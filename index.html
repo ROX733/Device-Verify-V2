@@ -7,171 +7,136 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',sans-serif;background:#f5f6f8;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;color:#0f172a;overflow:hidden}
-.card{width:100%;max-width:400px;background:#fff;border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,0.08),0 1px 3px rgba(0,0,0,0.05);padding:32px 28px 24px;position:relative;animation:cardIn .6s cubic-bezier(.34,1.56,.64,1) both}
-@keyframes cardIn{0%{transform:translateY(20px) scale(.96);opacity:0}100%{transform:translateY(0) scale(1);opacity:1}}
-.icons{display:flex;justify-content:center;align-items:flex-end;gap:18px;margin-bottom:22px;height:52px}
-.icons .small{width:22px;height:32px;border:2px solid #cbd5e1;border-radius:5px;position:relative;opacity:.8}
-.icons .small:after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:6px;height:2px;background:#cbd5e1;border-radius:1px}
-.icons .center{width:56px;height:40px;border:2.5px solid #2563eb;border-radius:6px;position:relative;background:#eff6ff;animation:float 2.2s ease-in-out infinite}
-.icons .center:after{content:'';position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:32px;height:3px;background:#2563eb;border-radius:2px}
-.icons .center:before{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:12px;height:2px;background:#2563eb;border-radius:1px}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-.status-icon{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;position:relative}
-.status-icon.success{background:#dcfce7;border:2px solid #bbf7d0}
-.status-icon.failed{background:#fee2e2;border:2px solid #fecaca}
-.status-icon.already{background:#dbeafe;border:2px solid #bfdbfe}
-.status-icon svg{width:32px;height:32px}
-.success svg path{stroke-dasharray:24;stroke-dashoffset:24;animation:draw .5s .2s ease forwards}
-@keyframes draw{to{stroke-dashoffset:0}}
-@keyframes pop{0%{transform:scale(.5)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
-.pop{animation:pop .5s cubic-bezier(.34,1.56,.64,1)}
-.title{font-size:17px;font-weight:700;text-align:center;margin-bottom:8px;letter-spacing:-.02em}
-.subtitle{font-size:13px;color:#64748b;text-align:center;line-height:1.5;margin-bottom:6px;min-height:38px}
-.progress-wrap{margin-top:20px}
-.bar-bg{height:6px;background:#f1f5f9;border-radius:999px;overflow:hidden;position:relative}
-.bar-fill{height:100%;background:#2563eb;border-radius:999px;position:relative;overflow:hidden;transition:width .3s ease}
-.bar-fill:after{content:'';position:absolute;top:0;left:-40%;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);animation:shimmer 1.2s infinite linear}
-@keyframes shimmer{0%{left:-40%}100%{left:100%}}
-.bar-meta{display:flex;justify-content:space-between;margin-top:8px;font-size:10.5px;letter-spacing:.08em;color:#94a3b8;font-weight:500}
-.bar-meta b{color:#2563eb}
-.btn{width:100%;height:44px;border-radius:12px;border:none;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;margin-top:18px}
-.btn-success{background:#22c55e;color:#fff;box-shadow:0 4px 14px rgba(34,197,94,.28)}
-.btn-success:hover{background:#16a34a;transform:translateY(-1px)}
-.btn-failed{background:#ef4444;color:#fff;box-shadow:0 4px 14px rgba(239,68,68,.24)}
-.btn-failed:hover{background:#dc2626}
-.btn-already{background:#3b82f6;color:#fff;box-shadow:0 4px 14px rgba(59,130,246,.28)}
-.btn-already:hover{background:#2563eb}
-.badge{margin:22px auto 0;display:inline-flex;align-items:center;gap:10px;padding:7px 14px;border-radius:999px;background:#0f172a;color:rgba(255,255,255,.85);font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
-.badge .dot{width:5px;height:5px;border-radius:50%}
-.dot-g{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.22)}
-.dot-b{background:#3b82f6}
-.dot-w{background:#fff}
-.sep{width:2px;height:2px;background:rgba(255,255,255,.3);border-radius:50%}
+body{font-family:'Inter',sans-serif;background:#f5f7fb;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{width:100%;max-width:380px;background:#fff;border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,0.08),0 2px 10px rgba(0,0,0,0.04);padding:32px 24px 28px;text-align:center;position:relative}
+.icons{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:24px}
+.icon-box{width:48px;height:32px;border-radius:8px;border:1.5px solid #e2e8f0;display:flex;align-items:center;justify-content:center;background:#fff;color:#94a3b8;transition:all .3s}
+.icon-box.active{width:56px;height:42px;border-color:#2563eb;background:#eff6ff;color:#2563eb;box-shadow:0 4px 12px rgba(37,99,235,0.15)}
+.icon-box svg{width:22px;height:22px}.icon-box.active svg{width:28px;height:28px}
+.progress-wrap{width:100%;height:4px;background:#eef2ff;border-radius:10px;overflow:hidden;margin:0 auto 18px;max-width:280px}
+.progress-bar{height:100%;background:#2563eb;width:0%;border-radius:10px;transition:width .2s linear}
+.title{font-size:15px;font-weight:700;color:#0f172a;margin-bottom:6px}
+.subtitle{font-size:12.5px;color:#64748b;line-height:1.5;margin-bottom:10px;max-width:300px;margin-left:auto;margin-right:auto}
+.status-icon{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
+.status-icon.success{background:#ecfdf5;border:2px solid #10b981;color:#10b981}
+.status-icon.error{background:#fef2f2;border:2px solid #ef4444;color:#ef4444}
+.status-icon.info{background:#eff6ff;border:2px solid #3b82f6;color:#3b82f6}
+.status-icon svg{width:34px;height:34px}
+.btn{width:100%;max-width:300px;padding:12px 20px;border-radius:12px;border:none;font-size:13.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin:18px auto 0;transition:all .2s}
+.btn-success{background:#10b981;color:#fff}.btn-success:hover{background:#059669}
+.btn-error{background:#ef4444;color:#fff}.btn-error:hover{background:#dc2626}
+.btn-info{background:#2563eb;color:#fff}.btn-info:hover{background:#1d4ed8}
 .hidden{display:none !important}
-.fade{animation:fade .4s ease}
-@keyframes fade{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:translateY(0)}}
-.demo{margin-top:20px;width:100%;max-width:400px;background:rgba(255,255,255,.8);backdrop-filter:blur(8px);border:1px solid rgba(0,0,0,.06);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px}
-.demo-title{font-size:11px;font-weight:700;letter-spacing:.12em;color:#64748b;text-transform:uppercase}
-.demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.demo-btn{height:36px;border-radius:8px;border:none;font-size:12px;font-weight:500;cursor:pointer}
-.footer{margin-top:14px;text-align:center;font-size:11px;color:#94a3b8}
-.footer span{font-family:monospace;font-size:10px}
-.loop-btn{margin-top:14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:999px;padding:6px 14px;font-size:11px;font-weight:600;color:#475569;cursor:pointer}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
 </head>
 <body>
 <div class="card" id="card">
-  <div id="verifying-block">
-    <div class="icons">
-      <div class="small"></div>
-      <div class="center"></div>
-      <div class="small"></div>
-    </div>
-    <div class="title">Verifying Device Environment</div>
-    <div class="subtitle" id="verify-sub">Analyzing your device for security compliance. Please wait...</div>
-    <div class="progress-wrap">
-      <div class="bar-bg"><div class="bar-fill" id="bar" style="width:8%"></div></div>
-      <div class="bar-meta"><span>SECURE CHECK</span><b id="pct">8%</b></div>
-    </div>
-  </div>
-  <div id="success-block" class="hidden">
-    <div class="status-icon success pop"><svg viewBox="0 0 24 24" fill="none"><path d="M6 12.5L10.2 16.5L18 8.5" stroke="#16a34a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-    <div class="title">Device Verified</div>
-    <div class="subtitle">Your device has been successfully authenticated. You can now access secure features.</div>
-    <button class="btn btn-success" onclick="closeApp()">Continue to Dashboard <span>→</span></button>
-  </div>
-  <div id="failed-block" class="hidden">
-    <div class="status-icon failed pop"><svg viewBox="0 0 24 24" fill="none"><path d="M8 8L16 16M16 8L8 16" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round"/></svg></div>
-    <div class="title">Verification Failed</div>
-    <div class="subtitle">We couldn[STRIPPED 1643 bytes]verifying')">Verifying</button>
-    <button class="demo-btn" style="background:#dcfce7;color:#166534" onclick="showState('success')">Success</button>
-    <button class="demo-btn" style="background:#fee2e2;color:#991b1b" onclick="showState('failed')">Failed</button>
-    <button class="demo-btn" style="background:#dbeafe;color:#1e40af" onclick="showState('already')">Already</button>
-  </div>
+<div id="verifying">
+<div class="icons">
+<div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="7" y="2" width="10" height="20" rx="2"/><circle cx="12" cy="18" r="1" fill="currentColor"/></svg></div>
+<div class="icon-box active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+<div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="2" width="16" height="20" rx="2"/></svg></div>
+</div>
+<div class="progress-wrap"><div class="progress-bar" id="progress"></div></div>
+<div class="title">Verifying Device Environment</div>
+<div class="subtitle">Analyzing your device and network for security compliance...</div>
+</div>
+<div id="success" class="hidden">
+<div class="status-icon success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5l10 -10"/></svg></div>
+<div class="title">Device Verified</div>
+<div class="subtitle" id="success-msg">Your device has been successfully authenticated. You can now access secure features.</div>
+<button class="btn btn-success" onclick="closeApp()">Continue to Dashboard</button>
+</div>
+<div id="already" class="hidden">
+<div class="status-icon info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
+<div class="title">Already Verified</div>
+<div class="subtitle">This device is already in your trusted list. No further action is required.</div>
+<button class="btn btn-info" onclick="closeApp()">Go to Dashboard</button>
+</div>
+<div id="failed" class="hidden">
+<div class="status-icon error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg></div>
+<div class="title">Verification Failed</div>
+<div class="subtitle" id="failed-msg">We couldn't verify this device. Please check your network connection or try again later.</div>
+<button class="btn btn-error" onclick="retry()">↻ Try Again</button>
+<div style="margin-top:10px"><a href="#" onclick="contactSupport()" style="font-size:12px;color:#64748b;text-decoration:none">Contact Support</a></div>
+</div>
 </div>
 <script>
-let progress=8,interval=null,loopInterval=null,looping=false;
-let visitorId='';
-const bar=document.getElementById('bar'), pct=document.getElementById('pct'), footer=document.getElementById('footer');
-const params=new URLSearchParams(location.search);
-const isDemo=params.get('demo')==='1';
-if(isDemo) document.getElementById('demoBox').classList.remove('hidden');
-function showState(s){
-  document.getElementById('verifying-block').classList.add('hidden');
-  document.getElementById('success-block').classList.add('hidden');
-  document.getElementById('failed-block').classList.add('hidden');
-  document.getElementById('already-block').classList.add('hidden');
-  if(s==='verifying'){ document.getElementById('verifying-block').classList.remove('hidden'); document.getElementById('verifying-block').classList.add('fade'); }
-  if(s==='success'){ document.getElementById('success-block').classList.remove('hidden'); document.getElementById('success-block').classList.add('fade'); bar.style.width='100%'; pct.textContent='100%'; }
-  if(s==='failed'){ document.getElementById('failed-block').classList.remove('hidden'); document.getElementById('failed-block').classList.add('fade'); }
-  if(s==='already'){ document.getElementById('already-block').classList.remove('hidden'); document.getElementById('already-block').classList.add('fade'); }
+const urlParams = new URLSearchParams(window.location.search);
+let BOT_ID = urlParams.get('id') || urlParams.get('bot_hash') || '';
+let USER_ID = urlParams.get('user_id') || '';
+function showState(state){
+  document.getElementById('verifying').classList.add('hidden');
+  document.getElementById('success').classList.add('hidden');
+  document.getElementById('already').classList.add('hidden');
+  document.getElementById('failed').classList.add('hidden');
+  document.getElementById(state).classList.remove('hidden');
 }
-function animateProgress(to=88,duration=3500){
-  clearInterval(interval);
-  let start=progress; let startTime=Date.now();
-  interval=setInterval(()=>{
-    let elapsed=Date.now()-startTime;
-    let t=Math.min(elapsed/duration,1);
-    let eased=1-Math.pow(1-t,3);
-    progress=Math.round(start+(to-start)*eased);
-    bar.style.width=progress+'%'; pct.textContent=progress+'%';
-    if(t>=1) clearInterval(interval);
-  },16);
-}
-function fingerprint(){
-  try{
-    const base=[navigator.userAgent,navigator.language,new Date().getTimezoneOffset(),screen.width+'x'+screen.height,screen.colorDepth,Intl.DateTimeFormat().resolvedOptions().timeZone||''].join('|');
-    let hash=0; for(let i=0;i<base.length;i++){ hash=((hash<<5)-hash)+base.charCodeAt(i); hash|=0; }
-    return 'fp_'+Math.abs(hash).toString(36)+'_'+Math.random().toString(36).slice(2,7);
-  }catch{ return 'fb_'+Math.random().toString(36).slice(2,12); }
-}
-async function realVerify(){
-  const bot=params.get('bot')||''; const bot_hash=params.get('bot_hash')||'';
-  const tg=window.Telegram?.WebApp; let user_id=params.get('user_id')||''; let initData='';
-  try{ if(tg){ tg.ready(); initData=tg.initData||''; user_id=tg.initDataUnsafe?.user?.id||user_id; } }catch{}
-  visitorId=fingerprint();
-  footer.innerHTML='<span>ID: '+visitorId.slice(0,16)+'… • '+screen.width+'×'+screen.height+'</span>';
-  const information=visitorId+'x'+screen.width+'x'+screen.height;
-  if(!bot && !bot_hash){
-    animateProgress(100,3500);
-    setTimeout(()=>{ showState('success'); },3600);
-    return;
+function closeApp(){ if(window.Telegram?.WebApp) Telegram.WebApp.close(); else window.close(); }
+function retry(){ location.reload(); }
+function contactSupport(){ alert('Contact @Admin'); }
+async function startVerification(){
+  if(!BOT_ID){
+    document.getElementById('failed-msg').textContent = 'Invalid Bot ID. Open only from valid link ?id=...';
+    showState('failed'); return;
   }
-  animateProgress(88,1200);
+  const ua = navigator.userAgent || '';
+  if(!/Android/i.test(ua)){
+    document.getElementById('failed-msg').textContent = 'Only Android Device Allowed. Please use Android phone.';
+    showState('failed'); return;
+  }
+  if(!window.Telegram || !window.Telegram.WebApp || !window.Telegram.WebApp.initData){
+    document.getElementById('failed-msg').textContent = 'Please open from Official Telegram Android App. 3rd Party apps not allowed.';
+    showState('failed'); return;
+  }
+  const webApp = window.Telegram.WebApp;
+  const tgUserId = webApp.initDataUnsafe?.user?.id || USER_ID;
+  const initData = webApp.initData;
+  if(!tgUserId){
+    document.getElementById('failed-msg').textContent = 'Telegram User ID missing.';
+    showState('failed'); return;
+  }
+  let p=0; const bar=document.getElementById('progress');
+  const interval=setInterval(()=>{ p+=Math.random()*12; if(p>90) p=90; bar.style.width=p+'%'; },120);
   try{
-    const payload={user_id:String(user_id),bot:String(bot),bot_hash:String(bot_hash),information,initData:String(initData)};
-    const resp=await fetch('https://project-hub.tg-dev-pro.site/rest-rox/verify.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    const data=await resp.json();
-    bar.style.width='100%'; pct.textContent='100%';
-    await new Promise(r=>setTimeout(r,300));
-    if(data.status==='success') showState('success');
-    else if(data.status==='info') showState('already');
-    else showState('failed');
+    const fp = await FingerprintJS.load();
+    const result = await fp.get();
+    const visitorId = result.visitorId;
+    const information = `${visitorId}x${screen.width}x${screen.height}x${navigator.language}`;
+    const payload = {
+      user_id: String(tgUserId),
+      bot_id: BOT_ID,
+      id: BOT_ID,
+      information: information,
+      initData: initData
+    };
+    const res = await fetch(`./verify.php?id=${encodeURIComponent(BOT_ID)}`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    clearInterval(interval); bar.style.width='100%';
+    setTimeout(()=>{
+      if(data.status==='success'){
+        document.getElementById('success-msg').textContent = data.message || 'Your device has been successfully authenticated.';
+        showState('success');
+        if(data.webhook_url){ fetch(data.webhook_url, {method:'POST', body: JSON.stringify({user_id: tgUserId, status:'verified'})}).catch(()=>{}); }
+      }else if(data.status==='info'){
+        showState('already');
+      }else{
+        document.getElementById('failed-msg').textContent = data.message || 'Verification Failed';
+        showState('failed');
+      }
+    },400);
   }catch(e){
-    bar.style.width='100%'; pct.textContent='100%';
-    setTimeout(()=>showState('failed'),400);
+    clearInterval(interval);
+    document.getElementById('failed-msg').textContent = 'Unexpected error: '+e.message;
+    showState('failed');
   }
 }
-function retry(){ showState('verifying'); progress=8; bar.style.width='8%'; pct.textContent='8%'; realVerify(); }
-function closeApp(){ try{ window.Telegram?.WebApp?.close(); }catch{} window.close(); }
-function toggleLoop(){
-  if(looping){ clearInterval(loopInterval); looping=false; document.getElementById('loopBtn').textContent='▶ Auto Loop (like your video)'; return; }
-  looping=true; document.getElementById('loopBtn').textContent='⏸ Stop Loop';
-  let seq=['verifying','success','verifying','failed','verifying','already']; let idx=0;
-  function next(){
-    let s=seq[idx%seq.length];
-    if(s==='verifying'){ showState('verifying'); progress=8; bar.style.width='8%'; animateProgress(100,3000); }
-    else showState(s);
-    idx++;
-  }
-  next();
-  loopInterval=setInterval(next,3500);
-}
-animateProgress(30,600);
-realVerify();
-document.addEventListener('contextmenu',e=>e.preventDefault());
-document.addEventListener('copy',e=>e.preventDefault());
+window.addEventListener('load', startVerification);
 </script>
 </body>
-  </html>
+</html>
