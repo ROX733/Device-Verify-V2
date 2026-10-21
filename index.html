@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Device Verification</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f6f8;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;color:#0f172a;overflow:hidden}
+.card{width:100%;max-width:400px;background:#fff;border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,0.08),0 1px 3px rgba(0,0,0,0.05);padding:32px 28px 24px;position:relative;animation:cardIn .6s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes cardIn{0%{transform:translateY(20px) scale(.96);opacity:0}100%{transform:translateY(0) scale(1);opacity:1}}
+.icons{display:flex;justify-content:center;align-items:flex-end;gap:18px;margin-bottom:22px;height:52px}
+.icons .small{width:22px;height:32px;border:2px solid #cbd5e1;border-radius:5px;position:relative;opacity:.8}
+.icons .small:after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:6px;height:2px;background:#cbd5e1;border-radius:1px}
+.icons .center{width:56px;height:40px;border:2.5px solid #2563eb;border-radius:6px;position:relative;background:#eff6ff;animation:float 2.2s ease-in-out infinite}
+.icons .center:after{content:'';position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:32px;height:3px;background:#2563eb;border-radius:2px}
+.icons .center:before{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:12px;height:2px;background:#2563eb;border-radius:1px}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.status-icon{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;position:relative}
+.status-icon.success{background:#dcfce7;border:2px solid #bbf7d0}
+.status-icon.failed{background:#fee2e2;border:2px solid #fecaca}
+.status-icon.already{background:#dbeafe;border:2px solid #bfdbfe}
+.status-icon svg{width:32px;height:32px}
+.success svg path{stroke-dasharray:24;stroke-dashoffset:24;animation:draw .5s .2s ease forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes pop{0%{transform:scale(.5)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+.pop{animation:pop .5s cubic-bezier(.34,1.56,.64,1)}
+.title{font-size:17px;font-weight:700;text-align:center;margin-bottom:8px;letter-spacing:-.02em}
+.subtitle{font-size:13px;color:#64748b;text-align:center;line-height:1.5;margin-bottom:6px;min-height:38px}
+.progress-wrap{margin-top:20px}
+.bar-bg{height:6px;background:#f1f5f9;border-radius:999px;overflow:hidden;position:relative}
+.bar-fill{height:100%;background:#2563eb;border-radius:999px;position:relative;overflow:hidden;transition:width .3s ease}
+.bar-fill:after{content:'';position:absolute;top:0;left:-40%;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);animation:shimmer 1.2s infinite linear}
+@keyframes shimmer{0%{left:-40%}100%{left:100%}}
+.bar-meta{display:flex;justify-content:space-between;margin-top:8px;font-size:10.5px;letter-spacing:.08em;color:#94a3b8;font-weight:500}
+.bar-meta b{color:#2563eb}
+.btn{width:100%;height:44px;border-radius:12px;border:none;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;margin-top:18px}
+.btn-success{background:#22c55e;color:#fff;box-shadow:0 4px 14px rgba(34,197,94,.28)}
+.btn-success:hover{background:#16a34a;transform:translateY(-1px)}
+.btn-failed{background:#ef4444;color:#fff;box-shadow:0 4px 14px rgba(239,68,68,.24)}
+.btn-failed:hover{background:#dc2626}
+.btn-already{background:#3b82f6;color:#fff;box-shadow:0 4px 14px rgba(59,130,246,.28)}
+.btn-already:hover{background:#2563eb}
+.badge{margin:22px auto 0;display:inline-flex;align-items:center;gap:10px;padding:7px 14px;border-radius:999px;background:#0f172a;color:rgba(255,255,255,.85);font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+.badge .dot{width:5px;height:5px;border-radius:50%}
+.dot-g{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.22)}
+.dot-b{background:#3b82f6}
+.dot-w{background:#fff}
+.sep{width:2px;height:2px;background:rgba(255,255,255,.3);border-radius:50%}
+.hidden{display:none !important}
+.fade{animation:fade .4s ease}
+@keyframes fade{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:translateY(0)}}
+.demo{margin-top:20px;width:100%;max-width:400px;background:rgba(255,255,255,.8);backdrop-filter:blur(8px);border:1px solid rgba(0,0,0,.06);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.demo-title{font-size:11px;font-weight:700;letter-spacing:.12em;color:#64748b;text-transform:uppercase}
+.demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.demo-btn{height:36px;border-radius:8px;border:none;font-size:12px;font-weight:500;cursor:pointer}
+.footer{margin-top:14px;text-align:center;font-size:11px;color:#94a3b8}
+.footer span{font-family:monospace;font-size:10px}
+.loop-btn{margin-top:14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:999px;padding:6px 14px;font-size:11px;font-weight:600;color:#475569;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <div id="verifying-block">
+    <div class="icons">
+      <div class="small"></div>
+      <div class="center"></div>
+      <div class="small"></div>
+    </div>
+    <div class="title">Verifying Device Environment</div>
+    <div class="subtitle" id="verify-sub">Analyzing your device for security compliance. Please wait...</div>
+    <div class="progress-wrap">
+      <div class="bar-bg"><div class="bar-fill" id="bar" style="width:8%"></div></div>
+      <div class="bar-meta"><span>SECURE CHECK</span><b id="pct">8%</b></div>
+    </div>
+  </div>
+  <div id="success-block" class="hidden">
+    <div class="status-icon success pop"><svg viewBox="0 0 24 24" fill="none"><path d="M6 12.5L10.2 16.5L18 8.5" stroke="#16a34a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="title">Device Verified</div>
+    <div class="subtitle">Your device has been successfully authenticated. You can now access secure features.</div>
+    <button class="btn btn-success" onclick="closeApp()">Continue to Dashboard <span>→</span></button>
+  </div>
+  <div id="failed-block" class="hidden">
+    <div class="status-icon failed pop"><svg viewBox="0 0 24 24" fill="none"><path d="M8 8L16 16M16 8L8 16" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round"/></svg></div>
+    <div class="title">Verification Failed</div>
+    <div class="subtitle">We couldn[STRIPPED 1643 bytes]verifying')">Verifying</button>
+    <button class="demo-btn" style="background:#dcfce7;color:#166534" onclick="showState('success')">Success</button>
+    <button class="demo-btn" style="background:#fee2e2;color:#991b1b" onclick="showState('failed')">Failed</button>
+    <button class="demo-btn" style="background:#dbeafe;color:#1e40af" onclick="showState('already')">Already</button>
+  </div>
+</div>
+<script>
+let progress=8,interval=null,loopInterval=null,looping=false;
+let visitorId='';
+const bar=document.getElementById('bar'), pct=document.getElementById('pct'), footer=document.getElementById('footer');
+const params=new URLSearchParams(location.search);
+const isDemo=params.get('demo')==='1';
+if(isDemo) document.getElementById('demoBox').classList.remove('hidden');
+function showState(s){
+  document.getElementById('verifying-block').classList.add('hidden');
+  document.getElementById('success-block').classList.add('hidden');
+  document.getElementById('failed-block').classList.add('hidden');
+  document.getElementById('already-block').classList.add('hidden');
+  if(s==='verifying'){ document.getElementById('verifying-block').classList.remove('hidden'); document.getElementById('verifying-block').classList.add('fade'); }
+  if(s==='success'){ document.getElementById('success-block').classList.remove('hidden'); document.getElementById('success-block').classList.add('fade'); bar.style.width='100%'; pct.textContent='100%'; }
+  if(s==='failed'){ document.getElementById('failed-block').classList.remove('hidden'); document.getElementById('failed-block').classList.add('fade'); }
+  if(s==='already'){ document.getElementById('already-block').classList.remove('hidden'); document.getElementById('already-block').classList.add('fade'); }
+}
+function animateProgress(to=88,duration=3500){
+  clearInterval(interval);
+  let start=progress; let startTime=Date.now();
+  interval=setInterval(()=>{
+    let elapsed=Date.now()-startTime;
+    let t=Math.min(elapsed/duration,1);
+    let eased=1-Math.pow(1-t,3);
+    progress=Math.round(start+(to-start)*eased);
+    bar.style.width=progress+'%'; pct.textContent=progress+'%';
+    if(t>=1) clearInterval(interval);
+  },16);
+}
+function fingerprint(){
+  try{
+    const base=[navigator.userAgent,navigator.language,new Date().getTimezoneOffset(),screen.width+'x'+screen.height,screen.colorDepth,Intl.DateTimeFormat().resolvedOptions().timeZone||''].join('|');
+    let hash=0; for(let i=0;i<base.length;i++){ hash=((hash<<5)-hash)+base.charCodeAt(i); hash|=0; }
+    return 'fp_'+Math.abs(hash).toString(36)+'_'+Math.random().toString(36).slice(2,7);
+  }catch{ return 'fb_'+Math.random().toString(36).slice(2,12); }
+}
+async function realVerify(){
+  const bot=params.get('bot')||''; const bot_hash=params.get('bot_hash')||'';
+  const tg=window.Telegram?.WebApp; let user_id=params.get('user_id')||''; let initData='';
+  try{ if(tg){ tg.ready(); initData=tg.initData||''; user_id=tg.initDataUnsafe?.user?.id||user_id; } }catch{}
+  visitorId=fingerprint();
+  footer.innerHTML='<span>ID: '+visitorId.slice(0,16)+'… • '+screen.width+'×'+screen.height+'</span>';
+  const information=visitorId+'x'+screen.width+'x'+screen.height;
+  if(!bot && !bot_hash){
+    animateProgress(100,3500);
+    setTimeout(()=>{ showState('success'); },3600);
+    return;
+  }
+  animateProgress(88,1200);
+  try{
+    const payload={user_id:String(user_id),bot:String(bot),bot_hash:String(bot_hash),information,initData:String(initData)};
+    const resp=await fetch('https://project-hub.tg-dev-pro.site/rest-rox/verify.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const data=await resp.json();
+    bar.style.width='100%'; pct.textContent='100%';
+    await new Promise(r=>setTimeout(r,300));
+    if(data.status==='success') showState('success');
+    else if(data.status==='info') showState('already');
+    else showState('failed');
+  }catch(e){
+    bar.style.width='100%'; pct.textContent='100%';
+    setTimeout(()=>showState('failed'),400);
+  }
+}
+function retry(){ showState('verifying'); progress=8; bar.style.width='8%'; pct.textContent='8%'; realVerify(); }
+function closeApp(){ try{ window.Telegram?.WebApp?.close(); }catch{} window.close(); }
+function toggleLoop(){
+  if(looping){ clearInterval(loopInterval); looping=false; document.getElementById('loopBtn').textContent='▶ Auto Loop (like your video)'; return; }
+  looping=true; document.getElementById('loopBtn').textContent='⏸ Stop Loop';
+  let seq=['verifying','success','verifying','failed','verifying','already']; let idx=0;
+  function next(){
+    let s=seq[idx%seq.length];
+    if(s==='verifying'){ showState('verifying'); progress=8; bar.style.width='8%'; animateProgress(100,3000); }
+    else showState(s);
+    idx++;
+  }
+  next();
+  loopInterval=setInterval(next,3500);
+}
+animateProgress(30,600);
+realVerify();
+document.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('copy',e=>e.preventDefault());
+</script>
+</body>
+  </html>
