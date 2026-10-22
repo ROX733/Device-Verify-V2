@@ -12,7 +12,7 @@
 body{font-family:'Inter',sans-serif;background:#f1f5f9;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
 .card{width:100%;max-width:360px;background:#fff;border-radius:18px;box-shadow:0 10px 40px rgba(0,0,0,0.08);padding:36px 28px 28px;text-align:center}
 .icon-row{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:20px}
-.dev{width:28px;height:28px;border:1.5px solid #cbd5e1;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:14px;transition:.3s}
+.dev{width:28px;height:28px;border:1.5px solid #cbd5e1;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:14px}
 .dev.active{border-color:#2563eb;color:#2563eb;width:42px;height:32px;border-width:2px;box-shadow:0 0 0 4px rgba(37,99,235,0.1)}
 .title{font-size:15px;font-weight:700;color:#0f172a;margin-bottom:6px}
 .sub{font-size:12.5px;color:#64748b;line-height:1.5;margin-bottom:16px}
@@ -22,63 +22,80 @@ body{font-family:'Inter',sans-serif;background:#f1f5f9;min-height:100vh;display:
 .check.ok{background:#dcfce7;color:#16a34a;border:2px solid #bbf7d0}
 .check.fail{background:#fee2e2;color:#ef4444;border:2px solid #fecaca}
 .check.info{background:#dbeafe;color:#2563eb;border:2px solid #bfdbfe}
-.btn{width:100%;padding:12px 14px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;margin-top:14px;font-family:Inter,sans-serif}
-.btn-green{background:#16a34a;color:#fff}
-.btn-blue{background:#2563eb;color:#fff}
-.btn-red{background:#ef4444;color:#fff}
-.btn-gray{background:#f1f5f9;color:#334155}
-.hidden{display:none!important}
-.state{display:flex;flex-direction:column;align-items:center}
+.btn{width:100%;padding:12px 14px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;margin-top:14px}
+.btn-green{background:#16a34a;color:#fff}.btn-blue{background:#2563eb;color:#fff}.btn-red{background:#ef4444;color:#fff}.btn-gray{background:#f1f5f9;color:#334155}
+.hidden{display:none!important}.state{display:flex;flex-direction:column;align-items:center}
 </style>
 </head>
 <body>
 <div class="card">
-<div id="loading" class="state">
-<div class="icon-row"><div class="dev" id="d1">📱</div><div class="dev active" id="d2">💻</div><div class="dev" id="d3">📱</div></div>
-<div class="title">Verifying Device Environment</div>
-<div class="sub">Analyzing security parameters...</div>
-<div class="bar"><div class="fill" id="fill"></div></div>
-</div>
-<div id="success" class="state hidden"><div class="check ok">✓</div><div class="title">Device Verified</div><div class="sub">Your device has been successfully authenticated. You can now access secure features.</div><button class="btn btn-green" onclick="closeApp()">→ Continue to Dashboard</button></div>
-<div id="already" class="state hidden"><div class="check info">🛡️</div><div class="title">Already Verified</div><div class="sub">This device is already in your trusted list. No further action is required.</div><button class="btn btn-blue" onclick="closeApp()">→ Go to Dashboard</button></div>
-<div id="failed" class="state hidden"><div class="check fail">✕</div><div class="title" id="fTitle">Verification Failed</div><div class="sub" id="fMsg">We couldn't verify this device.</div><div id="fBtns" style="width:100%"><button class="btn btn-red" onclick="location.reload()">↻ Try Again</button><div style="font-size:11px;color:#94a3b8;margin-top:10px">Contact Support</div></div></div>
+<div id="loading" class="state"><div class="icon-row"><div class="dev" id="d1">📱</div><div class="dev active" id="d2">💻</div><div class="dev" id="d3">📱</div></div><div class="title">Verifying Device Environment</div><div class="sub">Analyzing security parameters...</div><div class="bar"><div class="fill" id="fill"></div></div></div>
+<div id="success" class="state hidden"><div class="check ok">✓</div><div class="title">Device Verified</div><div class="sub">Your device has been successfully authenticated.</div><button class="btn btn-green" onclick="closeApp()">→ Continue</button></div>
+<div id="already" class="state hidden"><div class="check info">🛡️</div><div class="title">Already Verified</div><div class="sub">This device is already in your trusted list.</div><button class="btn btn-blue" onclick="closeApp()">→ Go to Dashboard</button></div>
+<div id="failed" class="state hidden"><div class="check fail">✕</div><div class="title" id="fTitle">Verification Failed</div><div class="sub" id="fMsg"></div><div id="fBtns" style="width:100%"><button class="btn btn-gray" onclick="closeApp()">→ Go to Dashboard</button></div></div>
 </div>
 <script>
 const tg=window.Telegram?.WebApp; if(tg){tg.ready(); tg.expand();}
 function closeApp(){try{tg.close()}catch(e){} try{window.close()}catch(e){}}
 function show(id){['loading','success','already','failed'].forEach(x=>document.getElementById(x).classList.add('hidden'));document.getElementById(id).classList.remove('hidden')}
-function qp(){const u=new URL(location.href);return{id:u.searchParams.get('id')||u.searchParams.get('bot')||u.searchParams.get('bot_hash')||'',uid:u.searchParams.get('user_id')||tg?.initDataUnsafe?.user?.id||'',un:u.searchParams.get('username')||tg?.initDataUnsafe?.user?.username||''}}
+function qp(){const u=new URL(location.href);return{id:u.searchParams.get('id')||'',uid:u.searchParams.get('user_id')||tg?.initDataUnsafe?.user?.id||'',un:u.searchParams.get('username')||'',hash:u.searchParams.get('bot_hash')||''}}
+
+async function getCanvasHash(){
+  try{const c=document.createElement('canvas');c.width=200;c.height=50;const ctx=c.getContext('2d');ctx.textBaseline='top';ctx.font='14px Arial';ctx.fillStyle='#f60';ctx.fillRect(10,10,100,30);ctx.fillStyle='#069';ctx.fillText('DeviceCheck123',20,20);return c.toDataURL().slice(-100);}catch(e){return 'no-canvas';}
+}
+async function getWebGLHash(){
+  try{const c=document.createElement('canvas');const gl=c.getContext('webgl')||c.getContext('experimental-webgl');if(!gl)return 'no-webgl';const dbg=gl.getExtension('WEBGL_debug_renderer_info');return (gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)||'').slice(0,60);}catch(e){return 'no-webgl';}
+}
+
 async function run(){
 const p=qp(); let prog=0; const iv=setInterval(()=>{prog+=Math.random()*18; if(prog>88)prog=88; document.getElementById('fill').style.width=prog+'%';},150);
-let idx=0; const devs=['d1','d2','d3']; const anim=setInterval(()=>{devs.forEach(d=>document.getElementById(d).classList.remove('active')); document.getElementById(devs[idx%3]).classList.add('active'); idx++;},500);
+let idx=0; const anim=setInterval(()=>{const ds=['d1','d2','d3']; ds.forEach(d=>document.getElementById(d).classList.remove('active')); document.getElementById(ds[idx%3]).classList.add('active'); idx++;},500);
 try{
-const fp=await FingerprintJS.load(); const res=await fp.get(); const visitorId=res.visitorId; const initData=tg?.initData||''; const ua=navigator.userAgent.toLowerCase();
-if(ua.includes('turbotel')||ua.includes('turbo')||!initData||initData.length<10){
-clearInterval(iv); clearInterval(anim);
-const errData={status:"error",title:"TurboTel Detected",message:"TurboTel / Fake Telegram Client Detected! Use Official Telegram App only. You are banned."};
-if(tg){try{tg.sendData(JSON.stringify(errData))}catch(e){}}
-document.getElementById('fTitle').textContent=errData.title; document.getElementById('fMsg').textContent=errData.message;
-document.getElementById('fBtns').innerHTML='<div style="font-size:11px;color:#ef4444;background:#fef2f2;padding:10px;border-radius:8px;border:1px solid #fecaca">Permanently blocked.</div><button class="btn btn-gray" style="margin-top:12px" onclick="closeApp()">→ Go to Dashboard</button>';
-show('failed'); return;
+const fp=await FingerprintJS.load(); const res=await fp.get();
+const visitorId=res.visitorId;
+const canvasHash=await getCanvasHash();
+const webglHash=await getWebGLHash();
+const screenInfo=`${screen.width}x${screen.height}x${screen.colorDepth}`;
+const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
+const tzOffset=new Date().getTimezoneOffset();
+const lang=navigator.language||'';
+const platform=navigator.platform||'';
+const hw=`${navigator.hardwareConcurrency||0}x${navigator.deviceMemory||0}`;
+const touch=navigator.maxTouchPoints||0;
+const ua=navigator.userAgent;
+const initData=tg?.initData||'';
+const low=ua.toLowerCase();
+
+if(low.includes('turbotel')||low.includes('turbo')||!initData||initData.length<10){
+  clearInterval(iv); clearInterval(anim);
+  const err={status:"error",title:"TurboTel Detected",message:"TurboTel / Fake Telegram Detected! Banned."};
+  if(tg)try{tg.sendData(JSON.stringify(err))}catch(e){}
+  document.getElementById('fTitle').textContent=err.title; document.getElementById('fMsg').textContent=err.message; show('failed'); return;
 }
-const payload={bot_id:p.id,id:p.id,bot:p.id,bot_hash:p.id,user_id:String(p.uid),username:p.un,visitorId:visitorId,information:`${visitorId}x${screen.width}x${screen.height}`,ua:navigator.userAgent,platform:navigator.platform,initData:initData};
-const r=await fetch(`./verify.php?id=${encodeURIComponent(p.id)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+
+const payload={
+  bot_id:p.id, id:p.id, user_id:String(p.uid), username:p.un, bot_hash:p.hash,
+  visitorId:visitorId, information:`${visitorId}x${screen.width}x${screen.height}`,
+  canvasHash:canvasHash, webglHash:webglHash, screenInfo:screenInfo,
+  timezone:tz, tzOffset:tzOffset, language:lang, platform:platform,
+  hardware:hw, touchPoints:touch, colorDepth:screen.colorDepth,
+  ua:ua, initData:initData
+};
+
+const r=await fetch(`./verify.php?id=${encodeURIComponent(p.id)}&bot_hash=${encodeURIComponent(p.hash)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
 const data=await r.json();
 clearInterval(iv); clearInterval(anim); document.getElementById('fill').style.width='100%';
-if(tg){try{tg.sendData(JSON.stringify(data));}catch(e){}}
+if(tg)try{tg.sendData(JSON.stringify(data))}catch(e){}
 setTimeout(()=>{
-if(data.status==='success'){show('success'); setTimeout(closeApp,1400);}
-else if(data.status==='info'){show('already'); setTimeout(closeApp,1400);}
-else{
-document.getElementById('fTitle').textContent=data.title||'Verification Failed'; document.getElementById('fMsg').textContent=data.message||'Failed';
-const msg=(data.message||'').toLowerCase(); const ttl=(data.title||'').toLowerCase();
-if(msg.includes('another')||msg.includes('banned')||ttl.includes('multiple')||ttl.includes('turbotel')||ttl.includes('vpn')){
-document.getElementById('fBtns').innerHTML='<div style="font-size:11px;color:#ef4444;background:#fef2f2;padding:10px;border-radius:8px;border:1px solid #fecaca">This device is linked to another account or blocked.</div><button class="btn btn-gray" style="margin-top:12px" onclick="closeApp()">→ Go to Dashboard</button>';
-}
-show('failed'); setTimeout(closeApp,2200);
-}
+  if(data.status==='success'){show('success'); setTimeout(closeApp,1300);}
+  else if(data.status==='info'){show('already'); setTimeout(closeApp,1300);}
+  else{
+    document.getElementById('fTitle').textContent=data.title||'Verification Failed';
+    document.getElementById('fMsg').textContent=data.message||'Failed';
+    show('failed'); setTimeout(closeApp,2500);
+  }
 },400);
-}catch(e){clearInterval(iv); clearInterval(anim); document.getElementById('fMsg').textContent='Network error: '+e.message; show('failed'); try{tg.sendData(JSON.stringify({status:"error",title:"Verification Failed",message:e.message}))}catch(err){}}
+}catch(e){clearInterval(iv); clearInterval(anim); document.getElementById('fMsg').textContent='Network error: '+e.message; show('failed'); try{tg.sendData(JSON.stringify({status:"error",title:"Failed",message:e.message}))}catch(err){}}
 }
 run();
 </script>
