@@ -6,180 +6,85 @@
 <title>Device Verification</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',sans-serif;background:#070b18;min-height:100vh;display:flex;flex-direction:column;color:#fff;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(rgba(59,130,246,0.15) 1px, transparent 1px);background-size:24px 24px;pointer-events:none;opacity:0.5}
-.top-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;position:relative;z-index:2}
-.top-header .left{display:flex;align-items:center;gap:12px}
-.avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#1e293b,#334155);border:2px solid rgba(59,130,246,0.3);display:flex;align-items:center;justify-content:center;font-weight:800;color:#60a5fa;overflow:hidden}
-.avatar img{width:100%;height:100%;object-fit:cover}
-.user-info .name{font-size:14px;font-weight:700;color:#fff}
-.user-info .id{font-size:11px;font-family:'JetBrains Mono',monospace;color:#64748b;margin-top:2px}
-.badge{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:100px;font-size:11px;font-weight:700;letter-spacing:0.8px;border:1px solid rgba(59,130,246,0.3);background:rgba(59,130,246,0.1);color:#60a5fa}
-.badge.used{color:#fbbf24;border-color:rgba(251,191,36,0.3);background:rgba(251,191,36,0.1)}
-.badge .dot{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor;animation:blink 1.5s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0.4}}
-
-.main-card{margin:16px 16px 20px;background:linear-gradient(180deg,rgba(17,24,47,0.8),rgba(10,15,30,0.9));border:1px solid rgba(59,130,246,0.15);border-radius:24px;padding:32px 24px 28px;position:relative;z-index:2;backdrop-filter:blur(20px);flex:1}
-.main-card::before{content:'';position:absolute;inset:0;border-radius:24px;background:radial-gradient(600px circle at 50% 0%, rgba(59,130,246,0.08), transparent 70%);pointer-events:none}
-
-.scanner-wrap{width:220px;height:220px;margin:0 auto 28px;position:relative;display:flex;align-items:center;justify-content:center}
-.scanner-grid{position:absolute;inset:0;border-radius:50%;background-image:linear-gradient(rgba(59,130,246,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.1) 1px, transparent 1px);background-size:20px 20px;mask:radial-gradient(circle, black 60%, transparent 100%);-webkit-mask:radial-gradient(circle, black 60%, transparent 100%)}
-.ring{position:absolute;border-radius:50%;border:1px solid rgba(59,130,246,0.15)}
-.ring.r1{inset:10%;border-style:dashed}
-.ring.r2{inset:0%;border:1px solid rgba(59,130,246,0.25);border-top-color:#60a5fa;border-right-color:transparent;border-bottom-color:transparent;border-left-color:transparent;animation:spin 3s linear infinite}
-.ring.r3{inset:22%;background:radial-gradient(circle, rgba(59,130,246,0.15), transparent 70%)}
+body{background:#060a18;min-height:100vh;font-family:'Inter',sans-serif;color:#fff;display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(rgba(59,130,246,0.12) 1px, transparent 1px);background-size:22px 22px;pointer-events:none}
+.header{padding:18px 20px;display:flex;justify-content:space-between;align-items:center;z-index:2}
+.left{display:flex;gap:12px;align-items:center}
+.avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#1e293b,#0f172a);border:2px solid rgba(59,130,246,0.3);display:flex;align-items:center;justify-content:center;font-weight:800;color:#60a5fa}
+.info .n{font-size:13px;font-weight:700}.info .i{font-size:10px;color:#64748b;font-family:monospace;margin-top:2px}
+.badge{display:flex;gap:6px;align-items:center;padding:6px 12px;border-radius:100px;font-size:10px;font-weight:700;letter-spacing:0.8px;border:1px solid rgba(59,130,246,0.3);background:rgba(59,130,246,0.1);color:#60a5fa}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor;animation:blink 1.2s infinite}
+@keyframes blink{50%{opacity:0.3}}
+.card{margin:10px 16px;background:linear-gradient(180deg,rgba(17,24,47,0.9),rgba(8,12,26,0.95));border:1px solid rgba(59,130,246,0.15);border-radius:24px;padding:30px 22px;z-index:2;flex:1}
+.scan{width:210px;height:210px;margin:0 auto 24px;position:relative;display:flex;align-items:center;justify-content:center}
+.grid{position:absolute;inset:0;border-radius:50%;background-image:linear-gradient(rgba(59,130,246,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.08) 1px, transparent 1px);background-size:18px 18px;mask:radial-gradient(circle, black 65%, transparent 100%)}
+.ring{position:absolute;border-radius:50%}
+.r1{inset:0;border:1px solid rgba(59,130,246,0.15);border-top-color:#60a5fa;border-right-color:transparent;animation:spin 2.5s linear infinite}
+.r2{inset:12%;border:1px dashed rgba(59,130,246,0.2)}
+.r3{inset:25%;background:radial-gradient(circle, rgba(59,130,246,0.18), transparent 70%)}
 @keyframes spin{to{transform:rotate(360deg)}}
-.center-shield{width:64px;height:64px;background:linear-gradient(135deg,#1e3a8a,#1e40af);border:2px solid #3b82f6;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 0 30px rgba(59,130,246,0.4), inset 0 1px 1px rgba(255,255,255,0.2);position:relative;z-index:2;font-size:28px}
-.orbit-dot{position:absolute;width:10px;height:10px;background:#60a5fa;border-radius:50%;box-shadow:0 0 10px #60a5fa, 0 0 20px #60a5fa}
-.orbit-dot.d1{top:15%;left:20%}.orbit-dot.d2{top:18%;right:18%}.orbit-dot.d3{bottom:18%;left:18%}.orbit-dot.d4{bottom:20%;right:16%}
-.orbit-line{position:absolute;width:60%;height:1px;background:linear-gradient(90deg,transparent,#3b82f633,transparent);bottom:22%;left:20%}
-
-.title{font-size:26px;font-weight:800;text-align:center;letter-spacing:-0.5px;margin-bottom:8px}
-.title span{color:#fff}
-.sub{font-size:13.5px;color:#94a3b8;text-align:center;line-height:1.5;margin-bottom:28px}
-
-.checks{display:flex;flex-direction:column;gap:10px;margin-bottom:28px}
-.check-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;transition:all 0.3s}
-.check-item.active{border-color:rgba(59,130,246,0.3);background:rgba(59,130,246,0.08)}
-.check-label{font-size:11.5px;font-weight:600;letter-spacing:1px;color:#64748b}
-.check-item.active .check-label{color:#94a3b8}
-.check-item.done .check-label{color:#e2e8f0}
-.status-dot{width:8px;height:8px;border-radius:50%;background:#334155;box-shadow:0 0 0 0 transparent;transition:all 0.3s}
-.status-dot.blue{background:#60a5fa;box-shadow:0 0 8px #60a5fa;animation:pulse 2s infinite}
-.status-dot.green{background:#22c55e;box-shadow:0 0 8px #22c55e}
-@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(96,165,250,0.4)}70%{box-shadow:0 0 0 6px rgba(96,165,250,0)}100%{box-shadow:0 0 0 0 rgba(96,165,250,0)}}
-
-.progress-wrap{width:100%;background:rgba(0,0,0,0.4);border-radius:100px;padding:4px;border:1px solid rgba(255,255,255,0.05)}
-.bar{height:8px;background:rgba(255,255,255,0.06);border-radius:100px;overflow:hidden;position:relative}
-.fill{height:100%;background:linear-gradient(90deg,#3b82f6,#60a5fa,#38bdf8);width:0%;border-radius:100px;transition:width 0.3s ease;box-shadow:0 0 10px rgba(59,130,246,0.5);position:relative}
-.fill::after{content:'';position:absolute;top:0;right:0;width:20px;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.4));animation:shine 1.5s infinite}
-@keyframes shine{0%{transform:translateX(-20px)}100%{transform:translateX(20px)}}
-
-.footer{font-size:11px;color:#475569;text-align:center;padding:16px;font-weight:500;letter-spacing:0.3px;position:relative;z-index:2}
-.footer span{color:#60a5fa}
-
-.success-icon{width:96px;height:96px;margin:0 auto 20px;background:linear-gradient(135deg,#3b82f6,#2563eb);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:48px;box-shadow:0 0 0 12px rgba(59,130,246,0.15), 0 20px 40px rgba(37,99,235,0.3)}
-.btn{width:100%;padding:14px;border:none;border-radius:14px;font-size:13px;font-weight:800;letter-spacing:0.5px;cursor:pointer;margin-top:20px;transition:all 0.2s;text-transform:uppercase}
+.shield{width:62px;height:62px;background:linear-gradient(135deg,#1e3a8a,#2563eb);border:2px solid #3b82f6;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 0 30px rgba(59,130,246,0.5);z-index:2}
+.od{position:absolute;width:9px;height:9px;background:#60a5fa;border-radius:50%;box-shadow:0 0 10px #60a5fa}
+.od1{top:12%;left:22%}.od2{top:14%;right:20%}.od3{bottom:16%;left:18%}.od4{bottom:18%;right:16%}
+.t{font-size:24px;font-weight:800;text-align:center;letter-spacing:-0.5px}
+.s{font-size:13px;color:#94a3b8;text-align:center;margin-top:6px;line-height:1.4}
+.checks{margin-top:26px;display:flex;flex-direction:column;gap:8px}
+.ci{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.06);border-radius:10px}
+.ci b{font-size:10.5px;letter-spacing:1px;color:#64748b}.ci.active b{color:#94a3b8}.ci.done b{color:#e2e8f0}
+.d{width:7px;height:7px;border-radius:50%;background:#334155}.d.blue{background:#60a5fa;box-shadow:0 0 8px #60a5fa;animation:pulse 1.8s infinite}.d.green{background:#22c55e;box-shadow:0 0 8px #22c55e}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(96,165,250,0.5)}70%{box-shadow:0 0 0 6px rgba(96,165,250,0)}100%{box-shadow:0 0 0 0 rgba(96,165,250,0)}}
+.barW{margin-top:22px;background:rgba(0,0,0,0.4);border-radius:100px;padding:4px;border:1px solid rgba(255,255,255,0.05)}
+.bar{height:8px;background:rgba(255,255,255,0.06);border-radius:100px;overflow:hidden}
+.fill{height:100%;width:0%;background:linear-gradient(90deg,#3b82f6,#38bdf8);border-radius:100px;transition:width 0.3s;box-shadow:0 0 10px rgba(59,130,246,0.5)}
+.bigBlue{width:110px;height:110px;margin:0 auto 22px;background:linear-gradient(135deg,#3b82f6,#2563eb);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:52px;box-shadow:0 0 0 14px rgba(59,130,246,0.12), 0 20px 40px rgba(37,99,235,0.35)}
+.btn{width:100%;padding:14px;border:none;border-radius:14px;font-weight:800;font-size:12.5px;letter-spacing:0.5px;cursor:pointer;margin-top:20px;text-transform:uppercase}
 .btn-blue{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;box-shadow:0 8px 20px rgba(37,99,235,0.3)}
-.btn:active{transform:scale(0.98)}
-
+.foot{text-align:center;padding:14px;font-size:11px;color:#475569;z-index:2}.foot span{color:#60a5fa}
 .hidden{display:none!important}
 </style>
 </head>
 <body>
-<div class="top-header">
-<div class="left">
-<div class="avatar" id="avatar">GH</div>
-<div class="user-info"><div class="name" id="userName">G.H. Support...</div><div class="id">ID: <span id="userId">7528813331</span></div></div>
+<div class="header"><div class="left"><div class="avatar" id="av">GH</div><div class="info"><div class="n" id="un">G.H. Support...</div><div class="i">ID: <span id="uid">7528813331</span></div></div></div><div class="badge" id="bd"><span class="dot"></span><span id="bt">SCANNING</span></div></div>
+<div class="card">
+<div id="v1">
+<div class="scan"><div class="grid"></div><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><div class="od od1"></div><div class="od od2"></div><div class="od od3"></div><div class="od od4"></div><div class="shield">🛡️</div></div>
+<div class="t" id="mt">Security Scan</div><div class="s" id="ms">Checking your device security<br>environment...</div>
+<div class="checks"><div class="ci" id="c1"><b>DEVICE INTEGRITY</b><span class="d" id="c1d"></span></div><div class="ci" id="c2"><b>NETWORK SECURITY</b><span class="d" id="c2d"></span></div><div class="ci" id="c3"><b>SESSION VALIDATION</b><span class="d" id="c3d"></span></div></div>
+<div class="barW"><div class="bar"><div class="fill" id="fill"></div></div></div>
 </div>
-<div class="badge" id="statusBadge"><span class="dot"></span><span id="badgeText">SCANNING</span></div>
+<div id="v2" class="hidden"><div class="bigBlue">✓</div><div class="t">Device Verification</div><div class="s" style="margin-top:8px"><b style="color:#fff">Verification Successful</b><br>Your device has been verified</div><button class="btn btn-blue" onclick="closeApp()">Continue to Bot</button></div>
+<div id="v3" class="hidden"><div class="scan" style="height:130px"><div class="ring r2" style="inset:0"></div><div class="shield">🛡️</div></div><div class="t" style="color:#60a5fa">Already Verified</div><div class="s" id="am">Warning: This physical phone is already linked to another account.</div><button class="btn btn-blue" onclick="closeApp()">CONTINUE TO BOT</button></div>
 </div>
-
-<div class="main-card">
-<div id="scanningView">
-<div class="scanner-wrap">
-<div class="scanner-grid"></div>
-<div class="ring r1"></div>
-<div class="ring r2"></div>
-<div class="ring r3"></div>
-<div class="orbit-dot d1"></div>
-<div class="orbit-dot d2"></div>
-<div class="orbit-dot d3"></div>
-<div class="orbit-dot d4"></div>
-<div class="orbit-line"></div>
-<div class="center-shield">🛡️</div>
-</div>
-<div class="title" id="mainTitle">Security Scan</div>
-<div class="sub" id="mainSub">Checking your device security<br>environment...</div>
-<div class="checks">
-<div class="check-item" id="c1"><span class="check-label">DEVICE INTEGRITY</span><span class="status-dot" id="d1s"></span></div>
-<div class="check-item" id="c2"><span class="check-label">NETWORK SECURITY</span><span class="status-dot" id="d2s"></span></div>
-<div class="check-item" id="c3"><span class="check-label">SESSION VALIDATION</span><span class="status-dot" id="d3s"></span></div>
-</div>
-<div class="progress-wrap"><div class="bar"><div class="fill" id="fill"></div></div></div>
-</div>
-
-<div id="successView" class="hidden">
-<div class="success-icon">✓</div>
-<div class="title">Device Verification<br><span style="font-size:18px;color:#60a5fa;font-weight:600">Verification Successful</span></div>
-<div class="sub" style="margin-top:12px">Your device has been verified</div>
-<button class="btn btn-blue" onclick="closeApp()">Continue to Bot</button>
-</div>
-
-<div id="alreadyView" class="hidden">
-<div class="scanner-wrap" style="height:140px"><div class="ring r1" style="inset:0"></div><div class="center-shield" style="background:linear-gradient(135deg,#1e3a8a,#334155)">🛡️</div></div>
-<div class="title" style="color:#60a5fa">Already Verified</div>
-<div class="sub" id="alreadyMsg">Warning: This physical phone is already linked to another account.</div>
-<button class="btn btn-blue" onclick="closeApp()">CONTINUE TO BOT</button>
-</div>
-
-</div>
-<div class="footer">Designed By <span>Jenil Dobariya</span></div>
-
+<div class="foot">Designed By <span>Jenil Dobariya</span></div>
 <script>
 const tg=window.Telegram?.WebApp; if(tg){tg.ready(); tg.expand();}
 function closeApp(){try{tg.close()}catch(e){} try{window.close()}catch(e){}}
 function qp(){const u=new URL(location.href);return{id:u.searchParams.get('id')||'',uid:u.searchParams.get('user_id')||tg?.initDataUnsafe?.user?.id||'',un:u.searchParams.get('username')||tg?.initDataUnsafe?.user?.username||'',hash:u.searchParams.get('bot_hash')||'',bot:u.searchParams.get('bot')||''}}
 async function getCanvasHash(){try{const c=document.createElement('canvas');c.width=200;c.height=50;const ctx=c.getContext('2d');ctx.textBaseline='top';ctx.font='14px Arial';ctx.fillStyle='#f60';ctx.fillRect(10,10,100,30);ctx.fillStyle='#069';ctx.fillText('DeviceCheck123',20,20);return c.toDataURL().slice(-100);}catch(e){return 'no-canvas';}}
 async function getWebGLHash(){try{const c=document.createElement('canvas');const gl=c.getContext('webgl')||c.getContext('experimental-webgl');if(!gl)return 'no-webgl';const dbg=gl.getExtension('WEBGL_debug_renderer_info');return (gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)||'').slice(0,60);}catch(e){return 'no-webgl';}}
-
-function setCheck(id, state){
-  const item=document.getElementById(id);
-  const dot=document.getElementById(id+'s');
-  if(state==='active'){item.classList.add('active'); dot.className='status-dot blue';}
-  if(state==='done'){item.classList.remove('active'); item.classList.add('done'); dot.className='status-dot green';}
-}
-
+function setC(id,st){const el=document.getElementById(id);const dot=document.getElementById(id+'d');if(st==='a'){el.classList.add('active');dot.className='d blue';}if(st==='d'){el.classList.remove('active');el.classList.add('done');dot.className='d green';}}
 async function run(){
-const p=qp();
-document.getElementById('userId').textContent=p.uid||'7528813331';
-document.getElementById('userName').textContent=(p.bot||'G.H. Support').replace('@','')+'...';
-document.getElementById('avatar').textContent=(p.bot||'GH').substring(0,2).toUpperCase();
-
-let prog=0;
-const iv=setInterval(()=>{prog+=Math.random()*8; if(prog>92)prog=92; document.getElementById('fill').style.width=prog+'%'; if(prog>20)setCheck('c1','active'); if(prog>45){setCheck('c1','done'); setCheck('c2','active');} if(prog>75){setCheck('c2','done'); setCheck('c3','active');}},150);
-
+const p=qp(); document.getElementById('uid').textContent=p.uid||'7528813331'; document.getElementById('un').textContent=(p.bot||'G.H. Support').replace('@','')+'...'; document.getElementById('av').textContent=(p.bot||'GH').slice(0,2).toUpperCase();
+let prog=0; const iv=setInterval(()=>{prog+=Math.random()*8; if(prog>92)prog=92; document.getElementById('fill').style.width=prog+'%'; if(prog>20)setC('c1','a'); if(prog>45){setC('c1','d'); setC('c2','a');} if(prog>75){setC('c2','d'); setC('c3','a');}},150);
 try{
-const fp=await FingerprintJS.load(); const res=await fp.get();
-const canvasHash=await getCanvasHash(); const webglHash=await getWebGLHash();
-const screenInfo=`${screen.width}x${screen.height}x${screen.colorDepth}`;
-const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''; const tzOffset=new Date().getTimezoneOffset();
-const payload={bot_id:p.id,id:p.id,user_id:String(p.uid),username:p.un,bot_hash:p.hash,visitorId:res.visitorId,information:`${res.visitorId}x${screen.width}x${screen.height}`,canvasHash,webglHash,screenInfo,timezone:tz,tzOffset,language:navigator.language||'',platform:navigator.platform||'',hardware:`${navigator.hardwareConcurrency||0}x${navigator.deviceMemory||0}`,touchPoints:navigator.maxTouchPoints||0,colorDepth:screen.colorDepth,ua:navigator.userAgent,initData:tg?.initData||''};
+const fp=await FingerprintJS.load(); const res=await fp.get(); const ch=await getCanvasHash(); const wh=await getWebGLHash();
+const payload={bot_id:p.id,id:p.id,user_id:String(p.uid),username:p.un,bot_hash:p.hash,visitorId:res.visitorId,information:`${res.visitorId}x${screen.width}x${screen.height}`,canvasHash:ch,webglHash:wh,screenInfo:`${screen.width}x${screen.height}x${screen.colorDepth}`,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||'',tzOffset:new Date().getTimezoneOffset(),language:navigator.language||'',platform:navigator.platform||'',hardware:`${navigator.hardwareConcurrency||0}x${navigator.deviceMemory||0}`,touchPoints:navigator.maxTouchPoints||0,ua:navigator.userAgent,initData:tg?.initData||''};
 const low=payload.ua.toLowerCase();
 if(low.includes('turbotel')||low.includes('turbo')||!payload.initData||payload.initData.length<10){
-  clearInterval(iv);
-  const err={status:"error",title:"TurboTel Detected",message:"Fake Telegram Client Detected! Banned.",hash:p.hash};
-  if(tg)try{tg.sendData(JSON.stringify(err))}catch(e){}
-  document.getElementById('mainTitle').textContent='Blocked'; document.getElementById('mainSub').textContent=err.message;
-  document.getElementById('statusBadge').className='badge used'; document.getElementById('badgeText').textContent='BLOCKED';
-  document.getElementById('alreadyMsg').textContent=err.message;
-  document.getElementById('scanningView').classList.add('hidden'); document.getElementById('alreadyView').classList.remove('hidden');
-  return;
+clearInterval(iv); const err={status:"error",title:"TurboTel Detected",message:"Fake Client! Banned.",hash:p.hash}; if(tg)try{tg.sendData(JSON.stringify(err))}catch(e){}
+document.getElementById('v1').classList.add('hidden'); document.getElementById('v3').classList.remove('hidden'); document.getElementById('am').textContent=err.message; document.getElementById('bd').innerHTML='<span class="dot" style="background:#ef4444"></span><span>BLOCKED</span>'; return;
 }
 const r=await fetch(`./verify.php?id=${encodeURIComponent(p.id)}&bot_hash=${encodeURIComponent(p.hash)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-const data=await r.json();
-clearInterval(iv); document.getElementById('fill').style.width='100%'; setCheck('c1','done'); setCheck('c2','done'); setCheck('c3','done');
+const data=await r.json(); clearInterval(iv); document.getElementById('fill').style.width='100%'; setC('c1','d'); setC('c2','d'); setC('c3','d');
 if(tg)try{tg.sendData(JSON.stringify(data))}catch(e){}
 setTimeout(()=>{
-if(data.status==='success'){
-  document.getElementById('statusBadge').innerHTML='<span class="dot" style="background:#22c55e"></span><span>VERIFIED</span>';
-  document.getElementById('statusBadge').style.color='#22c55e'; document.getElementById('statusBadge').style.borderColor='rgba(34,197,94,0.3)'; document.getElementById('statusBadge').style.background='rgba(34,197,94,0.1)';
-  document.getElementById('scanningView').classList.add('hidden'); document.getElementById('successView').classList.remove('hidden'); setTimeout(closeApp,1500);
-}else{
-  document.getElementById('statusBadge').className='badge used'; document.getElementById('badgeText').textContent=data.title.includes('Already')?'ALREADY':'USED DEVICE';
-  document.getElementById('scanningView').classList.add('hidden'); document.getElementById('alreadyView').classList.remove('hidden');
-  document.getElementById('alreadyMsg').textContent=data.message||'This physical phone is already linked to another account.';
-  setTimeout(closeApp,2500);
-}
-},500);
-}catch(e){
-clearInterval(iv);
-document.getElementById('mainSub').textContent='Network error: '+e.message;
-if(tg)try{tg.sendData(JSON.stringify({status:"error",title:"Failed",message:e.message}))}catch(err){}
-}
+if(data.status==='success'){document.getElementById('v1').classList.add('hidden'); document.getElementById('v2').classList.remove('hidden'); document.getElementById('bd').innerHTML='<span class="dot" style="background:#22c55e"></span><span>VERIFIED</span>'; setTimeout(closeApp,1500);}
+else{document.getElementById('v1').classList.add('hidden'); document.getElementById('v3').classList.remove('hidden'); document.getElementById('am').textContent=data.message||'Already linked to another account.'; document.getElementById('bt').textContent='USED DEVICE'; document.getElementById('bd').style.color='#fbbf24'; document.getElementById('bd').style.borderColor='rgba(251,191,36,0.3)'; document.getElementById('bd').style.background='rgba(251,191,36,0.1)'; setTimeout(closeApp,2500);}
+},400);
+}catch(e){clearInterval(iv); if(tg)try{tg.sendData(JSON.stringify({status:"error",title:"Failed",message:e.message}))}catch(err){}}
 }
 run();
 </script>
