@@ -26,14 +26,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#080a14;min-height:10
 .wave.w1{inset:0;animation-delay:0s}.wave.w2{inset:-12%;animation-delay:1s}.wave.w3{inset:-22%;animation-delay:2s}
 @keyframes wave{0%{transform:scale(0.8);opacity:0.8}100%{transform:scale(1.35);opacity:0}}
 .fp-core{width:84px;height:84px;background:linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.1);border-radius:22px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2}
-.fp-icon{font-size:34px;filter:drop-shadow(0 0 12px rgba(124,58,237,0.5))}
+.fp-icon{font-size:34px}
 .scan-line{position:absolute;width:100%;height:2px;background:linear-gradient(90deg,transparent,#a78bfa,transparent);top:0;left:0;animation:scan 2.2s ease-in-out infinite;z-index:3;box-shadow:0 0 10px #a78bfa}
 @keyframes scan{0%{top:10%}50%{top:85%}100%{top:10%}}
 .title{font-size:21px;font-weight:800;text-align:center;letter-spacing:-0.5px}
 .sub{font-size:12.5px;color:#94a3b8;text-align:center;margin-top:8px;line-height:1.5}
 .meta{display:flex;gap:8px;justify-content:center;margin-top:14px}
 .chip{padding:6px 12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:100px;font-size:10px;font-weight:600;letter-spacing:0.5px;color:#a5b4fc;display:flex;align-items:center;gap:6px}
-.chip-dot{width:5px;height:5px;background:#22c55e;border-radius:50%;box-shadow:0 0 6px #22c55e;animation:blink 1.5s infinite}
+.chip-dot{width:5px;height:5px;border-radius:50%;box-shadow:0 0 6px currentColor;animation:blink 1.5s infinite}
 @keyframes blink{50%{opacity:0.4}}
 .progress{margin-top:22px}
 .p-head{display:flex;justify-content:space-between;font-size:10px;font-weight:700;letter-spacing:1px;color:#64748b;margin-bottom:8px}
@@ -49,18 +49,33 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#080a14;min-height:10
 .r-dot.blue{background:#a78bfa;box-shadow:0 0 8px #a78bfa;animation:pulse 1.8s infinite}.r-dot.green{background:#22c55e;box-shadow:0 0 8px #22c55e}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(167,139,250,0.5)}70%{box-shadow:0 0 0 6px rgba(167,139,250,0)}100%{box-shadow:0 0 0 0 rgba(167,139,250,0)}}
 
-/* ALREADY VERIFIED - IMAGE JAISA BUT PIRO THEME MATCHING */
+/* COMMON ALREADY */
 .already-wrap{width:130px;height:130px;margin:10px auto 24px;position:relative;display:flex;align-items:center;justify-content:center}
 .already-circle-outer{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(96,165,250,0.3);background:radial-gradient(circle, rgba(59,130,246,0.08), transparent 70%)}
 .already-circle-inner{position:absolute;inset:18%;border-radius:50%;border:1px dashed rgba(96,165,250,0.25);animation:spin 12s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.already-shield{width:58px;height:58px;background:linear-gradient(135deg,#3b82f6,#60a5fa);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 0 0 8px rgba(59,130,246,0.12), 0 8px 24px rgba(59,130,246,0.3);position:relative;z-index:2}
-.already-title{font-size:24px;font-weight:800;text-align:center;color:#60a5fa;letter-spacing:-0.5px}
-.already-sub{font-size:13px;color:#94a3b8;text-align:center;margin-top:10px;line-height:1.5;padding:0 10px}
+.already-shield{width:58px;height:58px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;position:relative;z-index:2}
+.already-title{font-size:24px;font-weight:800;text-align:center;letter-spacing:-0.5px}
+.already-sub{font-size:13px;text-align:center;margin-top:10px;line-height:1.5;padding:0 10px}
+
+/* BLUE = Already Verified */
+.blue .already-circle-outer{border-color:rgba(96,165,250,0.35);background:radial-gradient(circle, rgba(59,130,246,0.1), transparent 70%)}
+.blue .already-circle-inner{border-color:rgba(96,165,250,0.3)}
+.blue .already-shield{background:linear-gradient(135deg,#3b82f6,#60a5fa);box-shadow:0 0 0 8px rgba(59,130,246,0.12), 0 8px 24px rgba(59,130,246,0.3)}
+.blue .already-title{color:#60a5fa}
+.blue .already-sub{color:#94a3b8}
+
+/* RED = Used Device / Same Device */
+.red .already-circle-outer{border-color:rgba(248,113,113,0.35);background:radial-gradient(circle, rgba(239,68,68,0.1), transparent 70%)}
+.red .already-circle-inner{border-color:rgba(248,113,113,0.3)}
+.red .already-shield{background:linear-gradient(135deg,#ef4444,#f87171);box-shadow:0 0 0 8px rgba(239,68,68,0.12), 0 8px 24px rgba(239,68,68,0.3)}
+.red .already-title{color:#f87171}
+.red .already-sub{color:#fca5a5}
 
 .bigBlue{width:100px;height:100px;margin:0 auto 18px;background:linear-gradient(135deg,#7c3aed,#4f46e5);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:44px;box-shadow:0 0 0 12px rgba(124,58,237,0.12), 0 20px 40px rgba(79,70,229,0.35)}
 .btn{width:100%;padding:14px;border:none;border-radius:14px;font-weight:800;font-size:12.5px;letter-spacing:0.5px;cursor:pointer;margin-top:22px;text-transform:uppercase}
 .btn-blue{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;box-shadow:0 8px 20px rgba(37,99,235,0.35)}
+.btn-red{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;box-shadow:0 8px 20px rgba(239,68,68,0.35)}
 .btn:active{transform:scale(0.98)}
 .watermark{margin-top:22px;text-align:center}
 .watermark a{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:100px;text-decoration:none;font-size:11px;font-weight:700;color:#94a3b8;backdrop-filter:blur(10px)}
@@ -76,7 +91,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#080a14;min-height:10
 <div id="v1">
 <div class="fp-wrap"><div class="wave w1"></div><div class="wave w2"></div><div class="wave w3"></div><div class="fp-core"><span class="fp-icon">🛡️</span><div class="scan-line"></div></div></div>
 <div class="title" id="mt">Securing Your Device</div><div class="sub" id="ms">Analyzing security profile to prevent multi-account abuse</div>
-<div class="meta"><div class="chip"><span class="chip-dot"></span><span id="chipText">SCANNING</span></div><div class="chip">⚡ FAST SCAN</div></div>
+<div class="meta"><div class="chip"><span class="chip-dot" id="chipDot" style="background:#a78bfa"></span><span id="chipText">SCANNING</span></div><div class="chip">⚡ FAST SCAN</div></div>
 <div class="progress"><div class="p-head"><span id="pLabel">INITIALIZING</span><span id="pct">0%</span></div><div class="p-bar"><div class="p-fill" id="fill"></div></div></div>
 <div class="list">
 <div class="row" id="c1"><div class="r-icon">📱</div><div class="r-text"><b>DEVICE INTEGRITY</b><span id="c1t">Waiting...</span></div><span class="r-dot" id="c1d"></span></div>
@@ -85,17 +100,23 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#080a14;min-height:10
 </div>
 </div>
 <div id="v2" class="hidden"><div class="bigBlue">✓</div><div class="title">Verified Successfully</div><div class="sub">Your device has been authenticated<br>Welcome to PIRO Network</div><button class="btn btn-blue" onclick="closeApp()">Continue to Bot →</button></div>
-<!-- ALREADY VERIFIED - FIXED LIKE YOUR IMAGE -->
-<div id="v3" class="hidden">
-<div class="already-wrap">
-<div class="already-circle-outer"></div>
-<div class="already-circle-inner"></div>
-<div class="already-shield">🛡️</div>
-</div>
+
+<!-- BLUE ALREADY VERIFIED -->
+<div id="v3-blue" class="hidden blue">
+<div class="already-wrap"><div class="already-circle-outer"></div><div class="already-circle-inner"></div><div class="already-shield">🛡️</div></div>
 <div class="already-title">Already Verified</div>
-<div class="already-sub" id="am">Warning: This physical phone is already linked to another account.</div>
+<div class="already-sub">Your device is already verified.<br>Welcome back!</div>
 <button class="btn btn-blue" onclick="closeApp()">CONTINUE TO BOT</button>
 </div>
+
+<!-- RED USED DEVICE -->
+<div id="v3-red" class="hidden red">
+<div class="already-wrap"><div class="already-circle-outer"></div><div class="already-circle-inner"></div><div class="already-shield">⚠️</div></div>
+<div class="already-title">Used Device Detected</div>
+<div class="already-sub" id="am">Warning: This physical phone is already linked to another account.</div>
+<button class="btn btn-red" onclick="closeApp()">CONTINUE TO BOT</button>
+</div>
+
 </div>
 <div class="watermark">
 <a href="https://t.me/ROXXOP" target="_blank" onclick="try{Telegram.WebApp.openTelegramLink('https://t.me/ROXXOP'); return false;}catch(e){}">
@@ -122,39 +143,58 @@ let fetchPromise=(async()=>{
     const payload={bot_id:p.id,id:p.id,user_id:String(p.uid),username:p.un,bot_hash:p.hash,visitorId:res.visitorId,information:`${res.visitorId}x${screen.width}x${screen.height}`,canvasHash:ch,webglHash:wh,screenInfo:`${screen.width}x${screen.height}x${screen.colorDepth}`,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||'',tzOffset:new Date().getTimezoneOffset(),language:navigator.language||'',platform:navigator.platform||'',hardware:`${navigator.hardwareConcurrency||0}x${navigator.deviceMemory||0}`,touchPoints:navigator.maxTouchPoints||0,ua:navigator.userAgent,initData:tg?.initData||''};
     const low=payload.ua.toLowerCase();
     if(low.includes('turbotel')||low.includes('turbo')||!payload.initData||payload.initData.length<10){
-      serverData={status:"error",title:"TurboTel Detected",message:"Fake Telegram Client Detected! Use official app.",hash:p.hash}; return;
+      serverData={status:"error",title:"TurboTel Detected",message:"Fake Telegram Client Detected! Use official app.",hash:p.hash,type:"turbo"}; return;
     }
     const r=await fetch(`./verify.php?id=${encodeURIComponent(p.id)}&bot_hash=${encodeURIComponent(p.hash)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     serverData=await r.json();
-  }catch(e){ serverData={status:"error",title:"Network Error",message:e.message,hash:p.hash}; }
+  }catch(e){ serverData={status:"error",title:"Network Error",message:e.message,hash:p.hash,type:"network"}; }
 })();
+
+// 5-10 sec animation with pauses
 for(let i=0;i<=35;i+=2){ setProgress(i,'INITIALIZING'); await sleep(45); }
-document.getElementById('chipText').textContent='CHECKING DEVICE';
 setC('c1','a','Analyzing hardware...');
 for(let i=35;i<=38;i++){ setProgress(i,'SCANNING DEVICE'); await sleep(100); }
 setC('c1','d','Hardware verified ✓');
+document.getElementById('chipText').textContent='CHECKING DEVICE';
 await sleep(2500);
+
 setC('c2','a','Checking network reputation...');
 for(let i=40;i<=75;i+=2){ setProgress(i,'VERIFYING NETWORK'); await sleep(60); }
 document.getElementById('chipText').textContent='VERIFYING NETWORK';
 setProgress(78,'VALIDATING SESSION');
 setC('c2','d','Network secure ✓');
 await sleep(2500);
+
 setC('c3','a','Validating session...');
 for(let i=80;i<=100;i+=3){ setProgress(i,'FINALIZING'); await sleep(50); }
 setC('c3','d','Session valid ✓');
+
 await fetchPromise;
 setProgress(100,'COMPLETED');
-document.getElementById('chipText').textContent=serverData?.status==='success'?'VERIFIED':'USED DEVICE';
 await sleep(600);
 if(tg)try{tg.sendData(JSON.stringify(serverData))}catch(e){}
+
+// LOGIC SPLIT - BLUE vs RED
+document.getElementById('v1').classList.add('hidden');
+
 if(serverData?.status==='success'){
-  document.getElementById('v1').classList.add('hidden');
+  document.getElementById('chipDot').style.background='#22c55e';
+  document.getElementById('chipText').textContent='VERIFIED';
   document.getElementById('v2').classList.remove('hidden');
   setTimeout(closeApp,1500);
-}else{
-  document.getElementById('v1').classList.add('hidden');
-  document.getElementById('v3').classList.remove('hidden');
+} 
+else if(serverData?.status==='info' || (serverData?.title||'').toLowerCase().includes('already')){
+  // BLUE - Already Verified (same user)
+  document.getElementById('chipDot').style.background='#60a5fa';
+  document.getElementById('chipText').textContent='ALREADY VERIFIED';
+  document.getElementById('v3-blue').classList.remove('hidden');
+  setTimeout(closeApp,2500);
+}
+else{
+  // RED - Used Device / Same Device / TurboTel / VPN
+  document.getElementById('chipDot').style.background='#f87171';
+  document.getElementById('chipText').textContent='USED DEVICE';
+  document.getElementById('v3-red').classList.remove('hidden');
   document.getElementById('am').textContent=serverData?.message||'Warning: This physical phone is already linked to another account.';
   setTimeout(closeApp,3000);
 }
@@ -162,4 +202,4 @@ if(serverData?.status==='success'){
 run();
 </script>
 </body>
-</html>
+  </html>
