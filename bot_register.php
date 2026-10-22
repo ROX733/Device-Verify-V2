@@ -1,5 +1,5 @@
 <?php
-// FILE 2: bot_register.php - FIXED: ID stable rahega, naya nahi banega
+// FILE 2: bot_register.php - FINAL: ID stable + Token validate
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
@@ -28,7 +28,16 @@ if(!$botHash){ echo json_encode(['status'=>'error','message'=>'botHash / id miss
 if(!$botUsernameClean){ echo json_encode(['status'=>'error','message'=>'bot username missing']); exit; }
 if(!$botToken){ echo json_encode(['status'=>'error','message'=>'bot_token missing']); exit; }
 
-// Check if bot already exists - SAME BOT = SAME ID (FIX)
+// === TOKEN VALIDATE - Fake token block ===
+$check = @file_get_contents("https://api.telegram.org/bot{$botToken}/getMe");
+$checkData = json_decode($check, true);
+if(!($checkData['ok']??false)){ 
+    echo json_encode(['status'=>'error','message'=>'Invalid bot_token - getMe failed']); 
+    exit; 
+}
+$botUsernameClean = $checkData['result']['username'] ?? $botUsernameClean;
+
+// Check if bot already exists - SAME BOT = SAME ID
 $foundIndex = -1;
 foreach($bots as $idx => $b){
     if(isset($b['bot_username_clean']) && $b['bot_username_clean'] === $botUsernameClean){
@@ -37,19 +46,23 @@ foreach($bots as $idx => $b){
     if(isset($b['bot_username']) && ltrim($b['bot_username'],'@') === $botUsernameClean){
         $foundIndex = $idx; break;
     }
+    if(isset($b['id']) && $b['id'] === $botHash){
+        $foundIndex = $idx; break;
+    }
 }
 
 if($foundIndex >= 0){
-    // FIX: Purana ID hi rakho, naya mat banao
+    // Purana bot - ID same rakho
     $responseId = $bots[$foundIndex]['id'] ?? $bots[$foundIndex]['random_id'];
     $bots[$foundIndex]['bot_hash'] = $botHash;
     $bots[$foundIndex]['bot_token'] = $botToken;
     $bots[$foundIndex]['webhook_url'] = $webhookUrl;
+    $bots[$foundIndex]['bot_username'] = '@'.$botUsernameClean;
+    $bots[$foundIndex]['bot_username_clean'] = $botUsernameClean;
     $bots[$foundIndex]['last_update'] = date('Y-m-d H:i:s');
     $bots[$foundIndex]['last_activity'] = date('Y-m-d H:i:s');
-    // Stats ko touch mat karo
 }else{
-    // Naya bot - tabhi naya ID banao
+    // Naya bot
     $responseId = substr(md5($botUsernameClean . time() . rand(1000,9999)), 0, 12);
     $newBot = [
         'id' => $responseId,
@@ -61,6 +74,7 @@ if($foundIndex >= 0){
         'webhook_url' => $webhookUrl,
         'created_at' => date('Y-m-d H:i:s'),
         'last_activity' => date('Y-m-d H:i:s'),
+        'last_update' => date('Y-m-d H:i:s'),
         'total_users' => 0,
         'vpn_users' => 0,
         'multiple_accounts' => 0,
@@ -75,7 +89,7 @@ echo json_encode([
     'id' => $responseId,
     'random_id' => $responseId,
     'bot' => '@'.$botUsernameClean,
-    'message' => 'Bot registered successfully',
+    'message' => 'Bot registered successfully - ID stable',
     'verify_url' => "./index.html?id=".$responseId
 ]);
 ?>
