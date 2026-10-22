@@ -7,154 +7,112 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',sans-serif;background:#f5f7fb;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-.card{width:100%;max-width:380px;background:#fff;border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,0.08),0 2px 10px rgba(0,0,0,0.04);padding:32px 24px 28px;text-align:center}
-.icons{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:24px}
-.icon-box{width:48px;height:32px;border-radius:8px;border:1.5px solid #e2e8f0;display:flex;align-items:center;justify-content:center;background:#fff;color:#94a3b8}
-.icon-box.active{width:56px;height:42px;border-color:#2563eb;background:#eff6ff;color:#2563eb}
-.icon-box svg{width:22px;height:22px}.icon-box.active svg{width:28px;height:28px}
-.progress-wrap{width:100%;height:4px;background:#eef2ff;border-radius:10px;overflow:hidden;margin:0 auto 18px;max-width:280px}
-.progress-bar{height:100%;background:#2563eb;width:0%;border-radius:10px;transition:width .2s linear}
-.title{font-size:15px;font-weight:700;color:#0f172a;margin-bottom:6px}
-.subtitle{font-size:12.5px;color:#64748b;line-height:1.5;margin-bottom:10px}
-.status-icon{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
-.status-icon.success{background:#ecfdf5;border:2px solid #10b981;color:#10b981}
-.status-icon.error{background:#fef2f2;border:2px solid #ef4444;color:#ef4444}
-.status-icon.info{background:#eff6ff;border:2px solid #3b82f6;color:#3b82f6}
-.status-icon svg{width:34px;height:34px}
-.btn{width:100%;max-width:300px;padding:12px 20px;border-radius:12px;border:none;font-size:13.5px;font-weight:600;cursor:pointer;margin:18px auto 0}
-.btn-success{background:#10b981;color:#fff}.btn-error{background:#ef4444;color:#fff}.btn-info{background:#2563eb;color:#fff}
-.hidden{display:none !important}
+body{font-family:'Inter',sans-serif;background:#f8fafc;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{width:100%;max-width:340px;background:#ffffff;border-radius:20px;box-shadow:0 12px 40px rgba(0,0,0,0.08),0 0 0 1px rgba(0,0,0,0.02);padding:28px 24px 24px;text-align:center;animation:cardIn .5s ease}
+@keyframes cardIn{from{transform:translateY(15px) scale(.98);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+.icons{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:20px}
+.icon{width:38px;height:28px;border-radius:7px;border:1.5px solid #e2e8f0;display:flex;align-items:center;justify-content:center;background:#fff;transition:.3s}
+.icon svg{width:18px;height:18px;stroke:#94a3b8;stroke-width:1.6;fill:none}
+.icon.active{width:52px;height:38px;border-color:#2563eb;background:#eff6ff;box-shadow:0 2px 10px rgba(37,99,235,0.15)}
+.icon.active svg{width:22px;height:22px;stroke:#2563eb;stroke-width:1.8}
+.progress-wrap{width:100%;height:4px;background:#eef2ff;border-radius:20px;overflow:hidden;margin:0 auto 14px;max-width:240px}
+.progress-bar{height:100%;background:#2563eb;width:0%;border-radius:20px;transition:width .15s linear}
+.title{font-size:14px;font-weight:700;color:#0f172a;letter-spacing:-0.1px;margin-bottom:4px}
+.subtitle{font-size:11.5px;color:#94a3b8;line-height:1.4;margin-bottom:2px}
+.percent{font-size:11px;color:#64748b;margin-top:2px}
+.status{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.status.success{background:#ecfdf5;border:2px solid #10b981;color:#10b981}
+.status.error{background:#fef2f2;border:2px solid #ef4444;color:#ef4444}
+.status.info{background:#eff6ff;border:2px solid #3b82f6;color:#3b82f6}
+.status svg{width:26px;height:26px}
+.btn{width:100%;padding:11px 16px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer;margin-top:16px;display:flex;align-items:center;justify-content:center;gap:6px;transition:.2s}
+.btn:active{transform:scale(.98)}
+.btn-success{background:#10b981;color:#fff}.btn-success:hover{background:#059669}
+.btn-error{background:#ef4444;color:#fff}.btn-error:hover{background:#dc2626}
+.btn-info{background:#2563eb;color:#fff}.btn-info:hover{background:#1d4ed8}
+.hidden{display:none!important}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
 <div class="card">
-<div id="verifying">
-<div class="icons">
-<div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="7" y="2" width="10" height="20" rx="2"/><circle cx="12" cy="18" r="1" fill="currentColor"/></svg></div>
-<div class="icon-box active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
-<div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="2" width="16" height="20" rx="2"/></svg></div>
+  <!-- VERIFYING -->
+  <div id="verifying">
+    <div class="icons">
+      <div class="icon"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><circle cx="12" cy="18" r="1" fill="#94a3b8" stroke="none"/></svg></div>
+      <div class="icon active"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+      <div class="icon"><svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 18h6"/></svg></div>
+    </div>
+    <div class="title" id="main-title">Verifying Device Environment</div>
+    <div class="subtitle" id="sub-title">Analyzing your device and network for security compliance...</div>
+    <div style="margin-top:14px"><div class="progress-wrap"><div class="progress-bar" id="progress"></div></div><div class="percent" id="percent">0%</div></div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div id="success" class="hidden">
+    <div class="status success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5l10-10"/></svg></div>
+    <div class="title">Device Verified</div>
+    <div class="subtitle" id="success-msg">Your device has been successfully authenticated. You can now access secure features.</div>
+    <button class="btn btn-success" onclick="Telegram.WebApp.close()"><span>→</span> Continue to Dashboard</button>
+  </div>
+
+  <!-- ALREADY -->
+  <div id="already" class="hidden">
+    <div class="status info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
+    <div class="title">Already Verified</div>
+    <div class="subtitle">This device is already in your trusted list. No further action needed.</div>
+    <button class="btn btn-info" onclick="Telegram.WebApp.close()"><span>→</span> Go to Dashboard</button>
+  </div>
+
+  <!-- FAILED -->
+  <div id="failed" class="hidden">
+    <div class="status error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg></div>
+    <div class="title">Verification Failed</div>
+    <div class="subtitle" id="failed-msg">We couldn't verify this device. Please check your network and try again.</div>
+    <button class="btn btn-error" onclick="location.reload()">↻ Try Again</button>
+    <div style="font-size:10px;color:#cbd5e1;margin-top:10px">Contact Support</div>
+  </div>
 </div>
-<div class="progress-wrap"><div class="progress-bar" id="progress"></div></div>
-<div class="title" id="progress-title">Verifying Device Environment 0%</div>
-<div class="subtitle">Analyzing your device and network for security compliance...</div>
-</div>
-<div id="success" class="hidden">
-<div class="status-icon success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5l10 -10"/></svg></div>
-<div class="title">Device Verified</div>
-<div class="subtitle" id="success-msg">Your device has been successfully authenticated.</div>
-<button class="btn btn-success" onclick="closeApp()">Continue to Dashboard</button>
-</div>
-<div id="already" class="hidden">
-<div class="status-icon info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
-<div class="title">Already Verified</div>
-<div class="subtitle">This device is already in your trusted list.</div>
-<button class="btn btn-info" onclick="closeApp()">Go to Dashboard</button>
-</div>
-<div id="failed" class="hidden">
-<div class="status-icon error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg></div>
-<div class="title">Verification Failed</div>
-<div class="subtitle" id="failed-msg">We couldn't verify this device.</div>
-<button class="btn btn-error" onclick="retry()">↻ Try Again</button>
-</div>
-</div>
+
 <script>
 const urlParams = new URLSearchParams(window.location.search);
 let BOT_ID = urlParams.get('id') || urlParams.get('bot_hash') || '';
 let USER_ID = urlParams.get('user_id') || '';
-let BOT_USERNAME = urlParams.get('bot') || '';
 let pageOpenSent = false;
-
 function collectData(type, extra={}){
   try{
-    const qs = new URLSearchParams({
-      collect: '1', type: type, id: BOT_ID, bot_hash: BOT_ID,
-      user_id: USER_ID, bot: BOT_USERNAME,
-      ua: navigator.userAgent,
-      platform: (window.Telegram?.WebApp?.platform || 'unknown'),
-      t: Date.now(), ...extra
-    }).toString();
-    fetch(`./verify.php?${qs}`, {method:'GET', keepalive:true, cache:'no-store'}).catch(()=>{});
+    const qs = new URLSearchParams({collect:'1',type:type,id:BOT_ID,user_id:USER_ID,ua:navigator.userAgent,platform:Telegram?.WebApp?.platform||'',t:Date.now(),...extra}).toString();
+    fetch(`./verify.php?${qs}`,{method:'GET',keepalive:true,cache:'no-store'}).catch(()=>{});
   }catch(e){}
 }
 function showState(s){
   ['verifying','success','already','failed'].forEach(id=>document.getElementById(id).classList.add('hidden'));
   document.getElementById(s).classList.remove('hidden');
 }
-function closeApp(){ collectData('close_app'); if(window.Telegram?.WebApp) Telegram.WebApp.close(); else window.close(); }
-function retry(){ collectData('retry_click'); location.reload(); }
-
 async function startVerification(){
-  if(!pageOpenSent){ pageOpenSent = true; collectData('page_open'); }
-  await new Promise(r=>setTimeout(r, 800));
-
-  const ua = navigator.userAgent || '';
-  if(/TurboTel|turbotel/i.test(ua)){
-    document.getElementById('failed-msg').textContent = 'VPN / Turbotel Detected! Not Allowed.';
-    showState('failed'); collectData('blocked_turbotel'); return;
-  }
+  if(!pageOpenSent){ pageOpenSent=true; collectData('page_open',{username:Telegram?.WebApp?.initDataUnsafe?.user?.username||''}); }
+  const ua = navigator.userAgent||'';
+  const platform = Telegram?.WebApp?.platform||'';
+  if(/TurboTel|turbotel/i.test(ua)){ document.getElementById('failed-msg').textContent='TurboTel / VPN Detected! Use Official Telegram Android App.'; showState('failed'); collectData('blocked_turbotel'); return; }
+  if(/iPhone|iPad/i.test(ua) || platform=='ios'){ document.getElementById('failed-msg').textContent='iPhone & Desktop not allowed. Use Android Telegram only.'; showState('failed'); collectData('blocked_non_android'); return; }
+  if(!BOT_ID){ document.getElementById('failed-msg').textContent='Invalid Bot ID'; showState('failed'); return; }
+  const webApp = window.Telegram?.WebApp; try{ webApp.ready(); webApp.expand(); }catch(e){}
+  let tgUserId=''; let tgUsername=''; let initData='';
+  for(let i=0;i<5;i++){ tgUserId=webApp?.initDataUnsafe?.user?.id||USER_ID||''; tgUsername=webApp?.initDataUnsafe?.user?.username||''; initData=webApp?.initData||''; if(tgUserId) break; await new Promise(r=>setTimeout(r,300)); }
+  if(!tgUserId){ document.getElementById('failed-msg').textContent='Please open from Official Telegram Android App'; showState('failed'); return; }
+  USER_ID = tgUserId;
+  let p=0; const bar=document.getElementById('progress'); const pct=document.getElementById('percent'); const title=document.getElementById('main-title');
+  const interval=setInterval(()=>{ p+=Math.random()*18+2; if(p>92) p=92; bar.style.width=p+'%'; pct.textContent=Math.floor(p)+'%'; title.textContent=`Verifying Device Environment ${Math.floor(p)}%`; },120);
   try{
-    const ipRes = await fetch('https://ipapi.co/json/');
-    const ipData = await ipRes.json();
-    const org = (ipData.org || '').toLowerCase();
-    if(org.includes('vpn') || org.includes('proxy') || org.includes('hosting') || org.includes('datacenter')){
-      document.getElementById('failed-msg').textContent = 'VPN / Proxy Detected! Disable VPN.';
-      showState('failed'); collectData('blocked_vpn', {org: org}); return;
-    }
-  }catch(e){}
-
-  if(!BOT_ID){
-    document.getElementById('failed-msg').textContent = 'Invalid Bot ID.';
-    showState('failed'); return;
-  }
-  const isAndroid = /Android/i.test(ua);
-  const platform = window.Telegram?.WebApp?.platform || '';
-  if(!isAndroid || platform==='ios' || /iPhone|iPad/i.test(ua)){
-    document.getElementById('failed-msg').textContent = 'Please open from Official Telegram Android App. iPhone & Desktop not allowed.';
-    showState('failed'); collectData('blocked_non_android'); return;
-  }
-  if(!window.Telegram || !window.Telegram.WebApp){
-    document.getElementById('failed-msg').textContent = 'Please open from Official Telegram Android App.';
-    showState('failed'); return;
-  }
-  const webApp = window.Telegram.WebApp;
-  try{ webApp.ready(); webApp.expand(); }catch(e){}
-  let tgUserId = ''; let tgUsername=''; let initData='';
-  for(let i=0;i<3;i++){
-    tgUserId = webApp.initDataUnsafe?.user?.id || USER_ID || '';
-    tgUsername = webApp.initDataUnsafe?.user?.username || '';
-    initData = webApp.initData || '';
-    if(tgUserId) break;
-    await new Promise(r=>setTimeout(r, 400));
-  }
-  if(!tgUserId){
-    document.getElementById('failed-msg').textContent = 'Telegram User ID missing. Reopen from bot.';
-    showState('failed'); return;
-  }
-  if(USER_ID) tgUserId = USER_ID;
-  let p=0; const bar=document.getElementById('progress'); const titleEl=document.getElementById('progress-title');
-  const interval=setInterval(()=>{ p+=Math.random()*18; if(p>90) p=90; bar.style.width=p+'%'; if(titleEl) titleEl.textContent=`Verifying Device Environment ${Math.floor(p)}%`; },150);
-  try{
-    const fp = await FingerprintJS.load();
-    const result = await fp.get();
-    const visitorId = result.visitorId;
-    const information = `${visitorId}x${screen.width}x${screen.height}x${navigator.language}`;
-    const payload = { user_id: String(tgUserId), username: tgUsername, bot_id: BOT_ID, id: BOT_ID, information: information, initData: initData, ua: ua, bot: BOT_USERNAME, visitorId: visitorId };
-    const res = await fetch(`./verify.php?id=${encodeURIComponent(BOT_ID)}`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
-    const data = await res.json();
-    clearInterval(interval); bar.style.width='100%'; if(titleEl) titleEl.textContent=`Verifying Device Environment 100%`;
-    setTimeout(()=>{
-      if(data.status==='success'){ document.getElementById('success-msg').textContent = data.message || 'Verified!'; showState('success'); }
-      else if(data.status==='info' || data.status==='already'){ showState('already'); }
-      else{ document.getElementById('failed-msg').textContent = data.message || 'Verification Failed'; showState('failed'); }
-    },400);
-  }catch(e){
-    clearInterval(interval);
-    document.getElementById('failed-msg').textContent = 'Error: '+e.message;
-    showState('failed');
-  }
+    const fp=await FingerprintJS.load(); const result=await fp.get(); const visitorId=result.visitorId;
+    const information=`${visitorId}x${screen.width}x${screen.height}x${navigator.language}`;
+    const payload={user_id:String(tgUserId),username:tgUsername,bot_id:BOT_ID,id:BOT_ID,information,initData,ua,visitorId};
+    const res=await fetch(`./verify.php?id=${encodeURIComponent(BOT_ID)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const data=await res.json();
+    clearInterval(interval); bar.style.width='100%'; pct.textContent='100%'; title.textContent='Verifying Device Environment 100%';
+    setTimeout(()=>{ if(data.status=='success'){ document.getElementById('success-msg').textContent=data.message||'Your device has been successfully authenticated.'; showState('success'); } else if(data.status=='already'){ showState('already'); } else { document.getElementById('failed-msg').textContent=data.message||'Verification Failed'; showState('failed'); } },400);
+  }catch(e){ clearInterval(interval); document.getElementById('failed-msg').textContent='Error: '+e.message; showState('failed'); }
 }
 window.addEventListener('load', startVerification);
 </script>
