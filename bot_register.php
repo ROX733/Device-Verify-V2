@@ -28,16 +28,14 @@ $bots = json_decode(file_get_contents($botsFile), true) ?: [];
 
 $botHash = $_GET['botHash'] ?? $_POST['botHash'] ?? $_GET['id'] ?? '';
 $botUsername = $_GET['bot'] ?? $_POST['bot'] ?? '';
-$botToken = $_GET['bot_token'] ?? $_POST['bot_token'] ?? '';
-$webhookUrl = $_GET['webhook_url'] ?? $_POST['webhook_url'] ?? '';
+$botToken = $_GET['bot_token'] ?? $_POST['bot_token'] ?? $_GET['token'] ?? '';
+$webhookUrl = $_GET['webhook_url'] ?? $_POST['webhook_url'] ?? $_GET['webhook'] ?? '';
 
 $botUsernameClean = ltrim($botUsername, '@');
 
-if(!$botHash) { echo json_encode(['status'=>'error','message'=>'botHash / id missing']); exit; }
-if(!$botUsernameClean) { echo json_encode(['status'=>'error','message'=>'bot username missing']); exit; }
-if(!$botToken) { echo json_encode(['status'=>'error','message'=>'bot_token missing']); exit; }
+if(!$botHash) { echo json_encode(['ok'=>False, 'msg'=>'botHash missing']); exit; }
+if(!$botToken) { echo json_encode(['ok'=>False, 'msg'=>'bot_token missing']); exit; }
 
-// Validate token with cURL (Render safe)
 $checkJson = curl_get("https://api.telegram.org/bot{$botToken}/getMe");
 $checkData = json_decode($checkJson, true);
 $finalUsername = $botUsernameClean;
@@ -45,7 +43,7 @@ if($checkData && ($checkData['ok']??false)){
     $finalUsername = $checkData['result']['username'] ?? $botUsernameClean;
 }
 
-// Same bot = Same ID - Naya ID nahi banega
+// Same bot = Same ID
 $foundIndex = -1;
 foreach($bots as $idx => $b){
     $clean = $b['bot_username_clean'] ?? ltrim($b['bot_username']??'', '@');
@@ -60,7 +58,6 @@ if($foundIndex >= 0){
     $bots[$foundIndex]['bot_username'] = '@'.$finalUsername;
     $bots[$foundIndex]['bot_username_clean'] = $finalUsername;
     $bots[$foundIndex]['last_activity'] = date('Y-m-d H:i:s');
-    $bots[$foundIndex]['last_update'] = date('Y-m-d H:i:s');
 }else{
     $responseId = substr(md5($finalUsername.time().rand(1000,9999)), 0, 12);
     $bots[] = [
@@ -73,18 +70,16 @@ if($foundIndex >= 0){
         'webhook_url' => $webhookUrl,
         'created_at' => date('Y-m-d H:i:s'),
         'last_activity' => date('Y-m-d H:i:s'),
-        'last_update' => date('Y-m-d H:i:s'),
     ];
 }
 
 file_put_contents($botsFile, json_encode($bots, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES), LOCK_EX);
 
+// === TERA WALA FINAL RESPONSE ===
 echo json_encode([
-    'status'=>'success',
-    'id'=>$responseId,
-    'random_id'=>$responseId,
-    'bot'=>'@'.$finalUsername,
-    'message'=>'Bot registered - ID stable',
-    'verify_url'=>"./index.html?id=".$responseId
+    'ok' => True,
+    'msg' => 'Bot token and webhook URL saved successfully',
+    'id' => $responseId,
+    'bot' => '@'.$finalUsername
 ]);
 ?>
