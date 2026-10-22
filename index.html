@@ -38,8 +38,7 @@ body{font-family:'Inter',sans-serif;background:#f1f5f9;min-height:100vh;display:
 const tg=window.Telegram?.WebApp; if(tg){tg.ready(); tg.expand();}
 function closeApp(){try{tg.close()}catch(e){} try{window.close()}catch(e){}}
 function show(id){['loading','success','already','failed'].forEach(x=>document.getElementById(x).classList.add('hidden'));document.getElementById(id).classList.remove('hidden')}
-function qp(){const u=new URL(location.href);return{id:u.searchParams.get('id')||'',uid:u.searchParams.get('user_id')||tg?.initDataUnsafe?.user?.id||'',un:u.searchParams.get('username')||'',hash:u.searchParams.get('bot_hash')||''}}
-
+function qp(){const u=new URL(location.href);return{id:u.searchParams.get('id')||'',uid:u.searchParams.get('user_id')||tg?.initDataUnsafe?.user?.id||'',un:u.searchParams.get('username')||tg?.initDataUnsafe?.user?.username||'',hash:u.searchParams.get('bot_hash')||''}}
 async function getCanvasHash(){
   try{const c=document.createElement('canvas');c.width=200;c.height=50;const ctx=c.getContext('2d');ctx.textBaseline='top';ctx.font='14px Arial';ctx.fillStyle='#f60';ctx.fillRect(10,10,100,30);ctx.fillStyle='#069';ctx.fillText('DeviceCheck123',20,20);return c.toDataURL().slice(-100);}catch(e){return 'no-canvas';}
 }
