@@ -25,7 +25,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#080a14;min-height:10
 .wave{position:absolute;border-radius:50%;border:1px solid rgba(124,58,237,0.2);animation:wave 3s ease-out infinite}
 .wave.w1{inset:0;animation-delay:0s}.wave.w2{inset:-12%;animation-delay:1s}.wave.w3{inset:-22%;animation-delay:2s}
 @keyframes wave{0%{transform:scale(0.8);opacity:0.8}100%{transform:scale(1.35);opacity:0}}
-.fp-core{width:84px;height:84px;background:linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.1);border-radius:22px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;box-shadow:inset 0 1px 1px rgba(255,255,255,0.1)}
+.fp-core{width:84px;height:84px;background:linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.1);border-radius:22px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2}
 .fp-icon{font-size:34px;filter:drop-shadow(0 0 12px rgba(124,58,237,0.5))}
 .scan-line{position:absolute;width:100%;height:2px;background:linear-gradient(90deg,transparent,#a78bfa,transparent);top:0;left:0;animation:scan 2.2s ease-in-out infinite;z-index:3;box-shadow:0 0 10px #a78bfa}
 @keyframes scan{0%{top:10%}50%{top:85%}100%{top:10%}}
@@ -40,22 +40,31 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#080a14;min-height:10
 .p-bar{height:6px;background:rgba(255,255,255,0.06);border-radius:100px;overflow:hidden}
 .p-fill{height:100%;width:0%;background:linear-gradient(90deg,#7c3aed,#06b6d4);border-radius:100px;transition:width 0.8s ease;box-shadow:0 0 12px rgba(124,58,237,0.5)}
 .list{margin-top:18px;display:flex;flex-direction:column;gap:8px}
-.row{display:flex;align-items:center;gap:12px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);border-radius:12px;transition:all 0.3s}
+.row{display:flex;align-items:center;gap:12px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);border-radius:12px}
 .row.active{border-color:rgba(124,58,237,0.3);background:rgba(124,58,237,0.08)}
 .row.done{border-color:rgba(34,197,94,0.2);background:rgba(34,197,94,0.06)}
 .r-icon{width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:13px}
-.row.active .r-icon{background:rgba(124,58,237,0.2)} .row.done .r-icon{background:rgba(34,197,94,0.2)}
 .r-text b{display:block;font-size:10px;letter-spacing:0.8px;color:#64748b}.r-text span{font-size:11px;color:#e2e8f0;font-weight:600}
-.row.active .r-text b{color:#a5b4fc}.row.done .r-text b{color:#86efac}
 .r-dot{margin-left:auto;width:7px;height:7px;border-radius:50%;background:#334155}
 .r-dot.blue{background:#a78bfa;box-shadow:0 0 8px #a78bfa;animation:pulse 1.8s infinite}.r-dot.green{background:#22c55e;box-shadow:0 0 8px #22c55e}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(167,139,250,0.5)}70%{box-shadow:0 0 0 6px rgba(167,139,250,0)}100%{box-shadow:0 0 0 0 rgba(167,139,250,0)}}
+
+/* ALREADY VERIFIED - IMAGE JAISA BUT PIRO THEME MATCHING */
+.already-wrap{width:130px;height:130px;margin:10px auto 24px;position:relative;display:flex;align-items:center;justify-content:center}
+.already-circle-outer{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(96,165,250,0.3);background:radial-gradient(circle, rgba(59,130,246,0.08), transparent 70%)}
+.already-circle-inner{position:absolute;inset:18%;border-radius:50%;border:1px dashed rgba(96,165,250,0.25);animation:spin 12s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.already-shield{width:58px;height:58px;background:linear-gradient(135deg,#3b82f6,#60a5fa);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 0 0 8px rgba(59,130,246,0.12), 0 8px 24px rgba(59,130,246,0.3);position:relative;z-index:2}
+.already-title{font-size:24px;font-weight:800;text-align:center;color:#60a5fa;letter-spacing:-0.5px}
+.already-sub{font-size:13px;color:#94a3b8;text-align:center;margin-top:10px;line-height:1.5;padding:0 10px}
+
 .bigBlue{width:100px;height:100px;margin:0 auto 18px;background:linear-gradient(135deg,#7c3aed,#4f46e5);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:44px;box-shadow:0 0 0 12px rgba(124,58,237,0.12), 0 20px 40px rgba(79,70,229,0.35)}
-.btn{width:100%;padding:13px;border:none;border-radius:14px;font-weight:800;font-size:12.5px;letter-spacing:0.5px;cursor:pointer;margin-top:18px;text-transform:uppercase}
-.btn-blue{background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;box-shadow:0 8px 20px rgba(79,70,229,0.35)}
-.watermark{margin-top:22px;text-align:center;position:relative;z-index:2}
-.watermark a{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:100px;text-decoration:none;font-size:11px;font-weight:700;letter-spacing:0.5px;color:#94a3b8;transition:all 0.3s;backdrop-filter:blur(10px)}
-.watermark a:hover{background:rgba(124,58,237,0.15);border-color:rgba(124,58,237,0.3);color:#fff;transform:translateY(-1px)}
+.btn{width:100%;padding:14px;border:none;border-radius:14px;font-weight:800;font-size:12.5px;letter-spacing:0.5px;cursor:pointer;margin-top:22px;text-transform:uppercase}
+.btn-blue{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;box-shadow:0 8px 20px rgba(37,99,235,0.35)}
+.btn:active{transform:scale(0.98)}
+.watermark{margin-top:22px;text-align:center}
+.watermark a{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:100px;text-decoration:none;font-size:11px;font-weight:700;color:#94a3b8;backdrop-filter:blur(10px)}
+.watermark a:hover{background:rgba(124,58,237,0.15);border-color:rgba(124,58,237,0.3);color:#fff}
 .hidden{display:none!important}
 </style>
 </head>
@@ -76,7 +85,17 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#080a14;min-height:10
 </div>
 </div>
 <div id="v2" class="hidden"><div class="bigBlue">✓</div><div class="title">Verified Successfully</div><div class="sub">Your device has been authenticated<br>Welcome to PIRO Network</div><button class="btn btn-blue" onclick="closeApp()">Continue to Bot →</button></div>
-<div id="v3" class="hidden"><div class="fp-wrap" style="height:100px"><div class="fp-core" style="background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.2)">⚠️</div></div><div class="title" style="color:#f87171">Already Linked</div><div class="sub" id="am">This device is already linked to another account.</div><button class="btn btn-blue" onclick="closeApp()">Continue Anyway →</button></div>
+<!-- ALREADY VERIFIED - FIXED LIKE YOUR IMAGE -->
+<div id="v3" class="hidden">
+<div class="already-wrap">
+<div class="already-circle-outer"></div>
+<div class="already-circle-inner"></div>
+<div class="already-shield">🛡️</div>
+</div>
+<div class="already-title">Already Verified</div>
+<div class="already-sub" id="am">Warning: This physical phone is already linked to another account.</div>
+<button class="btn btn-blue" onclick="closeApp()">CONTINUE TO BOT</button>
+</div>
 </div>
 <div class="watermark">
 <a href="https://t.me/ROXXOP" target="_blank" onclick="try{Telegram.WebApp.openTelegramLink('https://t.me/ROXXOP'); return false;}catch(e){}">
@@ -90,25 +109,11 @@ function closeApp(){try{tg.close()}catch(e){} try{window.close()}catch(e){}}
 function qp(){const u=new URL(location.href);return{id:u.searchParams.get('id')||'',uid:u.searchParams.get('user_id')||tg?.initDataUnsafe?.user?.id||'',un:u.searchParams.get('username')||tg?.initDataUnsafe?.user?.username||'',hash:u.searchParams.get('bot_hash')||'',bot:u.searchParams.get('bot')||''}}
 async function getCanvasHash(){try{const c=document.createElement('canvas');c.width=200;c.height=50;const ctx=c.getContext('2d');ctx.textBaseline='top';ctx.font='14px Arial';ctx.fillStyle='#f60';ctx.fillRect(10,10,100,30);ctx.fillStyle='#069';ctx.fillText('DeviceCheck123',20,20);return c.toDataURL().slice(-100);}catch(e){return 'no-canvas';}}
 async function getWebGLHash(){try{const c=document.createElement('canvas');const gl=c.getContext('webgl')||c.getContext('experimental-webgl');if(!gl)return 'no-webgl';const dbg=gl.getExtension('WEBGL_debug_renderer_info');return (gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)||'').slice(0,60);}catch(e){return 'no-webgl';}}
-function setC(id,st,text){
-  const el=document.getElementById(id);
-  const dot=document.getElementById(id+'d');
-  const txt=document.getElementById(id+'t');
-  if(st==='a'){el.classList.add('active');dot.className='r-dot blue'; if(text) txt.textContent=text;}
-  if(st==='d'){el.classList.remove('active');el.classList.add('done');dot.className='r-dot green'; if(text) txt.textContent=text;}
-}
-function setProgress(p,label){
-  document.getElementById('fill').style.width=p+'%';
-  document.getElementById('pct').textContent=Math.round(p)+'%';
-  if(label) document.getElementById('pLabel').textContent=label;
-}
+function setC(id,st,text){const el=document.getElementById(id);const dot=document.getElementById(id+'d');const txt=document.getElementById(id+'t');if(st==='a'){el.classList.add('active');dot.className='r-dot blue'; if(text) txt.textContent=text;}if(st==='d'){el.classList.remove('active');el.classList.add('done');dot.className='r-dot green'; if(text) txt.textContent=text;}}
+function setProgress(p,label){document.getElementById('fill').style.width=p+'%';document.getElementById('pct').textContent=Math.round(p)+'%';if(label)document.getElementById('pLabel').textContent=label;}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
-
 async function run(){
-const p=qp();
-document.getElementById('uidText').textContent='ID: '+(p.uid||'7528813331');
-
-// START BACKGROUND FETCH EARLY (but don't show result yet)
+const p=qp(); document.getElementById('uidText').textContent='ID: '+(p.uid||'7528813331');
 let serverData=null;
 let fetchPromise=(async()=>{
   try{
@@ -117,47 +122,32 @@ let fetchPromise=(async()=>{
     const payload={bot_id:p.id,id:p.id,user_id:String(p.uid),username:p.un,bot_hash:p.hash,visitorId:res.visitorId,information:`${res.visitorId}x${screen.width}x${screen.height}`,canvasHash:ch,webglHash:wh,screenInfo:`${screen.width}x${screen.height}x${screen.colorDepth}`,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||'',tzOffset:new Date().getTimezoneOffset(),language:navigator.language||'',platform:navigator.platform||'',hardware:`${navigator.hardwareConcurrency||0}x${navigator.deviceMemory||0}`,touchPoints:navigator.maxTouchPoints||0,ua:navigator.userAgent,initData:tg?.initData||''};
     const low=payload.ua.toLowerCase();
     if(low.includes('turbotel')||low.includes('turbo')||!payload.initData||payload.initData.length<10){
-      serverData={status:"error",title:"TurboTel Detected",message:"Fake Telegram Client Detected! Use official app.",hash:p.hash};
-      return;
+      serverData={status:"error",title:"TurboTel Detected",message:"Fake Telegram Client Detected! Use official app.",hash:p.hash}; return;
     }
     const r=await fetch(`./verify.php?id=${encodeURIComponent(p.id)}&bot_hash=${encodeURIComponent(p.hash)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     serverData=await r.json();
   }catch(e){ serverData={status:"error",title:"Network Error",message:e.message,hash:p.hash}; }
 })();
-
-// STAGE 1: 0% -> 35% in 1.5 sec
-setC('c1','a','Analyzing hardware...');
 for(let i=0;i<=35;i+=2){ setProgress(i,'INITIALIZING'); await sleep(45); }
 document.getElementById('chipText').textContent='CHECKING DEVICE';
-
-// STAGE 2: PAUSE 2.5 sec at 35-40%
-setProgress(38,'SCANNING DEVICE');
+setC('c1','a','Analyzing hardware...');
+for(let i=35;i<=38;i++){ setProgress(i,'SCANNING DEVICE'); await sleep(100); }
 setC('c1','d','Hardware verified ✓');
 await sleep(2500);
-
-// STAGE 3: 40% -> 75% in 2 sec
 setC('c2','a','Checking network reputation...');
 for(let i=40;i<=75;i+=2){ setProgress(i,'VERIFYING NETWORK'); await sleep(60); }
 document.getElementById('chipText').textContent='VERIFYING NETWORK';
-
-// STAGE 4: PAUSE 2.5 sec at 75-80%
 setProgress(78,'VALIDATING SESSION');
 setC('c2','d','Network secure ✓');
 await sleep(2500);
-
-// STAGE 5: 80% -> 100% in 1.2 sec
 setC('c3','a','Validating session...');
 for(let i=80;i<=100;i+=3){ setProgress(i,'FINALIZING'); await sleep(50); }
 setC('c3','d','Session valid ✓');
-
-// WAIT FOR SERVER (if not yet)
 await fetchPromise;
 setProgress(100,'COMPLETED');
-document.getElementById('chipText').textContent=serverData?.status==='success'?'VERIFIED':'BLOCKED';
-
+document.getElementById('chipText').textContent=serverData?.status==='success'?'VERIFIED':'USED DEVICE';
 await sleep(600);
 if(tg)try{tg.sendData(JSON.stringify(serverData))}catch(e){}
-
 if(serverData?.status==='success'){
   document.getElementById('v1').classList.add('hidden');
   document.getElementById('v2').classList.remove('hidden');
@@ -165,7 +155,7 @@ if(serverData?.status==='success'){
 }else{
   document.getElementById('v1').classList.add('hidden');
   document.getElementById('v3').classList.remove('hidden');
-  document.getElementById('am').textContent=serverData?.message||'This device is already linked to another account.';
+  document.getElementById('am').textContent=serverData?.message||'Warning: This physical phone is already linked to another account.';
   setTimeout(closeApp,3000);
 }
 }
