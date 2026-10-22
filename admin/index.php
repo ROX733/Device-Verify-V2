@@ -1,5 +1,5 @@
 <?php
-// FINAL Admin - Page Open + Verified Sab Dikhega
+// FINAL Admin - Username + Page Open + Verified + VPN Sab Dikhega
 session_start();
 $ADMIN_USER = 'admin';
 $ADMIN_PASS = 'AdminHuBro';
@@ -24,47 +24,70 @@ $users = file_exists($usersFile)? (json_decode(file_get_contents($usersFile),tru
 $search = $_GET['search'] ?? '';
 if($search){ $bots = array_filter($bots, fn($b)=>stripos($b['bot_username']??'', $search)!==false); }
 
+// === FIXED COUNTING LOGIC ===
 $totalUniqueBots = count($bots);
-$totalPageOpen = count(array_filter($users, fn($u)=>($u['type']??'')=='page_open' || ($u['is_page_open']??0)==1));
-$totalVerified = count(array_filter($users, fn($u)=>($u['is_page_open']??0)!=1 && ($u['type']??'')!='page_open' && ($u['type']??'')!='bot_not_found'));
-$totalVpn = count(array_filter($users, fn($u)=>($u['is_vpn']??0)==1));
-$mostActive=null;$max=0;foreach($bots as $b){$c=$b['total_users']??0;if($c>$max){$max=$c;$mostActive=$b;}}
+$totalPageOpen = 0; $totalVerified = 0; $totalVpn = 0;
+foreach($users as $u){
+    $type = $u['type'] ?? '';
+    $status = $u['status'] ?? '';
+    if($type=='page_open' || ($u['is_page_open']??0)==1) $totalPageOpen++;
+    if($status=='verified' || $type=='verified') $totalVerified++;
+    if(str_contains($type, 'blocked') || ($u['is_vpn']??0)==1) $totalVpn++;
+}
 
 if(isset($_GET['delete'])){ $del=$_GET['delete']; $botsAll=json_decode(file_get_contents($dataFile),true)?:[]; $botsAll=array_filter($botsAll, fn($b)=>($b['id']??'')!=$del && ($b['random_id']??'')!=$del); file_put_contents($dataFile, json_encode(array_values($botsAll), JSON_PRETTY_PRINT)); header("Location: ./"); exit; }
 if(isset($_GET['clear_users'])){ file_put_contents($usersFile, json_encode([])); header("Location: ./"); exit; }
 ?>
 <!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Admin Panel</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;background:#f8f9fe;color:#1e293b}.header{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.06);position:sticky;top:0;z-index:10}.btn-logout{background:#ec4899;color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer}.container{padding:20px;max-width:1200px;margin:0 auto}.card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);padding:16px;margin-bottom:16px}.stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:20px}.stat-card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.05)}.stat-title{font-size:12px;font-weight:600;color:#2563eb;margin-bottom:6px}.stat-value{font-size:22px;font-weight:800}.stat-sub{font-size:11px;color:#94a3b8}table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;padding:10px;font-size:11px;color:#64748b;text-transform:uppercase;border-bottom:1px solid #f1f5f9}td{padding:10px;border-bottom:1px solid #f8fafc;white-space:nowrap}.badge{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}.badge-open{background:#dbeafe;color:#2563eb}.badge-verified{background:#dcfce7;color:#16a34a}.badge-fail{background:#fee2e2;color:#dc2626}.btn-view{background:#3b82f6;color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer}.btn-delete{background:#ec4899;color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer}</style>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;background:#f8f9fe;color:#1e293b}.header{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.06);position:sticky;top:0;z-index:10}.btn-logout{background:#ec4899;color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer}.container{padding:20px;max-width:1200px;margin:0 auto}.card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);padding:16px;margin-bottom:16px;overflow:auto}.stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:20px}.stat-card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.05)}.stat-title{font-size:12px;font-weight:600;color:#2563eb;margin-bottom:6px}.stat-value{font-size:22px;font-weight:800}.stat-sub{font-size:11px;color:#94a3b8}table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;padding:10px;font-size:11px;color:#64748b;text-transform:uppercase;border-bottom:1px solid #f1f5f9}td{padding:10px;border-bottom:1px solid #f8fafc;white-space:nowrap}td.wrap{white-space:normal;word-break:break-all}.badge{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}.badge-open{background:#dbeafe;color:#2563eb}.badge-verified{background:#dcfce7;color:#16a34a}.badge-fail{background:#fee2e2;color:#dc2626}.btn-view{background:#3b82f6;color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer}.btn-delete{background:#ec4899;color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer}</style>
 </head><body>
 <div class="header"><div>🛡️ Admin Panel</div><div><button class="btn-logout" onclick="location.href='?logout=1'">Logout</button></div></div>
 <div class="container">
 <div class="stats-grid">
 <div class="stat-card"><div class="stat-title">Total Bots</div><div class="stat-value"><?=$totalUniqueBots?></div><div class="stat-sub">Registered</div></div>
-<div class="stat-card"><div class="stat-title">Page Opens</div><div class="stat-value"><?=$totalPageOpen?></div><div class="stat-sub">Webpage khula - Tera demand</div></div>
+<div class="stat-card"><div class="stat-title">Page Opens</div><div class="stat-value"><?=$totalPageOpen?></div><div class="stat-sub">Webpage khula</div></div>
 <div class="stat-card"><div class="stat-title">Verified Users</div><div class="stat-value"><?=$totalVerified?></div><div class="stat-sub">Final verified</div></div>
-<div class="stat-card"><div class="stat-title">VPN Users</div><div class="stat-value"><?=$totalVpn?></div><div class="stat-sub">Across all bots</div></div>
+<div class="stat-card"><div class="stat-title">VPN / Blocked</div><div class="stat-value"><?=$totalVpn?></div><div class="stat-sub">Turbotel + VPN</div></div>
 </div>
 
 <div class="card">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="font-weight:700">Bot Details</div><button onclick="if(confirm('Clear all users?')) location.href='?clear_users=1'" style="background:#fee2e2;color:#dc2626;border:none;padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer">Clear Users</button></div>
-<table><tr><th>Bot</th><th>ID</th><th>Page Opens</th><th>Verified</th><th>Last Activity</th><th>Action</th></tr>
+<table><tr><th>Bot</th><th>ID</th><th>Page Opens</th><th>Verified</th><th>Blocked</th><th>Last Activity</th><th>Action</th></tr>
 <?php foreach($bots as $b): 
 $bid=$b['id']??$b['random_id']??'';
 $botUsers=array_filter($users, fn($u)=>($u['bot_id']??'')==$bid || ($u['bot_id']??'')==($b['random_id']??''));
-$pageOpens=count(array_filter($botUsers, fn($u)=>($u['type']??'')=='page_open' || ($u['is_page_open']??0)==1));
-$verified=count(array_filter($botUsers, fn($u)=>($u['is_page_open']??0)!=1 && ($u['type']??'')!='page_open'));
+$pageOpens=0; $verified=0; $blocked=0;
+foreach($botUsers as $u){
+    $t=$u['type']??'';
+    if($t=='page_open' || ($u['is_page_open']??0)==1) $pageOpens++;
+    if(($u['status']??'')=='verified' || $t=='verified') $verified++;
+    if(str_contains($t,'blocked')) $blocked++;
+}
 ?>
-<tr><td style="color:#2563eb;font-weight:600"><?=htmlspecialchars($b['bot_username']??'')?></td><td style="font-size:11px"><?=htmlspecialchars($bid)?></td><td><span class="badge badge-open"><?=$pageOpens?></span></td><td><span class="badge badge-verified"><?=$verified?></span></td><td style="font-size:11px"><?=htmlspecialchars($b['last_activity']??$b['created_at']??'')?></td><td><button class="btn-view" onclick="location.href='?view=<?=urlencode($bid)?>'">View</button><button class="btn-delete" onclick="if(confirm('Delete?')) location.href='?delete=<?=urlencode($bid)?>'">Delete</button></td></tr>
+<tr><td style="color:#2563eb;font-weight:600"><?=htmlspecialchars($b['bot_username']??'')?></td><td style="font-size:11px"><?=htmlspecialchars(substr($bid,0,12))?></td><td><span class="badge badge-open"><?=$pageOpens?></span></td><td><span class="badge badge-verified"><?=$verified?></span></td><td><span class="badge badge-fail"><?=$blocked?></span></td><td style="font-size:11px"><?=htmlspecialchars($b['last_activity']??$b['created_at']??'')?></td><td><button class="btn-view" onclick="location.href='?view=<?=urlencode($bid)?>'">View</button> <button class="btn-delete" onclick="if(confirm('Delete?')) location.href='?delete=<?=urlencode($bid)?>'">Delete</button></td></tr>
 <?php endforeach; ?></table>
 </div>
 
 <?php if(isset($_GET['view'])): $vid=$_GET['view']; $vusers=array_filter($users, fn($u)=>($u['bot_id']??'')==$vid); ?>
 <div class="card">
 <div style="font-weight:700;margin-bottom:12px">Users for ID: <?=htmlspecialchars($vid)?> (<?=count($vusers)?>)</div>
-<table><tr><th>User ID</th><th>Type</th><th>IP</th><th>UA</th><th>Time</th></tr>
+<table><tr><th>User ID</th><th>Username</th><th>Type</th><th>IP</th><th>Device ID</th><th>Platform</th><th>Time</th></tr>
 <?php foreach(array_reverse($vusers) as $u): ?>
-<tr><td><?=htmlspecialchars($u['user_id']??'')?></td><td><?php $t=$u['type']??($u['is_page_open']??0?'page_open':'verified'); if($t=='page_open') echo '<span class="badge badge-open">PAGE OPEN</span>'; elseif($t=='bot_not_found') echo '<span class="badge badge-fail">BOT NOT FOUND</span>'; else echo '<span class="badge badge-verified">VERIFIED</span>'; ?></td><td style="font-size:11px"><?=htmlspecialchars($u['ip']??'')?></td><td style="font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis"><?=htmlspecialchars(substr($u['user_agent']??$u['ua']??'',0,80))?></td><td style="font-size:11px"><?=htmlspecialchars($u['verified_at']??$u['time']??'')?></td></tr>
+<tr>
+<td><?=htmlspecialchars($u['user_id']??'')?></td>
+<td style="color:#2563eb">@<?=htmlspecialchars($u['username']??'N/A')?></td>
+<td><?php $t=$u['type']??'unknown'; 
+if($t=='page_open') echo '<span class="badge badge-open">PAGE OPEN</span>'; 
+elseif(str_contains($t,'blocked')) echo '<span class="badge badge-fail">'.strtoupper($t).'</span>';
+elseif($t=='verified' || ($u['status']??'')=='verified') echo '<span class="badge badge-verified">VERIFIED</span>';
+else echo '<span class="badge badge-open">'.htmlspecialchars($t).'</span>';
+?></td>
+<td style="font-size:11px"><?=htmlspecialchars($u['ip']??'')?><br><small style="color:#94a3b8"><?=htmlspecialchars($u['org']??'')?></small></td>
+<td style="font-size:10px" class="wrap"><?=htmlspecialchars(substr($u['visitorId']??$u['information']??'',0,20))?></td>
+<td style="font-size:11px"><?=htmlspecialchars($u['platform']??'')?></td>
+<td style="font-size:11px"><?=htmlspecialchars($u['time']??$u['verified_at']??'')?></td>
+</tr>
 <?php endforeach; ?></table>
 </div>
 <?php endif; ?>
