@@ -3,87 +3,118 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Device Verification</title>
+<title>PIRO Verification</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#060a18;min-height:100vh;font-family:'Inter',sans-serif;color:#fff;display:flex;flex-direction:column}
-body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(rgba(59,130,246,0.12) 1px, transparent 1px);background-size:22px 22px;pointer-events:none}
-.header{padding:18px 20px;display:flex;justify-content:space-between;align-items:center;z-index:2}
-.left{display:flex;gap:12px;align-items:center}
-.avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#1e293b,#0f172a);border:2px solid rgba(59,130,246,0.3);display:flex;align-items:center;justify-content:center;font-weight:800;color:#60a5fa}
-.info .n{font-size:13px;font-weight:700}.info .i{font-size:10px;color:#64748b;font-family:monospace;margin-top:2px}
-.badge{display:flex;gap:6px;align-items:center;padding:6px 12px;border-radius:100px;font-size:10px;font-weight:700;letter-spacing:0.8px;border:1px solid rgba(59,130,246,0.3);background:rgba(59,130,246,0.1);color:#60a5fa}
-.dot{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor;animation:blink 1.2s infinite}
-@keyframes blink{50%{opacity:0.3}}
-.card{margin:10px 16px;background:linear-gradient(180deg,rgba(17,24,47,0.9),rgba(8,12,26,0.95));border:1px solid rgba(59,130,246,0.15);border-radius:24px;padding:30px 22px;z-index:2;flex:1}
-.scan{width:210px;height:210px;margin:0 auto 24px;position:relative;display:flex;align-items:center;justify-content:center}
-.grid{position:absolute;inset:0;border-radius:50%;background-image:linear-gradient(rgba(59,130,246,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.08) 1px, transparent 1px);background-size:18px 18px;mask:radial-gradient(circle, black 65%, transparent 100%)}
-.ring{position:absolute;border-radius:50%}
-.r1{inset:0;border:1px solid rgba(59,130,246,0.15);border-top-color:#60a5fa;border-right-color:transparent;animation:spin 2.5s linear infinite}
-.r2{inset:12%;border:1px dashed rgba(59,130,246,0.2)}
-.r3{inset:25%;background:radial-gradient(circle, rgba(59,130,246,0.18), transparent 70%)}
-@keyframes spin{to{transform:rotate(360deg)}}
-.shield{width:62px;height:62px;background:linear-gradient(135deg,#1e3a8a,#2563eb);border:2px solid #3b82f6;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 0 30px rgba(59,130,246,0.5);z-index:2}
-.od{position:absolute;width:9px;height:9px;background:#60a5fa;border-radius:50%;box-shadow:0 0 10px #60a5fa}
-.od1{top:12%;left:22%}.od2{top:14%;right:20%}.od3{bottom:16%;left:18%}.od4{bottom:18%;right:16%}
-.t{font-size:24px;font-weight:800;text-align:center;letter-spacing:-0.5px}
-.s{font-size:13px;color:#94a3b8;text-align:center;margin-top:6px;line-height:1.4}
-.checks{margin-top:26px;display:flex;flex-direction:column;gap:8px}
-.ci{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.06);border-radius:10px}
-.ci b{font-size:10.5px;letter-spacing:1px;color:#64748b}.ci.active b{color:#94a3b8}.ci.done b{color:#e2e8f0}
-.d{width:7px;height:7px;border-radius:50%;background:#334155}.d.blue{background:#60a5fa;box-shadow:0 0 8px #60a5fa;animation:pulse 1.8s infinite}.d.green{background:#22c55e;box-shadow:0 0 8px #22c55e}
-@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(96,165,250,0.5)}70%{box-shadow:0 0 0 6px rgba(96,165,250,0)}100%{box-shadow:0 0 0 0 rgba(96,165,250,0)}}
-.barW{margin-top:22px;background:rgba(0,0,0,0.4);border-radius:100px;padding:4px;border:1px solid rgba(255,255,255,0.05)}
-.bar{height:8px;background:rgba(255,255,255,0.06);border-radius:100px;overflow:hidden}
-.fill{height:100%;width:0%;background:linear-gradient(90deg,#3b82f6,#38bdf8);border-radius:100px;transition:width 0.3s;box-shadow:0 0 10px rgba(59,130,246,0.5)}
-.bigBlue{width:110px;height:110px;margin:0 auto 22px;background:linear-gradient(135deg,#3b82f6,#2563eb);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:52px;box-shadow:0 0 0 14px rgba(59,130,246,0.12), 0 20px 40px rgba(37,99,235,0.35)}
-.btn{width:100%;padding:14px;border:none;border-radius:14px;font-weight:800;font-size:12.5px;letter-spacing:0.5px;cursor:pointer;margin-top:20px;text-transform:uppercase}
-.btn-blue{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;box-shadow:0 8px 20px rgba(37,99,235,0.3)}
-.foot{text-align:center;padding:14px;font-size:11px;color:#475569;z-index:2}.foot span{color:#60a5fa}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#080a14;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;color:#fff;overflow:hidden}
+.bg{position:fixed;inset:0;z-index:0}
+.bg .blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.4}
+.blob.b1{width:400px;height:400px;background:radial-gradient(circle,#7c3aed,#4f46e5);top:-100px;left:-80px;animation:float 8s ease-in-out infinite}
+.blob.b2{width:300px;height:300px;background:radial-gradient(circle,#06b6d4,#3b82f6);bottom:-60px;right:-60px;animation:float 10s ease-in-out infinite reverse}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(20px,-20px) scale(1.1)}}
+.container{position:relative;z-index:2;width:100%;max-width:360px}
+.header{text-align:center;margin-bottom:24px}
+.logo{width:48px;height:48px;margin:0 auto 10px;background:linear-gradient(135deg,#7c3aed,#4f46e5);border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;box-shadow:0 8px 24px rgba(124,58,237,0.35)}
+.header h2{font-size:12px;font-weight:700;letter-spacing:2px;color:#a5b4fc;text-transform:uppercase}
+.header p{font-size:10px;color:#64748b;margin-top:4px;font-family:monospace}
+.card{background:rgba(16,20,38,0.85);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.08);border-radius:28px;padding:30px 22px;box-shadow:0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)}
+.fp-wrap{width:150px;height:150px;margin:0 auto 20px;position:relative;display:flex;align-items:center;justify-content:center}
+.wave{position:absolute;border-radius:50%;border:1px solid rgba(124,58,237,0.2);animation:wave 3s ease-out infinite}
+.wave.w1{inset:0;animation-delay:0s}.wave.w2{inset:-12%;animation-delay:1s}.wave.w3{inset:-22%;animation-delay:2s}
+@keyframes wave{0%{transform:scale(0.8);opacity:0.8}100%{transform:scale(1.35);opacity:0}}
+.fp-core{width:84px;height:84px;background:linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.1);border-radius:22px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;box-shadow:inset 0 1px 1px rgba(255,255,255,0.1)}
+.fp-icon{font-size:34px;filter:drop-shadow(0 0 12px rgba(124,58,237,0.5))}
+.scan-line{position:absolute;width:100%;height:2px;background:linear-gradient(90deg,transparent,#a78bfa,transparent);top:0;left:0;animation:scan 2.2s ease-in-out infinite;z-index:3;box-shadow:0 0 10px #a78bfa}
+@keyframes scan{0%{top:10%}50%{top:85%}100%{top:10%}}
+.title{font-size:21px;font-weight:800;text-align:center;letter-spacing:-0.5px}
+.sub{font-size:12.5px;color:#94a3b8;text-align:center;margin-top:8px;line-height:1.5}
+.meta{display:flex;gap:8px;justify-content:center;margin-top:14px}
+.chip{padding:6px 12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:100px;font-size:10px;font-weight:600;letter-spacing:0.5px;color:#a5b4fc;display:flex;align-items:center;gap:6px}
+.chip-dot{width:5px;height:5px;background:#22c55e;border-radius:50%;box-shadow:0 0 6px #22c55e;animation:blink 1.5s infinite}
+@keyframes blink{50%{opacity:0.4}}
+.progress{margin-top:22px}
+.p-head{display:flex;justify-content:space-between;font-size:10px;font-weight:700;letter-spacing:1px;color:#64748b;margin-bottom:8px}
+.p-bar{height:6px;background:rgba(255,255,255,0.06);border-radius:100px;overflow:hidden}
+.p-fill{height:100%;width:0%;background:linear-gradient(90deg,#7c3aed,#06b6d4);border-radius:100px;transition:width 0.4s;box-shadow:0 0 12px rgba(124,58,237,0.5)}
+.list{margin-top:18px;display:flex;flex-direction:column;gap:8px}
+.row{display:flex;align-items:center;gap:12px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);border-radius:12px;transition:all 0.3s}
+.row.active{border-color:rgba(124,58,237,0.3);background:rgba(124,58,237,0.08)}
+.row.done{border-color:rgba(34,197,94,0.2);background:rgba(34,197,94,0.06)}
+.r-icon{width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:13px}
+.row.active .r-icon{background:rgba(124,58,237,0.2)} .row.done .r-icon{background:rgba(34,197,94,0.2)}
+.r-text b{display:block;font-size:10px;letter-spacing:0.8px;color:#64748b}.r-text span{font-size:11px;color:#e2e8f0;font-weight:600}
+.row.active .r-text b{color:#a5b4fc}.row.done .r-text b{color:#86efac}
+.r-dot{margin-left:auto;width:7px;height:7px;border-radius:50%;background:#334155}
+.r-dot.blue{background:#a78bfa;box-shadow:0 0 8px #a78bfa;animation:pulse 1.8s infinite}.r-dot.green{background:#22c55e;box-shadow:0 0 8px #22c55e}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(167,139,250,0.5)}70%{box-shadow:0 0 0 6px rgba(167,139,250,0)}100%{box-shadow:0 0 0 0 rgba(167,139,250,0)}}
+.bigBlue{width:100px;height:100px;margin:0 auto 18px;background:linear-gradient(135deg,#7c3aed,#4f46e5);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:44px;box-shadow:0 0 0 12px rgba(124,58,237,0.12), 0 20px 40px rgba(79,70,229,0.35)}
+.btn{width:100%;padding:13px;border:none;border-radius:14px;font-weight:800;font-size:12.5px;letter-spacing:0.5px;cursor:pointer;margin-top:18px;text-transform:uppercase}
+.btn-blue{background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;box-shadow:0 8px 20px rgba(79,70,229,0.35)}
+.btn:active{transform:scale(0.98)}
+
+/* WATERMARK ROX */
+.watermark{margin-top:22px;text-align:center;position:relative;z-index:2}
+.watermark a{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:100px;text-decoration:none;font-size:11px;font-weight:700;letter-spacing:0.5px;color:#94a3b8;transition:all 0.3s;backdrop-filter:blur(10px)}
+.watermark a:hover{background:rgba(124,58,237,0.15);border-color:rgba(124,58,237,0.3);color:#fff;transform:translateY(-1px);box-shadow:0 4px 15px rgba(124,58,237,0.2)}
+.watermark a span.flag{font-size:13px}
+.watermark a span.name{color:#a5b4fc}
 .hidden{display:none!important}
 </style>
 </head>
 <body>
-<div class="header"><div class="left"><div class="avatar" id="av">GH</div><div class="info"><div class="n" id="un">G.H. Support...</div><div class="i">ID: <span id="uid">7528813331</span></div></div></div><div class="badge" id="bd"><span class="dot"></span><span id="bt">SCANNING</span></div></div>
+<div class="bg"><div class="blob b1"></div><div class="blob b2"></div></div>
+<div class="container">
+<div class="header"><div class="logo">ROX</div><h2>Device Verification</h2><p id="uidText">ID: 7528813331</p></div>
 <div class="card">
 <div id="v1">
-<div class="scan"><div class="grid"></div><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><div class="od od1"></div><div class="od od2"></div><div class="od od3"></div><div class="od od4"></div><div class="shield">🛡️</div></div>
-<div class="t" id="mt">Security Scan</div><div class="s" id="ms">Checking your device security<br>environment...</div>
-<div class="checks"><div class="ci" id="c1"><b>DEVICE INTEGRITY</b><span class="d" id="c1d"></span></div><div class="ci" id="c2"><b>NETWORK SECURITY</b><span class="d" id="c2d"></span></div><div class="ci" id="c3"><b>SESSION VALIDATION</b><span class="d" id="c3d"></span></div></div>
-<div class="barW"><div class="bar"><div class="fill" id="fill"></div></div></div>
+<div class="fp-wrap"><div class="wave w1"></div><div class="wave w2"></div><div class="wave w3"></div><div class="fp-core"><span class="fp-icon">🛡️</span><div class="scan-line"></div></div></div>
+<div class="title" id="mt">Securing Your Device</div><div class="sub" id="ms">Analyzing security profile to prevent multi-account abuse</div>
+<div class="meta"><div class="chip"><span class="chip-dot"></span>ENCRYPTED</div><div class="chip">⚡ FAST SCAN</div></div>
+<div class="progress"><div class="p-head"><span>SCANNING</span><span id="pct">0%</span></div><div class="p-bar"><div class="p-fill" id="fill"></div></div></div>
+<div class="list">
+<div class="row" id="c1"><div class="r-icon">📱</div><div class="r-text"><b>DEVICE INTEGRITY</b><span>Checking hardware fingerprint</span></div><span class="r-dot" id="c1d"></span></div>
+<div class="row" id="c2"><div class="r-icon">🌐</div><div class="r-text"><b>NETWORK SECURITY</b><span>Verifying IP reputation</span></div><span class="r-dot" id="c2d"></span></div>
+<div class="row" id="c3"><div class="r-icon">🔐</div><div class="r-text"><b>SESSION VALIDATION</b><span>Validating Telegram session</span></div><span class="r-dot" id="c3d"></span></div>
 </div>
-<div id="v2" class="hidden"><div class="bigBlue">✓</div><div class="t">Device Verification</div><div class="s" style="margin-top:8px"><b style="color:#fff">Verification Successful</b><br>Your device has been verified</div><button class="btn btn-blue" onclick="closeApp()">Continue to Bot</button></div>
-<div id="v3" class="hidden"><div class="scan" style="height:130px"><div class="ring r2" style="inset:0"></div><div class="shield">🛡️</div></div><div class="t" style="color:#60a5fa">Already Verified</div><div class="s" id="am">Warning: This physical phone is already linked to another account.</div><button class="btn btn-blue" onclick="closeApp()">CONTINUE TO BOT</button></div>
 </div>
-<div class="foot">Designed By <span>Jenil Dobariya</span></div>
+<div id="v2" class="hidden"><div class="bigBlue">✓</div><div class="title">Verified Successfully</div><div class="sub">Your device has been authenticated<br>Welcome to PIRO Network</div><button class="btn btn-blue" onclick="closeApp()">Continue to Bot →</button></div>
+<div id="v3" class="hidden"><div class="fp-wrap" style="height:100px"><div class="fp-core" style="background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.2)">⚠️</div></div><div class="title" style="color:#f87171">Already Linked</div><div class="sub" id="am">This device is already linked to another account. Multiple accounts not allowed.</div><button class="btn btn-blue" onclick="closeApp()">Continue Anyway →</button></div>
+</div>
+<!-- ROX WATERMARK WITH REDIRECTION -->
+<div class="watermark">
+<a href="https://t.me/ROXXOP" target="_blank" onclick="try{Telegram.WebApp.openTelegramLink('https://t.me/ROXXOP'); return false;}catch(e){}">
+<span>Designed By</span> <span class="name">ROX</span> <span class="flag">🇮🇳</span>
+</a>
+</div>
+</div>
 <script>
 const tg=window.Telegram?.WebApp; if(tg){tg.ready(); tg.expand();}
 function closeApp(){try{tg.close()}catch(e){} try{window.close()}catch(e){}}
 function qp(){const u=new URL(location.href);return{id:u.searchParams.get('id')||'',uid:u.searchParams.get('user_id')||tg?.initDataUnsafe?.user?.id||'',un:u.searchParams.get('username')||tg?.initDataUnsafe?.user?.username||'',hash:u.searchParams.get('bot_hash')||'',bot:u.searchParams.get('bot')||''}}
 async function getCanvasHash(){try{const c=document.createElement('canvas');c.width=200;c.height=50;const ctx=c.getContext('2d');ctx.textBaseline='top';ctx.font='14px Arial';ctx.fillStyle='#f60';ctx.fillRect(10,10,100,30);ctx.fillStyle='#069';ctx.fillText('DeviceCheck123',20,20);return c.toDataURL().slice(-100);}catch(e){return 'no-canvas';}}
 async function getWebGLHash(){try{const c=document.createElement('canvas');const gl=c.getContext('webgl')||c.getContext('experimental-webgl');if(!gl)return 'no-webgl';const dbg=gl.getExtension('WEBGL_debug_renderer_info');return (gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)||'').slice(0,60);}catch(e){return 'no-webgl';}}
-function setC(id,st){const el=document.getElementById(id);const dot=document.getElementById(id+'d');if(st==='a'){el.classList.add('active');dot.className='d blue';}if(st==='d'){el.classList.remove('active');el.classList.add('done');dot.className='d green';}}
+function setC(id,st){const el=document.getElementById(id);const dot=document.getElementById(id+'d');if(st==='a'){el.classList.add('active');dot.className='r-dot blue';}if(st==='d'){el.classList.remove('active');el.classList.add('done');dot.className='r-dot green';}}
 async function run(){
-const p=qp(); document.getElementById('uid').textContent=p.uid||'7528813331'; document.getElementById('un').textContent=(p.bot||'G.H. Support').replace('@','')+'...'; document.getElementById('av').textContent=(p.bot||'GH').slice(0,2).toUpperCase();
-let prog=0; const iv=setInterval(()=>{prog+=Math.random()*8; if(prog>92)prog=92; document.getElementById('fill').style.width=prog+'%'; if(prog>20)setC('c1','a'); if(prog>45){setC('c1','d'); setC('c2','a');} if(prog>75){setC('c2','d'); setC('c3','a');}},150);
+const p=qp(); document.getElementById('uidText').textContent='ID: '+(p.uid||'7528813331');
+let prog=0; const iv=setInterval(()=>{prog+=Math.random()*7; if(prog>92)prog=92; document.getElementById('fill').style.width=prog+'%'; document.getElementById('pct').textContent=Math.round(prog)+'%'; if(prog>20)setC('c1','a'); if(prog>45){setC('c1','d'); setC('c2','a');} if(prog>75){setC('c2','d'); setC('c3','a');}},160);
 try{
 const fp=await FingerprintJS.load(); const res=await fp.get(); const ch=await getCanvasHash(); const wh=await getWebGLHash();
 const payload={bot_id:p.id,id:p.id,user_id:String(p.uid),username:p.un,bot_hash:p.hash,visitorId:res.visitorId,information:`${res.visitorId}x${screen.width}x${screen.height}`,canvasHash:ch,webglHash:wh,screenInfo:`${screen.width}x${screen.height}x${screen.colorDepth}`,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||'',tzOffset:new Date().getTimezoneOffset(),language:navigator.language||'',platform:navigator.platform||'',hardware:`${navigator.hardwareConcurrency||0}x${navigator.deviceMemory||0}`,touchPoints:navigator.maxTouchPoints||0,ua:navigator.userAgent,initData:tg?.initData||''};
 const low=payload.ua.toLowerCase();
 if(low.includes('turbotel')||low.includes('turbo')||!payload.initData||payload.initData.length<10){
-clearInterval(iv); const err={status:"error",title:"TurboTel Detected",message:"Fake Client! Banned.",hash:p.hash}; if(tg)try{tg.sendData(JSON.stringify(err))}catch(e){}
-document.getElementById('v1').classList.add('hidden'); document.getElementById('v3').classList.remove('hidden'); document.getElementById('am').textContent=err.message; document.getElementById('bd').innerHTML='<span class="dot" style="background:#ef4444"></span><span>BLOCKED</span>'; return;
+clearInterval(iv); const err={status:"error",title:"TurboTel Detected",message:"Fake Telegram Client Detected! Use official app.",hash:p.hash}; if(tg)try{tg.sendData(JSON.stringify(err))}catch(e){}
+document.getElementById('v1').classList.add('hidden'); document.getElementById('v3').classList.remove('hidden'); document.getElementById('am').textContent=err.message; return;
 }
 const r=await fetch(`./verify.php?id=${encodeURIComponent(p.id)}&bot_hash=${encodeURIComponent(p.hash)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-const data=await r.json(); clearInterval(iv); document.getElementById('fill').style.width='100%'; setC('c1','d'); setC('c2','d'); setC('c3','d');
+const data=await r.json(); clearInterval(iv); document.getElementById('fill').style.width='100%'; document.getElementById('pct').textContent='100%'; setC('c1','d'); setC('c2','d'); setC('c3','d');
 if(tg)try{tg.sendData(JSON.stringify(data))}catch(e){}
 setTimeout(()=>{
-if(data.status==='success'){document.getElementById('v1').classList.add('hidden'); document.getElementById('v2').classList.remove('hidden'); document.getElementById('bd').innerHTML='<span class="dot" style="background:#22c55e"></span><span>VERIFIED</span>'; setTimeout(closeApp,1500);}
-else{document.getElementById('v1').classList.add('hidden'); document.getElementById('v3').classList.remove('hidden'); document.getElementById('am').textContent=data.message||'Already linked to another account.'; document.getElementById('bt').textContent='USED DEVICE'; document.getElementById('bd').style.color='#fbbf24'; document.getElementById('bd').style.borderColor='rgba(251,191,36,0.3)'; document.getElementById('bd').style.background='rgba(251,191,36,0.1)'; setTimeout(closeApp,2500);}
-},400);
+if(data.status==='success'){document.getElementById('v1').classList.add('hidden'); document.getElementById('v2').classList.remove('hidden'); setTimeout(closeApp,1500);}
+else{document.getElementById('v1').classList.add('hidden'); document.getElementById('v3').classList.remove('hidden'); document.getElementById('am').textContent=data.message||'This device is already linked to another account.'; setTimeout(closeApp,2500);}
+},500);
 }catch(e){clearInterval(iv); if(tg)try{tg.sendData(JSON.stringify({status:"error",title:"Failed",message:e.message}))}catch(err){}}
 }
 run();
