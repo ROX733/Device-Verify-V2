@@ -8,21 +8,21 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',sans-serif;background:#f5f7fb;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-.card{width:100%;max-width:380px;background:#fff;border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,0.08),0 2px 10px rgba(0,0,0,0.04);padding:32px 24px 28px;text-align:center;position:relative}
+.card{width:100%;max-width:380px;background:#fff;border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,0.08),0 2px 10px rgba(0,0,0,0.04);padding:32px 24px 28px;text-align:center}
 .icons{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:24px}
-.icon-box{width:48px;height:32px;border-radius:8px;border:1.5px solid #e2e8f0;display:flex;align-items:center;justify-content:center;background:#fff;color:#94a3b8;transition:all .3s}
-.icon-box.active{width:56px;height:42px;border-color:#2563eb;background:#eff6ff;color:#2563eb;box-shadow:0 4px 12px rgba(37,99,235,0.15)}
+.icon-box{width:48px;height:32px;border-radius:8px;border:1.5px solid #e2e8f0;display:flex;align-items:center;justify-content:center;background:#fff;color:#94a3b8}
+.icon-box.active{width:56px;height:42px;border-color:#2563eb;background:#eff6ff;color:#2563eb}
 .icon-box svg{width:22px;height:22px}.icon-box.active svg{width:28px;height:28px}
 .progress-wrap{width:100%;height:4px;background:#eef2ff;border-radius:10px;overflow:hidden;margin:0 auto 18px;max-width:280px}
 .progress-bar{height:100%;background:#2563eb;width:0%;border-radius:10px;transition:width .2s linear}
 .title{font-size:15px;font-weight:700;color:#0f172a;margin-bottom:6px}
-.subtitle{font-size:12.5px;color:#64748b;line-height:1.5;margin-bottom:10px;max-width:300px;margin-left:auto;margin-right:auto}
+.subtitle{font-size:12.5px;color:#64748b;line-height:1.5;margin-bottom:10px}
 .status-icon{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
 .status-icon.success{background:#ecfdf5;border:2px solid #10b981;color:#10b981}
 .status-icon.error{background:#fef2f2;border:2px solid #ef4444;color:#ef4444}
 .status-icon.info{background:#eff6ff;border:2px solid #3b82f6;color:#3b82f6}
 .status-icon svg{width:34px;height:34px}
-.btn{width:100%;max-width:300px;padding:12px 20px;border-radius:12px;border:none;font-size:13.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin:18px auto 0;transition:all .2s}
+.btn{width:100%;max-width:300px;padding:12px 20px;border-radius:12px;border:none;font-size:13.5px;font-weight:600;cursor:pointer;margin:18px auto 0}
 .btn-success{background:#10b981;color:#fff}.btn-error{background:#ef4444;color:#fff}.btn-info{background:#2563eb;color:#fff}
 .hidden{display:none !important}
 </style>
@@ -30,7 +30,7 @@ body{font-family:'Inter',sans-serif;background:#f5f7fb;min-height:100vh;display:
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-<div class="card" id="card">
+<div class="card">
 <div id="verifying">
 <div class="icons">
 <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="7" y="2" width="10" height="20" rx="2"/><circle cx="12" cy="18" r="1" fill="currentColor"/></svg></div>
@@ -38,7 +38,7 @@ body{font-family:'Inter',sans-serif;background:#f5f7fb;min-height:100vh;display:
 <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="2" width="16" height="20" rx="2"/></svg></div>
 </div>
 <div class="progress-wrap"><div class="progress-bar" id="progress"></div></div>
-<div class="title">Verifying Device Environment</div>
+<div class="title" id="progress-title">Verifying Device Environment 0%</div>
 <div class="subtitle">Analyzing your device and network for security compliance...</div>
 </div>
 <div id="success" class="hidden">
@@ -65,7 +65,7 @@ const urlParams = new URLSearchParams(window.location.search);
 let BOT_ID = urlParams.get('id') || urlParams.get('bot_hash') || '';
 let USER_ID = urlParams.get('user_id') || '';
 let BOT_USERNAME = urlParams.get('bot') || '';
-let WEBHOOK_URL = urlParams.get('webhook') || '';
+let pageOpenSent = false;
 
 function collectData(type, extra={}){
   try{
@@ -87,76 +87,73 @@ function closeApp(){ collectData('close_app'); if(window.Telegram?.WebApp) Teleg
 function retry(){ collectData('retry_click'); location.reload(); }
 
 async function startVerification(){
+  if(!pageOpenSent){ pageOpenSent = true; collectData('page_open'); }
   await new Promise(r=>setTimeout(r, 800));
-  collectData('page_open');
+
+  const ua = navigator.userAgent || '';
+  if(/TurboTel|turbotel/i.test(ua)){
+    document.getElementById('failed-msg').textContent = 'VPN / Turbotel Detected! Not Allowed.';
+    showState('failed'); collectData('blocked_turbotel'); return;
+  }
+  try{
+    const ipRes = await fetch('https://ipapi.co/json/');
+    const ipData = await ipRes.json();
+    const org = (ipData.org || '').toLowerCase();
+    if(org.includes('vpn') || org.includes('proxy') || org.includes('hosting') || org.includes('datacenter')){
+      document.getElementById('failed-msg').textContent = 'VPN / Proxy Detected! Disable VPN.';
+      showState('failed'); collectData('blocked_vpn', {org: org}); return;
+    }
+  }catch(e){}
 
   if(!BOT_ID){
     document.getElementById('failed-msg').textContent = 'Invalid Bot ID.';
-    showState('failed'); collectData('invalid_bot_id'); return;
+    showState('failed'); return;
   }
-
-  // === ONLY ANDROID ALLOWED CHECK ===
-  const ua = navigator.userAgent || '';
   const isAndroid = /Android/i.test(ua);
   const platform = window.Telegram?.WebApp?.platform || '';
-
-  // Block iPhone and Desktop
-  if(!isAndroid){
+  if(!isAndroid || platform==='ios' || /iPhone|iPad/i.test(ua)){
     document.getElementById('failed-msg').textContent = 'Please open from Official Telegram Android App. iPhone & Desktop not allowed.';
-    showState('failed'); 
-    collectData('blocked_non_android', {ua: ua, platform: platform}); 
-    return;
+    showState('failed'); collectData('blocked_non_android'); return;
   }
-  if(platform === 'ios' || platform === 'unknown' || /iPhone|iPad|iPod/i.test(ua)){
-    document.getElementById('failed-msg').textContent = 'iPhone & Desktop not allowed. Please use Official Telegram Android App.';
-    showState('failed'); 
-    collectData('blocked_ios_desktop', {ua: ua, platform: platform}); 
-    return;
-  }
-
   if(!window.Telegram || !window.Telegram.WebApp){
     document.getElementById('failed-msg').textContent = 'Please open from Official Telegram Android App.';
-    showState('failed'); collectData('not_telegram_env'); return;
+    showState('failed'); return;
   }
-
   const webApp = window.Telegram.WebApp;
   try{ webApp.ready(); webApp.expand(); }catch(e){}
-
-  let tgUserId = '';
-  let initData = '';
+  let tgUserId = ''; let tgUsername=''; let initData='';
   for(let i=0;i<3;i++){
     tgUserId = webApp.initDataUnsafe?.user?.id || USER_ID || '';
+    tgUsername = webApp.initDataUnsafe?.user?.username || '';
     initData = webApp.initData || '';
     if(tgUserId) break;
     await new Promise(r=>setTimeout(r, 400));
   }
-
   if(!tgUserId){
     document.getElementById('failed-msg').textContent = 'Telegram User ID missing. Reopen from bot.';
-    showState('failed'); collectData('missing_tg_user'); return;
+    showState('failed'); return;
   }
-
-  let p=0; const bar=document.getElementById('progress');
-  const interval=setInterval(()=>{ p+=Math.random()*12; if(p>90) p=90; bar.style.width=p+'%'; },120);
+  if(USER_ID) tgUserId = USER_ID;
+  let p=0; const bar=document.getElementById('progress'); const titleEl=document.getElementById('progress-title');
+  const interval=setInterval(()=>{ p+=Math.random()*18; if(p>90) p=90; bar.style.width=p+'%'; if(titleEl) titleEl.textContent=`Verifying Device Environment ${Math.floor(p)}%`; },150);
   try{
     const fp = await FingerprintJS.load();
     const result = await fp.get();
     const visitorId = result.visitorId;
     const information = `${visitorId}x${screen.width}x${screen.height}x${navigator.language}`;
-    const payload = { user_id: String(tgUserId), bot_id: BOT_ID, id: BOT_ID, information: information, initData: initData, ua: ua, bot: BOT_USERNAME };
-    collectData('verify_start', {visitorId});
+    const payload = { user_id: String(tgUserId), username: tgUsername, bot_id: BOT_ID, id: BOT_ID, information: information, initData: initData, ua: ua, bot: BOT_USERNAME, visitorId: visitorId };
     const res = await fetch(`./verify.php?id=${encodeURIComponent(BOT_ID)}`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
     const data = await res.json();
-    clearInterval(interval); bar.style.width='100%';
+    clearInterval(interval); bar.style.width='100%'; if(titleEl) titleEl.textContent=`Verifying Device Environment 100%`;
     setTimeout(()=>{
-      if(data.status==='success'){ document.getElementById('success-msg').textContent = data.message || 'Verified!'; showState('success'); collectData('verify_success'); }
-      else if(data.status==='info' || data.status==='already'){ showState('already'); collectData('already_verified'); }
-      else{ document.getElementById('failed-msg').textContent = data.message || 'Verification Failed'; showState('failed'); collectData('verify_failed', {msg: data.message||''}); }
+      if(data.status==='success'){ document.getElementById('success-msg').textContent = data.message || 'Verified!'; showState('success'); }
+      else if(data.status==='info' || data.status==='already'){ showState('already'); }
+      else{ document.getElementById('failed-msg').textContent = data.message || 'Verification Failed'; showState('failed'); }
     },400);
   }catch(e){
     clearInterval(interval);
-    document.getElementById('failed-msg').textContent = 'Unexpected error: '+e.message;
-    showState('failed'); collectData('exception', {error: e.message});
+    document.getElementById('failed-msg').textContent = 'Error: '+e.message;
+    showState('failed');
   }
 }
 window.addEventListener('load', startVerification);
