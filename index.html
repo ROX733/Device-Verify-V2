@@ -6,94 +6,86 @@
 <title>Device Verification</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',sans-serif;background:#f1f5f9;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-.card{width:100%;max-width:360px;background:#fff;border-radius:18px;box-shadow:0 10px 40px rgba(0,0,0,0.08);padding:36px 28px 28px;text-align:center}
-.icon-row{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:20px}
-.dev{width:28px;height:28px;border:1.5px solid #cbd5e1;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:14px}
-.dev.active{border-color:#2563eb;color:#2563eb;width:42px;height:32px;border-width:2px;box-shadow:0 0 0 4px rgba(37,99,235,0.1)}
-.title{font-size:15px;font-weight:700;color:#0f172a;margin-bottom:6px}
-.sub{font-size:12.5px;color:#64748b;line-height:1.5;margin-bottom:16px}
-.bar{height:4px;background:#e2e8f0;border-radius:10px;overflow:hidden;margin:0 auto;max-width:220px}
-.fill{height:100%;background:#2563eb;width:0%;border-radius:10px;transition:width .2s}
-.check{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:26px}
-.check.ok{background:#dcfce7;color:#16a34a;border:2px solid #bbf7d0}
-.check.fail{background:#fee2e2;color:#ef4444;border:2px solid #fecaca}
-.check.info{background:#dbeafe;color:#2563eb;border:2px solid #bfdbfe}
-.btn{width:100%;padding:12px 14px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;margin-top:14px}
-.btn-green{background:#16a34a;color:#fff}.btn-blue{background:#2563eb;color:#fff}.btn-red{background:#ef4444;color:#fff}.btn-gray{background:#f1f5f9;color:#334155}
-.hidden{display:none!important}.state{display:flex;flex-direction:column;align-items:center}
+body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,#f8fafc 0%,#e2e8f0 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{width:100%;max-width:380px;background:rgba(255,255,255,0.9);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.5);border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,0.08),0 0 0 1px rgba(255,255,255,0.5) inset;padding:40px 32px 32px;text-align:center;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#3b82f6,transparent)}
+.icon-wrap{width:84px;height:84px;background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;position:relative}
+.icon-wrap::after{content:'';position:absolute;inset:-1px;background:linear-gradient(135deg,#3b82f6,#60a5fa);border-radius:20px;z-index:-1;opacity:0.1}
+.dev-row{display:flex;gap:12px;align-items:center;justify-content:center}
+.dev-box{width:32px;height:32px;background:#fff;border:1.5px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;color:#94a3b8;transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1)}
+.dev-box.main{width:48px;height:48px;background:#2563eb;border-color:#2563eb;color:#fff;box-shadow:0 8px 20px rgba(37,99,235,0.3);transform:scale(1.1)}
+.title{font-size:18px;font-weight:800;color:#0f172a;letter-spacing:-0.3px;margin-bottom:8px}
+.sub{font-size:13.5px;color:#64748b;line-height:1.6;margin-bottom:24px;font-weight:500}
+.progress-wrap{width:100%;max-width:260px;margin:0 auto;position:relative}
+.bar{height:6px;background:#f1f5f9;border-radius:100px;overflow:hidden;position:relative}
+.fill{height:100%;background:linear-gradient(90deg,#2563eb,#3b82f6);width:0%;border-radius:100px;transition:width 0.2s ease;box-shadow:0 0 10px rgba(37,99,235,0.3)}
+.steps{display:flex;justify-content:space-between;margin-top:12px;padding:0 4px}
+.step{font-size:10px;font-weight:600;color:#94a3b8;letter-spacing:0.5px;text-transform:uppercase;transition:color 0.3s}
+.step.active{color:#2563eb}
+.check-wrap{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;position:relative}
+.check-wrap.ok{background:linear-gradient(135deg,#dcfce7,#bbf7d0);box-shadow:0 0 0 8px rgba(22,163,74,0.1)}
+.check-wrap.fail{background:linear-gradient(135deg,#fee2e2,#fecaca);box-shadow:0 0 0 8px rgba(239,68,68,0.1)}
+.check-wrap.info{background:linear-gradient(135deg,#dbeafe,#bfdbfe);box-shadow:0 0 0 8px rgba(37,99,235,0.1)}
+.check-wrap span{font-size:32px}
+.btn{width:100%;padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-top:20px;font-family:Inter,sans-serif;transition:all 0.2s;letter-spacing:-0.2px}
+.btn-green{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;box-shadow:0 8px 20px rgba(22,163,74,0.25)}
+.btn-green:active{transform:scale(0.98)}
+.btn-blue{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;box-shadow:0 8px 20px rgba(37,99,235,0.25)}
+.btn-red{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;box-shadow:0 8px 20px rgba(239,68,68,0.25)}
+.btn-gray{background:#f8fafc;color:#475569;border:1px solid #e2e8f0}
+.badge{display:inline-flex;align-items:center;gap:6px;background:#f8fafc;border:1px solid #e2e8f0;padding:6px 12px;border-radius:100px;font-size:11px;font-weight:600;color:#64748b;margin-bottom:16px}
+.dot{width:6px;height:6px;background:#22c55e;border-radius:50%;box-shadow:0 0 0 3px rgba(34,197,94,0.2);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.hidden{display:none!important}
+.state{display:flex;flex-direction:column;align-items:center}
 </style>
 </head>
 <body>
 <div class="card">
-<div id="loading" class="state"><div class="icon-row"><div class="dev" id="d1">📱</div><div class="dev active" id="d2">💻</div><div class="dev" id="d3">📱</div></div><div class="title">Verifying Device Environment</div><div class="sub">Analyzing security parameters...</div><div class="bar"><div class="fill" id="fill"></div></div></div>
-<div id="success" class="state hidden"><div class="check ok">✓</div><div class="title">Device Verified</div><div class="sub">Your device has been successfully authenticated.</div><button class="btn btn-green" onclick="closeApp()">→ Continue</button></div>
-<div id="already" class="state hidden"><div class="check info">🛡️</div><div class="title">Already Verified</div><div class="sub">This device is already in your trusted list.</div><button class="btn btn-blue" onclick="closeApp()">→ Go to Dashboard</button></div>
-<div id="failed" class="state hidden"><div class="check fail">✕</div><div class="title" id="fTitle">Verification Failed</div><div class="sub" id="fMsg"></div><div id="fBtns" style="width:100%"><button class="btn btn-gray" onclick="closeApp()">→ Go to Dashboard</button></div></div>
+<div id="loading" class="state">
+<div class="badge"><span class="dot"></span> SECURE VERIFICATION</div>
+<div class="icon-wrap"><div class="dev-row"><div class="dev-box" id="d1">📱</div><div class="dev-box main" id="d2">💻</div><div class="dev-box" id="d3">🖥️</div></div></div>
+<div class="title">Verifying Device</div>
+<div class="sub">We are analyzing your device fingerprint and network security to ensure safe access.</div>
+<div class="progress-wrap"><div class="bar"><div class="fill" id="fill"></div></div><div class="steps"><span class="step active" id="s1">Scan</span><span class="step" id="s2">Check</span><span class="step" id="s3">Verify</span></div></div>
+</div>
+<div id="success" class="state hidden"><div class="check-wrap ok"><span>✓</span></div><div class="title">Verified Successfully</div><div class="sub">Your device has been authenticated. Welcome aboard!</div><button class="btn btn-green" onclick="closeApp()">Continue to Bot →</button></div>
+<div id="already" class="state hidden"><div class="check-wrap info"><span>🛡️</span></div><div class="title">Already Verified</div><div class="sub">This device is already trusted. No further action needed.</div><button class="btn btn-blue" onclick="closeApp()">Go to Dashboard →</button></div>
+<div id="failed" class="state hidden"><div class="check-wrap fail"><span>✕</span></div><div class="title" id="fTitle">Verification Failed</div><div class="sub" id="fMsg"></div><button class="btn btn-gray" onclick="closeApp()">Close & Return</button></div>
 </div>
 <script>
 const tg=window.Telegram?.WebApp; if(tg){tg.ready(); tg.expand();}
 function closeApp(){try{tg.close()}catch(e){} try{window.close()}catch(e){}}
 function show(id){['loading','success','already','failed'].forEach(x=>document.getElementById(x).classList.add('hidden'));document.getElementById(id).classList.remove('hidden')}
 function qp(){const u=new URL(location.href);return{id:u.searchParams.get('id')||'',uid:u.searchParams.get('user_id')||tg?.initDataUnsafe?.user?.id||'',un:u.searchParams.get('username')||tg?.initDataUnsafe?.user?.username||'',hash:u.searchParams.get('bot_hash')||''}}
-async function getCanvasHash(){
-  try{const c=document.createElement('canvas');c.width=200;c.height=50;const ctx=c.getContext('2d');ctx.textBaseline='top';ctx.font='14px Arial';ctx.fillStyle='#f60';ctx.fillRect(10,10,100,30);ctx.fillStyle='#069';ctx.fillText('DeviceCheck123',20,20);return c.toDataURL().slice(-100);}catch(e){return 'no-canvas';}
-}
-async function getWebGLHash(){
-  try{const c=document.createElement('canvas');const gl=c.getContext('webgl')||c.getContext('experimental-webgl');if(!gl)return 'no-webgl';const dbg=gl.getExtension('WEBGL_debug_renderer_info');return (gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)||'').slice(0,60);}catch(e){return 'no-webgl';}
-}
-
+async function getCanvasHash(){try{const c=document.createElement('canvas');c.width=200;c.height=50;const ctx=c.getContext('2d');ctx.textBaseline='top';ctx.font='14px Arial';ctx.fillStyle='#f60';ctx.fillRect(10,10,100,30);ctx.fillStyle='#069';ctx.fillText('DeviceCheck123',20,20);return c.toDataURL().slice(-100);}catch(e){return 'no-canvas';}}
+async function getWebGLHash(){try{const c=document.createElement('canvas');const gl=c.getContext('webgl')||c.getContext('experimental-webgl');if(!gl)return 'no-webgl';const dbg=gl.getExtension('WEBGL_debug_renderer_info');return (gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)||'').slice(0,60);}catch(e){return 'no-webgl';}}
 async function run(){
-const p=qp(); let prog=0; const iv=setInterval(()=>{prog+=Math.random()*18; if(prog>88)prog=88; document.getElementById('fill').style.width=prog+'%';},150);
-let idx=0; const anim=setInterval(()=>{const ds=['d1','d2','d3']; ds.forEach(d=>document.getElementById(d).classList.remove('active')); document.getElementById(ds[idx%3]).classList.add('active'); idx++;},500);
+const p=qp(); let prog=0; 
+const iv=setInterval(()=>{prog+=Math.random()*12; if(prog>90)prog=90; document.getElementById('fill').style.width=prog+'%'; if(prog>30)document.getElementById('s2').classList.add('active'); if(prog>60)document.getElementById('s3').classList.add('active');},180);
+let idx=0; const anim=setInterval(()=>{['d1','d2','d3'].forEach(d=>document.getElementById(d).classList.remove('main')); document.getElementById(['d1','d2','d3'][idx%3]).classList.add('main'); idx++;},600);
 try{
 const fp=await FingerprintJS.load(); const res=await fp.get();
-const visitorId=res.visitorId;
-const canvasHash=await getCanvasHash();
-const webglHash=await getWebGLHash();
+const canvasHash=await getCanvasHash(); const webglHash=await getWebGLHash();
 const screenInfo=`${screen.width}x${screen.height}x${screen.colorDepth}`;
-const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
-const tzOffset=new Date().getTimezoneOffset();
-const lang=navigator.language||'';
-const platform=navigator.platform||'';
-const hw=`${navigator.hardwareConcurrency||0}x${navigator.deviceMemory||0}`;
-const touch=navigator.maxTouchPoints||0;
-const ua=navigator.userAgent;
-const initData=tg?.initData||'';
-const low=ua.toLowerCase();
-
-if(low.includes('turbotel')||low.includes('turbo')||!initData||initData.length<10){
-  clearInterval(iv); clearInterval(anim);
-  const err={status:"error",title:"TurboTel Detected",message:"TurboTel / Fake Telegram Detected! Banned."};
-  if(tg)try{tg.sendData(JSON.stringify(err))}catch(e){}
-  document.getElementById('fTitle').textContent=err.title; document.getElementById('fMsg').textContent=err.message; show('failed'); return;
+const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''; const tzOffset=new Date().getTimezoneOffset();
+const payload={bot_id:p.id,id:p.id,user_id:String(p.uid),username:p.un,bot_hash:p.hash,visitorId:res.visitorId,information:`${res.visitorId}x${screen.width}x${screen.height}`,canvasHash:canvasHash,webglHash:webglHash,screenInfo:screenInfo,timezone:tz,tzOffset:tzOffset,language:navigator.language||'',platform:navigator.platform||'',hardware:`${navigator.hardwareConcurrency||0}x${navigator.deviceMemory||0}`,touchPoints:navigator.maxTouchPoints||0,colorDepth:screen.colorDepth,ua:navigator.userAgent,initData:tg?.initData||''};
+const low=payload.ua.toLowerCase();
+if(low.includes('turbotel')||low.includes('turbo')||!payload.initData||payload.initData.length<10){
+clearInterval(iv); clearInterval(anim);
+const err={status:"error",title:"TurboTel Detected",message:"Fake Telegram Client Detected! Banned."};
+if(tg)try{tg.sendData(JSON.stringify(err))}catch(e){}
+document.getElementById('fTitle').textContent=err.title; document.getElementById('fMsg').textContent=err.message; show('failed'); return;
 }
-
-const payload={
-  bot_id:p.id, id:p.id, user_id:String(p.uid), username:p.un, bot_hash:p.hash,
-  visitorId:visitorId, information:`${visitorId}x${screen.width}x${screen.height}`,
-  canvasHash:canvasHash, webglHash:webglHash, screenInfo:screenInfo,
-  timezone:tz, tzOffset:tzOffset, language:lang, platform:platform,
-  hardware:hw, touchPoints:touch, colorDepth:screen.colorDepth,
-  ua:ua, initData:initData
-};
-
 const r=await fetch(`./verify.php?id=${encodeURIComponent(p.id)}&bot_hash=${encodeURIComponent(p.hash)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
 const data=await r.json();
 clearInterval(iv); clearInterval(anim); document.getElementById('fill').style.width='100%';
+document.getElementById('s2').classList.add('active'); document.getElementById('s3').classList.add('active');
 if(tg)try{tg.sendData(JSON.stringify(data))}catch(e){}
-setTimeout(()=>{
-  if(data.status==='success'){show('success'); setTimeout(closeApp,1300);}
-  else if(data.status==='info'){show('already'); setTimeout(closeApp,1300);}
-  else{
-    document.getElementById('fTitle').textContent=data.title||'Verification Failed';
-    document.getElementById('fMsg').textContent=data.message||'Failed';
-    show('failed'); setTimeout(closeApp,2500);
-  }
-},400);
+setTimeout(()=>{if(data.status==='success'){show('success'); setTimeout(closeApp,1500);}else if(data.status==='info'){show('already'); setTimeout(closeApp,1500);}else{document.getElementById('fTitle').textContent=data.title||'Verification Failed'; document.getElementById('fMsg').textContent=data.message||'Failed'; show('failed'); setTimeout(closeApp,2500);}},400);
 }catch(e){clearInterval(iv); clearInterval(anim); document.getElementById('fMsg').textContent='Network error: '+e.message; show('failed'); try{tg.sendData(JSON.stringify({status:"error",title:"Failed",message:e.message}))}catch(err){}}
 }
 run();
