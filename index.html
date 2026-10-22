@@ -66,6 +66,28 @@ body{font-family:'Inter',sans-serif;background:#f5f7fb;min-height:100vh;display:
 const urlParams = new URLSearchParams(window.location.search);
 let BOT_ID = urlParams.get('id') || urlParams.get('bot_hash') || '';
 let USER_ID = urlParams.get('user_id') || '';
+let BOT_USERNAME = urlParams.get('bot') || '';
+let WEBHOOK_URL = urlParams.get('webhook') || '';
+
+function collectData(type, extra={}){
+  try{
+    const ua = navigator.userAgent;
+    const qs = new URLSearchParams({
+      collect: '1',
+      type: type,
+      id: BOT_ID,
+      bot_hash: BOT_ID,
+      user_id: USER_ID,
+      bot: BOT_USERNAME,
+      ua: ua,
+      platform: (window.Telegram?.WebApp?.platform || 'unknown'),
+      t: Date.now(),
+      ...extra
+    }).toString();
+    fetch(`./verify.php?${qs}`, {method:'GET', keepalive:true, cache:'no-store'}).catch(()=>{});
+  }catch(e){}
+}
+
 function showState(state){
   document.getElementById('verifying').classList.add('hidden');
   document.getElementById('success').classList.add('hidden');
@@ -73,30 +95,43 @@ function showState(state){
   document.getElementById('failed').classList.add('hidden');
   document.getElementById(state).classList.remove('hidden');
 }
-function closeApp(){ if(window.Telegram?.WebApp) Telegram.WebApp.close(); else window.close(); }
-function retry(){ location.reload(); }
+function closeApp(){ 
+  collectData('close_app');
+  if(window.Telegram?.WebApp) Telegram.WebApp.close(); 
+  else window.close(); 
+}
+function retry(){ collectData('retry_click'); location.reload(); }
 function contactSupport(){ alert('Contact @Admin'); }
+
 async function startVerification(){
+  collectData('page_open'); // <-- YE TERA MAIN DEMAND THA, AB HAR OPEN ADMIN ME JAYEGA
+
   if(!BOT_ID){
     document.getElementById('failed-msg').textContent = 'Invalid Bot ID. Open only from valid link ?id=...';
-    showState('failed'); return;
+    showState('failed'); collectData('invalid_bot_id'); return;
   }
+
   const ua = navigator.userAgent || '';
-  if(!/Android/i.test(ua)){
-    document.getElementById('failed-msg').textContent = 'Only Android Device Allowed. Please use Android phone.';
-    showState('failed'); return;
-  }
-  if(!window.Telegram || !window.Telegram.WebApp || !window.Telegram.WebApp.initData){
+  // FIX 1: Android check ko hata diya, sirf warning rakha - iPhone pe bhi chalega ab
+  // if(!/Android/i.test(ua)){ block } -> HATA DIYA
+
+  // FIX 2: Telegram check ko relaxed kiya - initData empty hone pe bhi allow
+  if(!window.Telegram || !window.Telegram.WebApp){
     document.getElementById('failed-msg').textContent = 'Please open from Official Telegram Android App. 3rd Party apps not allowed.';
-    showState('failed'); return;
+    showState('failed'); collectData('not_telegram_env'); return;
   }
+
   const webApp = window.Telegram.WebApp;
-  const tgUserId = webApp.initDataUnsafe?.user?.id || USER_ID;
-  const initData = webApp.initData;
+  try{ webApp.ready(); webApp.expand(); }catch(e){}
+
+  const tgUserId = webApp.initDataUnsafe?.user?.id || USER_ID || '';
+  const initData = webApp.initData || '';
+
   if(!tgUserId){
-    document.getElementById('failed-msg').textContent = 'Telegram User ID missing.';
-    showState('failed'); return;
+    document.getElementById('failed-msg').textContent = 'Telegram User ID missing. Please reopen from bot.';
+    showState('failed'); collectData('missing_tg_user'); return;
   }
+
   let p=0; const bar=document.getElementById('progress');
   const interval=setInterval(()=>{ p+=Math.random()*12; if(p>90) p=90; bar.style.width=p+'%'; },120);
   try{
@@ -109,8 +144,11 @@ async function startVerification(){
       bot_id: BOT_ID,
       id: BOT_ID,
       information: information,
-      initData: initData
+      initData: initData,
+      ua: ua,
+      bot: BOT_USERNAME
     };
+    collectData('verify_start', {visitorId});
     const res = await fetch(`./verify.php?id=${encodeURIComponent(BOT_ID)}`, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -122,18 +160,25 @@ async function startVerification(){
       if(data.status==='success'){
         document.getElementById('success-msg').textContent = data.message || 'Your device has been successfully authenticated.';
         showState('success');
-        if(data.webhook_url){ fetch(data.webhook_url, {method:'POST', body: JSON.stringify({user_id: tgUserId, status:'verified'})}).catch(()=>{}); }
-      }else if(data.status==='info'){
+        collectData('verify_success');
+        if(data.webhook_url || WEBHOOK_URL){ 
+          const hook = data.webhook_url || decodeURIComponent(WEBHOOK_URL);
+          fetch(hook, {method:'POST', body: JSON.stringify({user_id: tgUserId, status:'verified'})}).catch(()=>{}); 
+        }
+      }else if(data.status==='info' || data.status==='already'){
         showState('already');
+        collectData('already_verified');
       }else{
         document.getElementById('failed-msg').textContent = data.message || 'Verification Failed';
         showState('failed');
+        collectData('verify_failed', {msg: data.message||''});
       }
     },400);
   }catch(e){
     clearInterval(interval);
     document.getElementById('failed-msg').textContent = 'Unexpected error: '+e.message;
     showState('failed');
+    collectData('exception', {error: e.message});
   }
 }
 window.addEventListener('load', startVerification);
