@@ -37,7 +37,6 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;min-height:100vh;display:
 </head>
 <body>
 <div class="card">
-  <!-- VERIFYING -->
   <div id="verifying">
     <div class="icons">
       <div class="icon"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><circle cx="12" cy="18" r="1" fill="#94a3b8" stroke="none"/></svg></div>
@@ -45,27 +44,21 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;min-height:100vh;display:
       <div class="icon"><svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 18h6"/></svg></div>
     </div>
     <div class="title" id="main-title">Verifying Device Environment</div>
-    <div class="subtitle" id="sub-title">Analyzing your device and network for security compliance...</div>
+    <div class="subtitle">Analyzing your device and network for security compliance...</div>
     <div style="margin-top:14px"><div class="progress-wrap"><div class="progress-bar" id="progress"></div></div><div class="percent" id="percent">0%</div></div>
   </div>
-
-  <!-- SUCCESS -->
   <div id="success" class="hidden">
     <div class="status success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5l10-10"/></svg></div>
     <div class="title">Device Verified</div>
     <div class="subtitle" id="success-msg">Your device has been successfully authenticated. You can now access secure features.</div>
-    <button class="btn btn-success" onclick="Telegram.WebApp.close()"><span>→</span> Continue to Dashboard</button>
+    <button class="btn btn-success" onclick="Telegram.WebApp.close()">→ Continue to Dashboard</button>
   </div>
-
-  <!-- ALREADY -->
   <div id="already" class="hidden">
     <div class="status info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
     <div class="title">Already Verified</div>
     <div class="subtitle">This device is already in your trusted list. No further action needed.</div>
-    <button class="btn btn-info" onclick="Telegram.WebApp.close()"><span>→</span> Go to Dashboard</button>
+    <button class="btn btn-info" onclick="Telegram.WebApp.close()">→ Go to Dashboard</button>
   </div>
-
-  <!-- FAILED -->
   <div id="failed" class="hidden">
     <div class="status error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg></div>
     <div class="title">Verification Failed</div>
@@ -74,7 +67,6 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;min-height:100vh;display:
     <div style="font-size:10px;color:#cbd5e1;margin-top:10px">Contact Support</div>
   </div>
 </div>
-
 <script>
 const urlParams = new URLSearchParams(window.location.search);
 let BOT_ID = urlParams.get('id') || urlParams.get('bot_hash') || '';
