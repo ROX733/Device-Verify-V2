@@ -2,204 +2,174 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>PIRO Verification</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Device Verification</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Plus Jakarta Sans',sans-serif;background:#080a14;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;color:#fff;overflow:hidden}
-.bg{position:fixed;inset:0;z-index:0}
-.bg .blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.4}
-.blob.b1{width:400px;height:400px;background:radial-gradient(circle,#7c3aed,#4f46e5);top:-100px;left:-80px;animation:float 8s ease-in-out infinite}
-.blob.b2{width:300px;height:300px;background:radial-gradient(circle,#06b6d4,#3b82f6);bottom:-60px;right:-60px;animation:float 10s ease-in-out infinite reverse}
-@keyframes float{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(20px,-20px) scale(1.1)}}
-.container{position:relative;z-index:2;width:100%;max-width:360px}
-.header{text-align:center;margin-bottom:24px}
-.logo{width:48px;height:48px;margin:0 auto 10px;background:linear-gradient(135deg,#7c3aed,#4f46e5);border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;box-shadow:0 8px 24px rgba(124,58,237,0.35)}
-.header h2{font-size:12px;font-weight:700;letter-spacing:2px;color:#a5b4fc;text-transform:uppercase}
-.header p{font-size:10px;color:#64748b;margin-top:4px;font-family:monospace}
-.card{background:rgba(16,20,38,0.85);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.08);border-radius:28px;padding:30px 22px;box-shadow:0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)}
-.fp-wrap{width:150px;height:150px;margin:0 auto 20px;position:relative;display:flex;align-items:center;justify-content:center}
-.wave{position:absolute;border-radius:50%;border:1px solid rgba(124,58,237,0.2);animation:wave 3s ease-out infinite}
-.wave.w1{inset:0;animation-delay:0s}.wave.w2{inset:-12%;animation-delay:1s}.wave.w3{inset:-22%;animation-delay:2s}
-@keyframes wave{0%{transform:scale(0.8);opacity:0.8}100%{transform:scale(1.35);opacity:0}}
-.fp-core{width:84px;height:84px;background:linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.1);border-radius:22px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2}
-.fp-icon{font-size:34px}
-.scan-line{position:absolute;width:100%;height:2px;background:linear-gradient(90deg,transparent,#a78bfa,transparent);top:0;left:0;animation:scan 2.2s ease-in-out infinite;z-index:3;box-shadow:0 0 10px #a78bfa}
-@keyframes scan{0%{top:10%}50%{top:85%}100%{top:10%}}
-.title{font-size:21px;font-weight:800;text-align:center;letter-spacing:-0.5px}
-.sub{font-size:12.5px;color:#94a3b8;text-align:center;margin-top:8px;line-height:1.5}
-.meta{display:flex;gap:8px;justify-content:center;margin-top:14px}
-.chip{padding:6px 12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:100px;font-size:10px;font-weight:600;letter-spacing:0.5px;color:#a5b4fc;display:flex;align-items:center;gap:6px}
-.chip-dot{width:5px;height:5px;border-radius:50%;box-shadow:0 0 6px currentColor;animation:blink 1.5s infinite}
-@keyframes blink{50%{opacity:0.4}}
-.progress{margin-top:22px}
-.p-head{display:flex;justify-content:space-between;font-size:10px;font-weight:700;letter-spacing:1px;color:#64748b;margin-bottom:8px}
-.p-bar{height:6px;background:rgba(255,255,255,0.06);border-radius:100px;overflow:hidden}
-.p-fill{height:100%;width:0%;background:linear-gradient(90deg,#7c3aed,#06b6d4);border-radius:100px;transition:width 0.8s ease;box-shadow:0 0 12px rgba(124,58,237,0.5)}
-.list{margin-top:18px;display:flex;flex-direction:column;gap:8px}
-.row{display:flex;align-items:center;gap:12px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);border-radius:12px}
-.row.active{border-color:rgba(124,58,237,0.3);background:rgba(124,58,237,0.08)}
-.row.done{border-color:rgba(34,197,94,0.2);background:rgba(34,197,94,0.06)}
-.r-icon{width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:13px}
-.r-text b{display:block;font-size:10px;letter-spacing:0.8px;color:#64748b}.r-text span{font-size:11px;color:#e2e8f0;font-weight:600}
-.r-dot{margin-left:auto;width:7px;height:7px;border-radius:50%;background:#334155}
-.r-dot.blue{background:#a78bfa;box-shadow:0 0 8px #a78bfa;animation:pulse 1.8s infinite}.r-dot.green{background:#22c55e;box-shadow:0 0 8px #22c55e}
-@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(167,139,250,0.5)}70%{box-shadow:0 0 0 6px rgba(167,139,250,0)}100%{box-shadow:0 0 0 0 rgba(167,139,250,0)}}
-
-/* COMMON ALREADY */
-.already-wrap{width:130px;height:130px;margin:10px auto 24px;position:relative;display:flex;align-items:center;justify-content:center}
-.already-circle-outer{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(96,165,250,0.3);background:radial-gradient(circle, rgba(59,130,246,0.08), transparent 70%)}
-.already-circle-inner{position:absolute;inset:18%;border-radius:50%;border:1px dashed rgba(96,165,250,0.25);animation:spin 12s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.already-shield{width:58px;height:58px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;position:relative;z-index:2}
-.already-title{font-size:24px;font-weight:800;text-align:center;letter-spacing:-0.5px}
-.already-sub{font-size:13px;text-align:center;margin-top:10px;line-height:1.5;padding:0 10px}
-
-/* BLUE = Already Verified */
-.blue .already-circle-outer{border-color:rgba(96,165,250,0.35);background:radial-gradient(circle, rgba(59,130,246,0.1), transparent 70%)}
-.blue .already-circle-inner{border-color:rgba(96,165,250,0.3)}
-.blue .already-shield{background:linear-gradient(135deg,#3b82f6,#60a5fa);box-shadow:0 0 0 8px rgba(59,130,246,0.12), 0 8px 24px rgba(59,130,246,0.3)}
-.blue .already-title{color:#60a5fa}
-.blue .already-sub{color:#94a3b8}
-
-/* RED = Used Device / Same Device */
-.red .already-circle-outer{border-color:rgba(248,113,113,0.35);background:radial-gradient(circle, rgba(239,68,68,0.1), transparent 70%)}
-.red .already-circle-inner{border-color:rgba(248,113,113,0.3)}
-.red .already-shield{background:linear-gradient(135deg,#ef4444,#f87171);box-shadow:0 0 0 8px rgba(239,68,68,0.12), 0 8px 24px rgba(239,68,68,0.3)}
-.red .already-title{color:#f87171}
-.red .already-sub{color:#fca5a5}
-
-.bigBlue{width:100px;height:100px;margin:0 auto 18px;background:linear-gradient(135deg,#7c3aed,#4f46e5);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:44px;box-shadow:0 0 0 12px rgba(124,58,237,0.12), 0 20px 40px rgba(79,70,229,0.35)}
-.btn{width:100%;padding:14px;border:none;border-radius:14px;font-weight:800;font-size:12.5px;letter-spacing:0.5px;cursor:pointer;margin-top:22px;text-transform:uppercase}
-.btn-blue{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;box-shadow:0 8px 20px rgba(37,99,235,0.35)}
-.btn-red{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;box-shadow:0 8px 20px rgba(239,68,68,0.35)}
-.btn:active{transform:scale(0.98)}
-.watermark{margin-top:22px;text-align:center}
-.watermark a{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:100px;text-decoration:none;font-size:11px;font-weight:700;color:#94a3b8;backdrop-filter:blur(10px)}
-.watermark a:hover{background:rgba(124,58,237,0.15);border-color:rgba(124,58,237,0.3);color:#fff}
-.hidden{display:none!important}
+  :root{
+    --bg:#070b14; --bg-2:#0c1220; --card:#0e1524; --line:rgba(255,255,255,0.07);
+    --ink:#e7ecf5; --ink-dim:#8993a8; --teal:#2fe6b8; --teal-dim:rgba(47,230,184,0.14);
+    --violet:#8b7bff; --violet-dim:rgba(139,123,255,0.14); --amber:#ffb84d;
+    --amber-dim:rgba(255,184,77,0.14); --red:#ff5d6c; --red-dim:rgba(255,93,108,0.14);
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --disp:'Space Grotesk', system-ui, sans-serif; --body:'Inter', system-ui, sans-serif;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+  *{box-sizing:border-box; margin:0; padding:0;} html,body{height:100%;}
+  body{
+    background: radial-gradient(60% 45% at 50% 0%, rgba(139,123,255,0.10), transparent 60%), radial-gradient(50% 40% at 85% 90%, rgba(47,230,184,0.08), transparent 60%), var(--bg);
+    color:var(--ink); font-family:var(--body); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:28px 16px; -webkit-font-smoothing:antialiased;
+  }
+  .frame{ width:100%; max-width:400px; }
+  .id-card{ display:flex; align-items:center; gap:12px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px 16px; margin-bottom:14px; }
+  .id-avatar{ width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; background:linear-gradient(135deg, var(--violet-dim), var(--teal-dim)); border:1px solid var(--line); flex-shrink:0; }
+  .id-meta{ flex:1; min-width:0; } .id-name{ font-family:var(--disp); font-weight:600; font-size:15px; } .id-sub{ font-family:var(--mono); font-size:11.5px; color:var(--ink-dim); margin-top:2px; }
+  .id-status{ font-family:var(--mono); font-size:10.5px; letter-spacing:.04em; padding:5px 10px; border-radius:999px; white-space:nowrap; display:flex; align-items:center; gap:6px; }
+  .id-status .dot{ width:6px; height:6px; border-radius:50%; }
+  .id-status.st-scan{ background:var(--violet-dim); color:var(--violet); } .id-status.st-scan .dot{ background:var(--violet); animation:pulse 1s infinite; }
+  .id-status.st-ok{ background:var(--teal-dim); color:var(--teal); } .id-status.st-ok .dot{ background:var(--teal); }
+  .id-status.st-bad{ background:var(--red-dim); color:var(--red); } .id-status.st-bad .dot{ background:var(--red); }
+  .panel{ background:var(--card); border:1px solid var(--line); border-radius:22px; padding:36px 26px 28px; text-align:center; position:relative; overflow:hidden; }
+  .panel::before{ content:''; position:absolute; inset:0; background:radial-gradient(60% 50% at 50% 10%, rgba(255,255,255,0.035), transparent 70%); pointer-events:none; }
+  .rings{ width:180px; height:180px; margin:0 auto 26px; position:relative; display:flex; align-items:center; justify-content:center; }
+  .ring{ position:absolute; border-radius:50%; border:1px solid var(--line); }
+  .ring.r1{ width:180px; height:180px; } .ring.r2{ width:140px; height:140px; }
+  .ring.r3{ width:100px; height:100px; border:2px solid var(--accent, var(--violet)); box-shadow:0 0 0 1px var(--accent, var(--violet)) inset, 0 0 30px -6px var(--accent, var(--violet)); }
+  .ring.spin{ border-top-color:var(--accent, var(--violet)); animation:spin 1.6s linear infinite; }
+  .glow-dot{ position:absolute; width:6px; height:6px; border-radius:50%; background:var(--accent, var(--violet)); top:10%; left:6%; box-shadow:0 0 10px 2px var(--accent, var(--violet)); opacity:.8; }
+  .core-icon{ font-size:34px; position:relative; z-index:2; line-height:1; }
+  .stepper{ display:flex; align-items:center; justify-content:center; gap:8px; font-family:var(--mono); font-size:11px; letter-spacing:.03em; color:var(--ink-dim); margin-bottom:18px; }
+  .stepper .step{ display:flex; align-items:center; gap:6px; } .stepper .num{ width:18px; height:18px; border-radius:50%; border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:10px; }
+  .stepper .step.active{ color:var(--ink); } .stepper .step.active .num{ border-color:var(--accent, var(--violet)); color:var(--accent, var(--violet)); }
+  .stepper .step.done .num{ border-color:var(--teal); color:var(--teal); background:var(--teal-dim); }
+  .stepper .bar{ width:22px; height:1px; background:var(--line); }
+  h1{ font-family:var(--disp); font-size:22px; font-weight:600; margin-bottom:6px; } h1.ok{ color:var(--teal); } h1.bad{ color:var(--red); } h1.warn{ color:var(--amber); }
+  .sub{ font-size:13.5px; color:var(--ink-dim); line-height:1.5; margin-bottom:20px; padding:0 6px; }
+  .log{ font-family:var(--mono); font-size:11px; color:var(--ink-dim); text-align:left; background:var(--bg-2); border:1px solid var(--line); border-radius:12px; padding:12px 14px; height:96px; overflow:hidden; margin-bottom:20px; }
+  .log div{ opacity:0; animation:fadeIn .3s forwards; margin-bottom:3px; } .log .ok-tag{ color:var(--teal); } .log .hash{ color:var(--violet); word-break:break-all; }
+  .cta{ width:100%; border:none; border-radius:14px; padding:15px; font-family:var(--disp); font-weight:600; font-size:15px; cursor:pointer; transition:transform .15s ease, opacity .15s ease; }
+  .cta:active{ transform:scale(.98); } .cta.primary{ background:var(--teal); color:#04231b; } .cta.retry{ background:var(--red); color:#2a0a0d; } .cta.ghost{ background:transparent; border:1px solid var(--line); color:var(--ink); margin-top:10px; } .cta[disabled]{ opacity:.45; pointer-events:none; }
+  .foot{ text-align:center; font-size:11.5px; color:var(--ink-dim); margin-top:18px; } .foot b{ color:var(--ink); font-weight:600; }
+  @keyframes spin{ to{ transform:rotate(360deg); } } @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.3; } } @keyframes fadeIn{ to{ opacity:1; } }
+  #soundToggle{ display:flex; align-items:center; gap:6px; margin:0 auto 14px; padding:7px 14px; background:var(--card); border:1px solid var(--line); border-radius:999px; color:var(--ink-dim); font-family:var(--mono); font-size:11px; cursor:pointer; }
+  #soundToggle.off{ color:var(--red); }
+  #tapUnlock{ position:fixed; inset:0; z-index:50; background:rgba(4,7,14,0.72); backdrop-filter:blur(2px); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:10px; text-align:center; padding:20px; font-family:var(--body); color:var(--ink); cursor:pointer; }
+  #tapUnlock .big{ font-size:30px; } #tapUnlock .txt{ font-family:var(--disp); font-weight:600; font-size:15px; } #tapUnlock .sub2{ font-size:12.5px; color:var(--ink-dim); }
+  .hidden{ display:none !important; }
 </style>
 </head>
 <body>
-<div class="bg"><div class="blob b1"></div><div class="blob b2"></div></div>
-<div class="container">
-<div class="header"><div class="logo">ROX</div><h2>Device Verification</h2><p id="uidText">ID: 7528813331</p></div>
-<div class="card">
-<div id="v1">
-<div class="fp-wrap"><div class="wave w1"></div><div class="wave w2"></div><div class="wave w3"></div><div class="fp-core"><span class="fp-icon">🛡️</span><div class="scan-line"></div></div></div>
-<div class="title" id="mt">Securing Your Device</div><div class="sub" id="ms">Analyzing security profile to prevent multi-account abuse</div>
-<div class="meta"><div class="chip"><span class="chip-dot" id="chipDot" style="background:#a78bfa"></span><span id="chipText">SCANNING</span></div><div class="chip">⚡ FAST SCAN</div></div>
-<div class="progress"><div class="p-head"><span id="pLabel">INITIALIZING</span><span id="pct">0%</span></div><div class="p-bar"><div class="p-fill" id="fill"></div></div></div>
-<div class="list">
-<div class="row" id="c1"><div class="r-icon">📱</div><div class="r-text"><b>DEVICE INTEGRITY</b><span id="c1t">Waiting...</span></div><span class="r-dot" id="c1d"></span></div>
-<div class="row" id="c2"><div class="r-icon">🌐</div><div class="r-text"><b>NETWORK SECURITY</b><span id="c2t">Waiting...</span></div><span class="r-dot" id="c2d"></span></div>
-<div class="row" id="c3"><div class="r-icon">🔐</div><div class="r-text"><b>SESSION VALIDATION</b><span id="c3t">Waiting...</span></div><span class="r-dot" id="c3d"></span></div>
+<div class="frame">
+  <div class="id-card"><div class="id-avatar">🛡️</div><div class="id-meta"><div class="id-name" id="botName">Loading…</div><div class="id-sub" id="botId">ID: —</div></div><div class="id-status st-scan" id="idStatus"><span class="dot"></span><span id="idStatusText">SCANNING</span></div></div>
+  <button id="soundToggle">🔊 Sound on</button>
+  <div class="panel">
+    <div class="stepper" id="stepper"><div class="step active" data-step="1"><span class="num">1</span>SCAN</div><div class="bar"></div><div class="step" data-step="2"><span class="num">2</span>VERIFY</div><div class="bar"></div><div class="step" data-step="3"><span class="num">3</span>DONE</div></div>
+    <div class="rings" id="rings"><div class="ring r1"></div><div class="ring r2 spin"></div><div class="ring r3"></div><div class="glow-dot"></div><div class="core-icon" id="coreIcon">🔍</div></div>
+    <h1 id="title">Scanning Device</h1><div class="sub" id="subtitle">Reading device signals to confirm you're a real, unique user.</div>
+    <div class="log" id="log"></div>
+    <button class="cta primary hidden" id="ctaMain">Continue to Bot</button><button class="cta retry hidden" id="ctaRetry">Try Again</button>
+  </div>
+  <div class="foot">Designed by <b>Ravi Maker Bot</b></div>
 </div>
-</div>
-<div id="v2" class="hidden"><div class="bigBlue">✓</div><div class="title">Verified Successfully</div><div class="sub">Your device has been authenticated<br>Welcome to PIRO Network</div><button class="btn btn-blue" onclick="closeApp()">Continue to Bot →</button></div>
-
-<!-- BLUE ALREADY VERIFIED -->
-<div id="v3-blue" class="hidden blue">
-<div class="already-wrap"><div class="already-circle-outer"></div><div class="already-circle-inner"></div><div class="already-shield">🛡️</div></div>
-<div class="already-title">Already Verified</div>
-<div class="already-sub">Your device is already verified.<br>Welcome back!</div>
-<button class="btn btn-blue" onclick="closeApp()">CONTINUE TO BOT</button>
-</div>
-
-<!-- RED USED DEVICE -->
-<div id="v3-red" class="hidden red">
-<div class="already-wrap"><div class="already-circle-outer"></div><div class="already-circle-inner"></div><div class="already-shield">⚠️</div></div>
-<div class="already-title">Used Device Detected</div>
-<div class="already-sub" id="am">Warning: This physical phone is already linked to another account.</div>
-<button class="btn btn-red" onclick="closeApp()">CONTINUE TO BOT</button>
-</div>
-
-</div>
-<div class="watermark">
-<a href="https://t.me/ROXXOP" target="_blank" onclick="try{Telegram.WebApp.openTelegramLink('https://t.me/ROXXOP'); return false;}catch(e){}">
-<span>Designed By</span> <span style="color:#a5b4fc">ROX</span> <span>🇮🇳</span>
-</a>
-</div>
-</div>
+<div id="tapUnlock" class="hidden"><div class="big">🔈</div><div class="txt">Tap to enable sound</div><div class="sub2">Your browser blocks audio until you interact with the page</div></div>
 <script>
-const tg=window.Telegram?.WebApp; if(tg){tg.ready(); tg.expand();}
-function closeApp(){try{tg.close()}catch(e){} try{window.close()}catch(e){}}
-function qp(){const u=new URL(location.href);return{id:u.searchParams.get('id')||'',uid:u.searchParams.get('user_id')||tg?.initDataUnsafe?.user?.id||'',un:u.searchParams.get('username')||tg?.initDataUnsafe?.user?.username||'',hash:u.searchParams.get('bot_hash')||'',bot:u.searchParams.get('bot')||''}}
-async function getCanvasHash(){try{const c=document.createElement('canvas');c.width=200;c.height=50;const ctx=c.getContext('2d');ctx.textBaseline='top';ctx.font='14px Arial';ctx.fillStyle='#f60';ctx.fillRect(10,10,100,30);ctx.fillStyle='#069';ctx.fillText('DeviceCheck123',20,20);return c.toDataURL().slice(-100);}catch(e){return 'no-canvas';}}
-async function getWebGLHash(){try{const c=document.createElement('canvas');const gl=c.getContext('webgl')||c.getContext('experimental-webgl');if(!gl)return 'no-webgl';const dbg=gl.getExtension('WEBGL_debug_renderer_info');return (gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)||'').slice(0,60);}catch(e){return 'no-webgl';}}
-function setC(id,st,text){const el=document.getElementById(id);const dot=document.getElementById(id+'d');const txt=document.getElementById(id+'t');if(st==='a'){el.classList.add('active');dot.className='r-dot blue'; if(text) txt.textContent=text;}if(st==='d'){el.classList.remove('active');el.classList.add('done');dot.className='r-dot green'; if(text) txt.textContent=text;}}
-function setProgress(p,label){document.getElementById('fill').style.width=p+'%';document.getElementById('pct').textContent=Math.round(p)+'%';if(label)document.getElementById('pLabel').textContent=label;}
-function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
-async function run(){
-const p=qp(); document.getElementById('uidText').textContent='ID: '+(p.uid||'7528813331');
-let serverData=null;
-let fetchPromise=(async()=>{
-  try{
-    const fp=await FingerprintJS.load(); const res=await fp.get();
-    const ch=await getCanvasHash(); const wh=await getWebGLHash();
-    const payload={bot_id:p.id,id:p.id,user_id:String(p.uid),username:p.un,bot_hash:p.hash,visitorId:res.visitorId,information:`${res.visitorId}x${screen.width}x${screen.height}`,canvasHash:ch,webglHash:wh,screenInfo:`${screen.width}x${screen.height}x${screen.colorDepth}`,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||'',tzOffset:new Date().getTimezoneOffset(),language:navigator.language||'',platform:navigator.platform||'',hardware:`${navigator.hardwareConcurrency||0}x${navigator.deviceMemory||0}`,touchPoints:navigator.maxTouchPoints||0,ua:navigator.userAgent,initData:tg?.initData||''};
-    const low=payload.ua.toLowerCase();
-    if(low.includes('turbotel')||low.includes('turbo')||!payload.initData||payload.initData.length<10){
-      serverData={status:"error",title:"TurboTel Detected",message:"Fake Telegram Client Detected! Use official app.",hash:p.hash,type:"turbo"}; return;
+(function(){
+  const qs = new URLSearchParams(location.search);
+  const BOT_USERNAME = qs.get('botusername') || '';
+  const BOT_TOKEN = qs.get('bottoken') || '';
+  const WEBHOOK = qs.get('webhook') || '';
+  const HASH = qs.get('hash') || '';
+  const USER_ID = qs.get('user_id') || '';
+  const $ = (id) => document.getElementById(id);
+  const rings = $('rings'), title = $('title'), subtitle = $('subtitle'), log = $('log');
+  const ctaMain = $('ctaMain'), ctaRetry = $('ctaRetry');
+  const idStatus = $('idStatus'), idStatusText = $('idStatusText');
+  const coreIcon = $('coreIcon');
+  const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+  if (tg) { try { tg.ready(); tg.expand(); } catch(e){} }
+
+  const Sound = (function(){
+    let ctx=null,muted=false,pingTimer=null;
+    const toggleBtn=$('soundToggle'), unlockOverlay=$('tapUnlock');
+    function ensureCtx(){ if(!ctx) ctx=new (window.AudioContext||window.webkitAudioContext)(); return ctx; }
+    function tone(freq,start,dur,type,peakGain){ if(muted) return; const c=ensureCtx(); const osc=c.createOscillator(); const gain=c.createGain(); osc.type=type||'sine'; osc.frequency.setValueAtTime(freq,c.currentTime+start); gain.gain.setValueAtTime(0,c.currentTime+start); gain.gain.linearRampToValueAtTime(peakGain||0.08,c.currentTime+start+0.015); gain.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+start+dur); osc.connect(gain).connect(c.destination); osc.start(c.currentTime+start); osc.stop(c.currentTime+start+dur+0.05); }
+    function sweep(freqFrom,freqTo,start,dur,peakGain){ if(muted) return; const c=ensureCtx(); const osc=c.createOscillator(); const gain=c.createGain(); osc.type='sine'; osc.frequency.setValueAtTime(freqFrom,c.currentTime+start); osc.frequency.exponentialRampToValueAtTime(freqTo,c.currentTime+start+dur); gain.gain.setValueAtTime(0,c.currentTime+start); gain.gain.linearRampToValueAtTime(peakGain||0.07,c.currentTime+start+0.02); gain.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+start+dur); osc.connect(gain).connect(c.destination); osc.start(c.currentTime+start); osc.stop(c.currentTime+start+dur+0.05); }
+    function startScanPing(){ stopScanPing(); sweep(700,1400,0,0.35,0.05); pingTimer=setInterval(()=>tone(1500,0,0.12,'sine',0.045),850); }
+    function stopScanPing(){ if(pingTimer){clearInterval(pingTimer);pingTimer=null;} }
+    function playSuccess(){ stopScanPing(); tone(660,0,0.14,'sine',0.07); tone(880,0.12,0.14,'sine',0.07); tone(1320,0.24,0.22,'sine',0.08); }
+    function playWarn(){ stopScanPing(); tone(660,0,0.14,'sine',0.06); tone(500,0.14,0.22,'sine',0.06); }
+    function playFail(){ stopScanPing(); tone(320,0,0.18,'sawtooth',0.05); tone(220,0.16,0.28,'sawtooth',0.06); }
+    function setMuted(v){ muted=v; toggleBtn.classList.toggle('off',muted); toggleBtn.textContent=muted?'🔇 Sound off':'🔊 Sound on'; if(muted) stopScanPing(); }
+    toggleBtn.addEventListener('click',()=>setMuted(!muted));
+    function tryUnlockAndPlay(after){ ensureCtx(); if(ctx.state==='suspended'){ unlockOverlay.classList.remove('hidden'); const unlock=()=>{ ctx.resume().then(()=>{ unlockOverlay.classList.add('hidden'); unlockOverlay.removeEventListener('click',unlock); if(after) after(); }); }; unlockOverlay.addEventListener('click',unlock); } else { if(after) after(); } }
+    return { startScanPing, stopScanPing, playSuccess, playWarn, playFail, tryUnlockAndPlay, setMuted };
+  })();
+
+  (async function loadBotProfile(){ if(!BOT_TOKEN){ $('botName').textContent=BOT_USERNAME?('@'+BOT_USERNAME):'Verification'; return; } try{ const r=await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getMe`); const d=await r.json(); if(d&&d.ok){ $('botName').textContent=d.result.first_name||('@'+d.result.username); $('botId').textContent='ID: '+d.result.id; } else { $('botName').textContent=BOT_USERNAME?('@'+BOT_USERNAME):'Verification'; } }catch(e){ $('botName').textContent=BOT_USERNAME?('@'+BOT_USERNAME):'Verification'; } })();
+  function setStep(n){ document.querySelectorAll('#stepper .step').forEach(s=>{ const step=parseInt(s.dataset.step,10); s.classList.toggle('active',step===n); s.classList.toggle('done',step<n); }); }
+  function setAccent(color){ rings.style.setProperty('--accent',color); }
+  function logLine(html,delay){ const d=document.createElement('div'); d.innerHTML=html; d.style.animationDelay=delay+'ms'; log.appendChild(d); }
+  function setIdStatus(cls,text){ idStatus.className='id-status '+cls; idStatusText.textContent=text; }
+  async function sha256(str){ const buf=await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str)); return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join(''); }
+  function canvasSignal(){ try{ const c=document.createElement('canvas'); const ctx=c.getContext('2d'); ctx.textBaseline='top'; ctx.font='14px Arial'; ctx.fillText('device-fp-🔐-verify',2,2); return c.toDataURL(); }catch(e){ return 'no-canvas'; } }
+  async function computeFingerprint(){ const parts=[navigator.userAgent,navigator.language,screen.width+'x'+screen.height+'x'+screen.colorDepth,Intl.DateTimeFormat().resolvedOptions().timeZone,navigator.hardwareConcurrency||0,navigator.platform||'',canvasSignal()].join('||'); return await sha256(parts); }
+  async function checkVPN(){ try{ const r=await fetch('https://ipapi.co/json/'); if(!r.ok) return false; const d=await r.json(); const org=(d.org||'').toLowerCase(); const flags=['vpn','proxy','hosting','datacenter','cloud','digitalocean','amazon','ovh','vultr','linode']; return flags.some(f=>org.includes(f)); }catch(e){return false;} }
+  function checkCloneApp(){ if(!tg) return true; const officialPlatforms=['android','ios','tdesktop','weba','web','macos','windows']; const platform=(tg.platform||'').toLowerCase(); const hasInitData=!!(tg.initData&&tg.initData.length>0); if(!hasInitData) return true; if(platform&&!officialPlatforms.includes(platform)) return true; return false; }
+
+  async function postResult(status, message, fp){
+    // 1. TBC ko bhejo - RASTA 2 FIX
+    if(tg){
+      try{
+        tg.sendData(JSON.stringify({ status: status, title: message, message: message, hash: HASH, fp: fp, user_id: USER_ID }));
+        console.log("TBC sendData sent:", status, message);
+      }catch(e){ console.log(e); }
     }
-    const r=await fetch(`./verify.php?id=${encodeURIComponent(p.id)}&bot_hash=${encodeURIComponent(p.hash)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    serverData=await r.json();
-  }catch(e){ serverData={status:"error",title:"Network Error",message:e.message,hash:p.hash,type:"network"}; }
-})();
+    // 2. Old Render webhook bhi bhejo agar webhook param hai
+    if(!WEBHOOK) return {ok:true};
+    try{
+      const res=await fetch(WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status,message,fp,deviceCheckEnabled:true,hash:HASH,user_id:USER_ID})});
+      return {ok:res.ok};
+    }catch(e){ return {ok:false}; }
+  }
 
-// 5-10 sec animation with pauses
-for(let i=0;i<=35;i+=2){ setProgress(i,'INITIALIZING'); await sleep(45); }
-setC('c1','a','Analyzing hardware...');
-for(let i=35;i<=38;i++){ setProgress(i,'SCANNING DEVICE'); await sleep(100); }
-setC('c1','d','Hardware verified ✓');
-document.getElementById('chipText').textContent='CHECKING DEVICE';
-await sleep(2500);
+  function showResult({ variant, headline, body, icon, cta, payload, fp }){
+    setStep(3); coreIcon.textContent=icon; title.textContent=headline; title.className=variant; subtitle.textContent=body; log.classList.add('hidden'); rings.querySelector('.spin').classList.remove('spin');
+    if(variant==='ok'){ setAccent('var(--teal)'); setIdStatus('st-ok','VERIFIED'); Sound.playSuccess(); }
+    else if(variant==='warn'){ setAccent('var(--amber)'); setIdStatus('st-ok','VERIFIED'); Sound.playWarn(); }
+    else{ setAccent('var(--red)'); setIdStatus('st-bad','BLOCKED'); Sound.playFail(); }
+    if(cta==='continue'){
+      ctaMain.textContent='Continue to Bot'; ctaMain.classList.remove('hidden');
+      ctaMain.onclick=()=>{ if(tg){ try{ setTimeout(()=>tg.close(),500); }catch(e){} } if(BOT_USERNAME) setTimeout(()=>{location.href='https://t.me/'+BOT_USERNAME;},1500); };
+    } else if(cta==='retry'){
+      ctaRetry.classList.remove('hidden'); ctaRetry.onclick=()=>location.reload();
+    }
+  }
 
-setC('c2','a','Checking network reputation...');
-for(let i=40;i<=75;i+=2){ setProgress(i,'VERIFYING NETWORK'); await sleep(60); }
-document.getElementById('chipText').textContent='VERIFYING NETWORK';
-setProgress(78,'VALIDATING SESSION');
-setC('c2','d','Network secure ✓');
-await sleep(2500);
-
-setC('c3','a','Validating session...');
-for(let i=80;i<=100;i+=3){ setProgress(i,'FINALIZING'); await sleep(50); }
-setC('c3','d','Session valid ✓');
-
-await fetchPromise;
-setProgress(100,'COMPLETED');
-await sleep(600);
-if(tg)try{tg.sendData(JSON.stringify(serverData))}catch(e){}
-
-// LOGIC SPLIT - BLUE vs RED
-document.getElementById('v1').classList.add('hidden');
-
-if(serverData?.status==='success'){
-  document.getElementById('chipDot').style.background='#22c55e';
-  document.getElementById('chipText').textContent='VERIFIED';
-  document.getElementById('v2').classList.remove('hidden');
-  setTimeout(closeApp,1500);
-} 
-else if(serverData?.status==='info' || (serverData?.title||'').toLowerCase().includes('already')){
-  // BLUE - Already Verified (same user)
-  document.getElementById('chipDot').style.background='#60a5fa';
-  document.getElementById('chipText').textContent='ALREADY VERIFIED';
-  document.getElementById('v3-blue').classList.remove('hidden');
-  setTimeout(closeApp,2500);
-}
-else{
-  // RED - Used Device / Same Device / TurboTel / VPN
-  document.getElementById('chipDot').style.background='#f87171';
-  document.getElementById('chipText').textContent='USED DEVICE';
-  document.getElementById('v3-red').classList.remove('hidden');
-  document.getElementById('am').textContent=serverData?.message||'Warning: This physical phone is already linked to another account.';
-  setTimeout(closeApp,3000);
-}
-}
-run();
-</script>
-</body>
-  </html>
+  async function run(){
+    Sound.tryUnlockAndPlay(()=>Sound.startScanPing()); Sound.startScanPing(); setAccent('var(--violet)'); setStep(1);
+    logLine('<span class="ok-tag">›</span> checking display… <span class="ok-tag">ok</span>',0);
+    logLine('<span class="ok-tag">›</span> checking timezone… <span class="ok-tag">ok</span>',300);
+    logLine('<span class="ok-tag">›</span> checking hardware profile… <span class="ok-tag">ok</span>',600);
+    const fpPromise=computeFingerprint(); await new Promise(r=>setTimeout(r,1500));
+    setStep(2); title.textContent='Verifying Device'; subtitle.textContent='Processing result…'; setIdStatus('st-scan','VERIFYING');
+    const fp=await fpPromise; logLine('<span class="ok-tag">›</span> device hash <span class="hash">'+fp.slice(0,24)+'…</span>',0);
+    const alreadyKey='ff_verified_'+fp; const already=sessionStorage.getItem(alreadyKey);
+    const [isVpn,isClone]=await Promise.all([checkVPN(),Promise.resolve(checkCloneApp())]);
+    await new Promise(r=>setTimeout(r,900));
+    let payload;
+    if(isVpn){ payload={status:'fail', message:'VPN Detected'}; }
+    else if(isClone){ payload={status:'fail', message:'Clone App Detected'}; }
+    else if(already){ payload={status:'pass', message:'Already Verified'}; }
+    else{ payload={status:'pass', message:'Verified Successfully'}; sessionStorage.setItem(alreadyKey,'1'); }
+    const sent=await postResult(payload.status,payload.message,fp);
+    if(!sent.ok && WEBHOOK){
+      showResult({variant:'bad',headline:'Verification Failed',body:'We could not reach the bot to confirm your result. Please try again.',icon:'✕',cta:'retry',payload,fp}); return;
+    }
+    if(payload.status==='pass' && payload.message==='Verified Successfully'){
+      showResult({variant:'ok',headline:'Verified Successfully',body:'Your device is now verified. Redirecting to bot...',icon:'✅',cta:'continue',payload,fp});
+    } else if(payload.status==='pass' && payload.message==='Already Verified'){
+      showResult({variant:'warn',headline:'Already Verified',body:'Your device is already verified.',icon:'✔️',cta:'continue',payload,fp});
+    } else if(payload.message==='VPN Detected'){
+      showResult({variant:'bad',headline:'VPN Detected',body:'VPN/Proxy not allowed. Disable it.',icon:'🛡️',cta:'retry',payload,fp});
+    } else {
+      showResult({variant:'bad',headline:'Clone App Detected',body:'Use official Telegram app only.',icon:'
