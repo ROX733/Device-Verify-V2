@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Device Verification - ROX</title>
+<title>Device Verification</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&display=swap');
   :root{--bg:#070b14;--card:#0e1524;--line:rgba(255,255,255,0.07);--ink:#e7ecf5;--dim:#8993a8;--teal:#2fe6b8;--violet:#8b7bff;--red:#ff5d6c;--amber:#ffb84d;--teal-dim:rgba(47,230,184,0.14);--violet-dim:rgba(139,123,255,0.14);--red-dim:rgba(255,93,108,0.14);--amber-dim:rgba(255,184,77,0.14)}
   *{box-sizing:border-box;margin:0;padding:0} body{background:radial-gradient(60% 45% at 50% 0%, rgba(139,123,255,0.12), transparent 60%),var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
   .frame{width:100%;max-width:400px}
@@ -30,17 +30,17 @@
   .log{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);text-align:left;background:#0c1220;border:1px solid var(--line);border-radius:12px;padding:12px;height:90px;overflow:hidden;margin-bottom:18px}
   .cta{width:100%;border:none;border-radius:14px;padding:14px;font-family:'Space Grotesk',sans-serif;font-weight:600;cursor:pointer} .primary{background:var(--teal);color:#04231b} .retry{background:var(--red);color:#2a0a0d}
   .foot{text-align:center;font-size:11px;color:var(--dim);margin-top:16px;cursor:pointer} .foot b{color:var(--ink)}
-  @keyframes spin{to{transform:rotate(360deg)}} @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}} @keyframes fade{to{opacity:1}}
+  @keyframes spin{to{transform:rotate(360deg)}} @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
   .hidden{display:none !important}
 </style>
 </head>
 <body>
 <div class="frame">
-  <div class="id-card"><div class="id-avatar">🛡️</div><div class="id-meta"><div class="id-name" id="botName">ROX Verification</div><div class="id-sub" id="botId">Secure Device Check</div></div><div class="id-status st-scan" id="idStatus"><span class="dot"></span><span id="idStatusText">SCANNING</span></div></div>
+  <div class="id-card"><div class="id-avatar">🛡️</div><div class="id-meta"><div class="id-name">ROX Verification</div><div class="id-sub">Secure Device Check</div></div><div class="id-status st-scan" id="idStatus"><span class="dot"></span><span id="idStatusText">SCANNING</span></div></div>
   <div class="panel">
     <div class="stepper"><div class="step active" id="s1"><span class="num">1</span>SCAN</div><div style="width:20px;height:1px;background:var(--line)"></div><div class="step" id="s2"><span class="num">2</span>VERIFY</div><div style="width:20px;height:1px;background:var(--line)"></div><div class="step" id="s3"><span class="num">3</span>DONE</div></div>
     <div class="rings" id="rings"><div class="ring r1"></div><div class="ring r2 spin"></div><div class="ring r3"></div><div class="core" id="coreIcon">🔍</div></div>
-    <h1 id="title">Scanning Device</h1><div class="sub" id="subtitle">Reading device signals to confirm you're real.</div>
+    <h1 id="title">Scanning Device</h1><div class="sub" id="subtitle">Reading device signals...</div>
     <div class="log" id="log"></div>
     <button class="cta primary hidden" id="ctaMain">Continue to Bot</button><button class="cta retry hidden" id="ctaRetry">Try Again</button>
   </div>
@@ -49,12 +49,12 @@
 <script>
 (function(){
   const qs=new URLSearchParams(location.search);
-  const HASH=qs.get('hash')||qs.get('bot_hash')||''; const USER_ID=qs.get('user_id')||''; const BOT_USERNAME=qs.get('botusername')||qs.get('bot')||'';
+  const HASH=qs.get('hash')||qs.get('bot_hash')||''; const USER_ID=qs.get('user_id')||'';
   const $=id=>document.getElementById(id);
   const title=$('title'), subtitle=$('subtitle'), log=$('log'), ctaMain=$('ctaMain'), ctaRetry=$('ctaRetry'), idStatus=$('idStatus'), idStatusText=$('idStatusText'), coreIcon=$('coreIcon'), rings=$('rings');
   const tg=(window.Telegram&&window.Telegram.WebApp)?window.Telegram.WebApp:null; if(tg){try{tg.ready();tg.expand();}catch(e){}}
   $('watermark').onclick=()=>window.open('https://t.me/ROXXOP','_blank');
-  function setStep(n){ document.getElementById('s1').className=n==1?'step active':n>1?'step done':'step'; document.getElementById('s2').className=n==2?'step active':n>2?'step done':'step'; document.getElementById('s3').className=n==3?'step active':'step'; }
+  function setStep(n){ $('s1').className=n==1?'step active':n>1?'step done':'step'; $('s2').className=n==2?'step active':n>2?'step done':'step'; $('s3').className=n==3?'step active':'step'; }
   function setAccent(c){ rings.style.setProperty('--accent',c); }
   function logLine(h,d){ const el=document.createElement('div'); el.innerHTML=h; el.style.animation='fade .3s forwards'; el.style.animationDelay=d+'ms'; el.style.opacity='0'; log.appendChild(el); }
   function setIdStatus(cls,t){ idStatus.className='id-status '+cls; idStatusText.textContent=t; }
@@ -63,29 +63,19 @@
   async function fp(){ const p=[navigator.userAgent,navigator.language,screen.width+'x'+screen.height,Intl.DateTimeFormat().resolvedOptions().timeZone,navigator.hardwareConcurrency||0,canvasSig(),navigator.platform].join('||'); return await sha256(p); }
   function isClone(){ if(!tg) return true; return !(tg.initData&&tg.initData.length>0); }
   async function isVpn(){ try{ const r=await fetch('https://ipapi.co/json/'); const d=await r.json(); const o=(d.org||'').toLowerCase(); return ['vpn','proxy','hosting','datacenter'].some(f=>o.includes(f)); }catch(e){return false;} }
-  
-  // RASTA 2 FIX - TBC ko data bhejo
   function sendToTBC(status, message, fingerprint){
     const data={ status: status, title: message, message: message, hash: HASH, fp: fingerprint, user_id: USER_ID };
-    console.log("TBC SEND:", data);
-    if(tg){
-      try{
-        tg.sendData(JSON.stringify(data));
-        setTimeout(()=>{ try{tg.close();}catch(e){} }, 1500);
-      }catch(e){}
-    }
+    if(tg){ try{ tg.sendData(JSON.stringify(data)); setTimeout(()=>{ try{tg.close();}catch(e){} }, 1500); }catch(e){} }
   }
-
   function showResult(variant, head, body, icon, status, message, fingerprint){
     setStep(3); coreIcon.textContent=icon; title.textContent=head; title.className=variant; subtitle.textContent=body; log.classList.add('hidden'); rings.querySelector('.spin').classList.remove('spin');
     if(variant=='ok'){ setAccent('var(--teal)'); setIdStatus('st-ok','VERIFIED'); }
     else if(variant=='warn'){ setAccent('var(--amber)'); setIdStatus('st-warn','ALREADY'); }
     else{ setAccent('var(--red)'); setIdStatus('st-bad','BLOCKED'); }
     sendToTBC(status, message, fingerprint);
-    if(status=='pass'){ ctaMain.classList.remove('hidden'); ctaMain.onclick=()=>{ if(tg) try{tg.close();}catch(e){} }; }
+    if(status=='pass'){ ctaMain.classList.remove('hidden'); }
     else{ ctaRetry.classList.remove('hidden'); ctaRetry.onclick=()=>location.reload(); }
   }
-
   async function run(){
     setAccent('var(--violet)'); setStep(1);
     logLine('› checking display… <span style="color:var(--teal)">ok</span>',0);
@@ -95,21 +85,19 @@
     setStep(2); title.textContent='Verifying Device'; subtitle.textContent='Processing... 0%'; setIdStatus('st-scan','VERIFYING');
     const fingerprint=await fpp; logLine('› device hash <span style="color:var(--violet)">'+fingerprint.slice(0,20)+'…</span>',0);
     const [vpn, clone]=await Promise.all([isVpn(), Promise.resolve(isClone())]);
-    // 5-10 sec delay with stops at 30-40% and 70-80%
-    let prog=0;
-    const timer=setInterval(()=>{
+    let prog=0; const timer=setInterval(()=>{
       prog+=Math.random()*8;
       if(prog>=30 && prog<40){ subtitle.textContent='Processing... '+Math.floor(prog)+'% - Checking network'; return; }
       if(prog>=70 && prog<80){ subtitle.textContent='Processing... '+Math.floor(prog)+'% - Finalizing'; return; }
       subtitle.textContent='Processing... '+Math.min(99, Math.floor(prog))+'%';
       if(prog>=100){
         clearInterval(timer);
-        if(vpn){ showResult('bad','VPN Detected','VPN/Proxy not allowed. Disable it.','🛡️','fail','VPN Detected',fingerprint); }
+        if(vpn){ showResult('bad','VPN Detected','VPN/Proxy not allowed.','🛡️','fail','VPN Detected',fingerprint); }
         else if(clone){ showResult('bad','Clone App Detected','Use official Telegram app only.','📱','fail','Clone App Detected',fingerprint); }
         else{
           const key='ff_verified_'+fingerprint;
           if(sessionStorage.getItem(key)){ showResult('warn','Already Verified','Your device is already verified.','✔️','pass','Already Verified',fingerprint); }
-          else{ sessionStorage.setItem(key,'1'); showResult('ok','Verified Successfully','Your device is now verified. Redirecting...','✅','pass','Verified Successfully',fingerprint); }
+          else{ sessionStorage.setItem(key,'1'); showResult('ok','Verified Successfully','Your device is now verified.','✅','pass','Verified Successfully',fingerprint); }
         }
       }
     }, 350);
