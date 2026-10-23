@@ -3,173 +3,119 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Device Verification</title>
+<title>Device Verification - ROX</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-  :root{
-    --bg:#070b14; --bg-2:#0c1220; --card:#0e1524; --line:rgba(255,255,255,0.07);
-    --ink:#e7ecf5; --ink-dim:#8993a8; --teal:#2fe6b8; --teal-dim:rgba(47,230,184,0.14);
-    --violet:#8b7bff; --violet-dim:rgba(139,123,255,0.14); --amber:#ffb84d;
-    --amber-dim:rgba(255,184,77,0.14); --red:#ff5d6c; --red-dim:rgba(255,93,108,0.14);
-    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    --disp:'Space Grotesk', system-ui, sans-serif; --body:'Inter', system-ui, sans-serif;
-  }
-  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
-  *{box-sizing:border-box; margin:0; padding:0;} html,body{height:100%;}
-  body{
-    background: radial-gradient(60% 45% at 50% 0%, rgba(139,123,255,0.10), transparent 60%), radial-gradient(50% 40% at 85% 90%, rgba(47,230,184,0.08), transparent 60%), var(--bg);
-    color:var(--ink); font-family:var(--body); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:28px 16px; -webkit-font-smoothing:antialiased;
-  }
-  .frame{ width:100%; max-width:400px; }
-  .id-card{ display:flex; align-items:center; gap:12px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px 16px; margin-bottom:14px; }
-  .id-avatar{ width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; background:linear-gradient(135deg, var(--violet-dim), var(--teal-dim)); border:1px solid var(--line); flex-shrink:0; }
-  .id-meta{ flex:1; min-width:0; } .id-name{ font-family:var(--disp); font-weight:600; font-size:15px; } .id-sub{ font-family:var(--mono); font-size:11.5px; color:var(--ink-dim); margin-top:2px; }
-  .id-status{ font-family:var(--mono); font-size:10.5px; letter-spacing:.04em; padding:5px 10px; border-radius:999px; white-space:nowrap; display:flex; align-items:center; gap:6px; }
-  .id-status .dot{ width:6px; height:6px; border-radius:50%; }
-  .id-status.st-scan{ background:var(--violet-dim); color:var(--violet); } .id-status.st-scan .dot{ background:var(--violet); animation:pulse 1s infinite; }
-  .id-status.st-ok{ background:var(--teal-dim); color:var(--teal); } .id-status.st-ok .dot{ background:var(--teal); }
-  .id-status.st-bad{ background:var(--red-dim); color:var(--red); } .id-status.st-bad .dot{ background:var(--red); }
-  .panel{ background:var(--card); border:1px solid var(--line); border-radius:22px; padding:36px 26px 28px; text-align:center; position:relative; overflow:hidden; }
-  .panel::before{ content:''; position:absolute; inset:0; background:radial-gradient(60% 50% at 50% 10%, rgba(255,255,255,0.035), transparent 70%); pointer-events:none; }
-  .rings{ width:180px; height:180px; margin:0 auto 26px; position:relative; display:flex; align-items:center; justify-content:center; }
-  .ring{ position:absolute; border-radius:50%; border:1px solid var(--line); }
-  .ring.r1{ width:180px; height:180px; } .ring.r2{ width:140px; height:140px; }
-  .ring.r3{ width:100px; height:100px; border:2px solid var(--accent, var(--violet)); box-shadow:0 0 0 1px var(--accent, var(--violet)) inset, 0 0 30px -6px var(--accent, var(--violet)); }
-  .ring.spin{ border-top-color:var(--accent, var(--violet)); animation:spin 1.6s linear infinite; }
-  .glow-dot{ position:absolute; width:6px; height:6px; border-radius:50%; background:var(--accent, var(--violet)); top:10%; left:6%; box-shadow:0 0 10px 2px var(--accent, var(--violet)); opacity:.8; }
-  .core-icon{ font-size:34px; position:relative; z-index:2; line-height:1; }
-  .stepper{ display:flex; align-items:center; justify-content:center; gap:8px; font-family:var(--mono); font-size:11px; letter-spacing:.03em; color:var(--ink-dim); margin-bottom:18px; }
-  .stepper .step{ display:flex; align-items:center; gap:6px; } .stepper .num{ width:18px; height:18px; border-radius:50%; border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:10px; }
-  .stepper .step.active{ color:var(--ink); } .stepper .step.active .num{ border-color:var(--accent, var(--violet)); color:var(--accent, var(--violet)); }
-  .stepper .step.done .num{ border-color:var(--teal); color:var(--teal); background:var(--teal-dim); }
-  .stepper .bar{ width:22px; height:1px; background:var(--line); }
-  h1{ font-family:var(--disp); font-size:22px; font-weight:600; margin-bottom:6px; } h1.ok{ color:var(--teal); } h1.bad{ color:var(--red); } h1.warn{ color:var(--amber); }
-  .sub{ font-size:13.5px; color:var(--ink-dim); line-height:1.5; margin-bottom:20px; padding:0 6px; }
-  .log{ font-family:var(--mono); font-size:11px; color:var(--ink-dim); text-align:left; background:var(--bg-2); border:1px solid var(--line); border-radius:12px; padding:12px 14px; height:96px; overflow:hidden; margin-bottom:20px; }
-  .log div{ opacity:0; animation:fadeIn .3s forwards; margin-bottom:3px; } .log .ok-tag{ color:var(--teal); } .log .hash{ color:var(--violet); word-break:break-all; }
-  .cta{ width:100%; border:none; border-radius:14px; padding:15px; font-family:var(--disp); font-weight:600; font-size:15px; cursor:pointer; transition:transform .15s ease, opacity .15s ease; }
-  .cta:active{ transform:scale(.98); } .cta.primary{ background:var(--teal); color:#04231b; } .cta.retry{ background:var(--red); color:#2a0a0d; } .cta.ghost{ background:transparent; border:1px solid var(--line); color:var(--ink); margin-top:10px; } .cta[disabled]{ opacity:.45; pointer-events:none; }
-  .foot{ text-align:center; font-size:11.5px; color:var(--ink-dim); margin-top:18px; } .foot b{ color:var(--ink); font-weight:600; }
-  @keyframes spin{ to{ transform:rotate(360deg); } } @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.3; } } @keyframes fadeIn{ to{ opacity:1; } }
-  #soundToggle{ display:flex; align-items:center; gap:6px; margin:0 auto 14px; padding:7px 14px; background:var(--card); border:1px solid var(--line); border-radius:999px; color:var(--ink-dim); font-family:var(--mono); font-size:11px; cursor:pointer; }
-  #soundToggle.off{ color:var(--red); }
-  #tapUnlock{ position:fixed; inset:0; z-index:50; background:rgba(4,7,14,0.72); backdrop-filter:blur(2px); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:10px; text-align:center; padding:20px; font-family:var(--body); color:var(--ink); cursor:pointer; }
-  #tapUnlock .big{ font-size:30px; } #tapUnlock .txt{ font-family:var(--disp); font-weight:600; font-size:15px; } #tapUnlock .sub2{ font-size:12.5px; color:var(--ink-dim); }
-  .hidden{ display:none !important; }
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap');
+  :root{--bg:#070b14;--card:#0e1524;--line:rgba(255,255,255,0.07);--ink:#e7ecf5;--dim:#8993a8;--teal:#2fe6b8;--violet:#8b7bff;--red:#ff5d6c;--amber:#ffb84d;--teal-dim:rgba(47,230,184,0.14);--violet-dim:rgba(139,123,255,0.14);--red-dim:rgba(255,93,108,0.14);--amber-dim:rgba(255,184,77,0.14)}
+  *{box-sizing:border-box;margin:0;padding:0} body{background:radial-gradient(60% 45% at 50% 0%, rgba(139,123,255,0.12), transparent 60%),var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .frame{width:100%;max-width:400px}
+  .id-card{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:14px}
+  .id-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--violet-dim),var(--teal-dim));border:1px solid var(--line)} 
+  .id-meta{flex:1} .id-name{font-family:'Space Grotesk',sans-serif;font-weight:600} .id-sub{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim)}
+  .id-status{font-family:'JetBrains Mono',monospace;font-size:10px;padding:5px 10px;border-radius:999px;display:flex;align-items:center;gap:6px} .dot{width:6px;height:6px;border-radius:50%}
+  .st-scan{background:var(--violet-dim);color:var(--violet)} .st-scan .dot{background:var(--violet);animation:pulse 1s infinite}
+  .st-ok{background:var(--teal-dim);color:var(--teal)} .st-ok .dot{background:var(--teal)}
+  .st-bad{background:var(--red-dim);color:var(--red)} .st-bad .dot{background:var(--red)}
+  .st-warn{background:var(--amber-dim);color:var(--amber)} .st-warn .dot{background:var(--amber)}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:32px 24px;text-align:center}
+  .rings{width:160px;height:160px;margin:0 auto 24px;position:relative;display:flex;align-items:center;justify-content:center}
+  .ring{position:absolute;border-radius:50%;border:1px solid var(--line)} .r1{width:160px;height:160px} .r2{width:120px;height:120px} .r3{width:84px;height:84px;border:2px solid var(--accent,var(--violet));box-shadow:0 0 20px -5px var(--accent,var(--violet))}
+  .spin{border-top-color:var(--accent,var(--violet));animation:spin 1.6s linear infinite} .core{font-size:32px;z-index:2}
+  .stepper{display:flex;align-items:center;justify-content:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);margin-bottom:16px}
+  .step{display:flex;align-items:center;gap:5px} .num{width:16px;height:16px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:9px}
+  .active{color:var(--ink)} .active .num{border-color:var(--violet);color:var(--violet)} .done .num{border-color:var(--teal);color:var(--teal);background:var(--teal-dim)}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:22px;margin-bottom:6px} .ok{color:var(--teal)} .bad{color:var(--red)} .warn{color:var(--amber)}
+  .sub{font-size:13px;color:var(--dim);line-height:1.5;margin-bottom:18px}
+  .log{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);text-align:left;background:#0c1220;border:1px solid var(--line);border-radius:12px;padding:12px;height:90px;overflow:hidden;margin-bottom:18px}
+  .cta{width:100%;border:none;border-radius:14px;padding:14px;font-family:'Space Grotesk',sans-serif;font-weight:600;cursor:pointer} .primary{background:var(--teal);color:#04231b} .retry{background:var(--red);color:#2a0a0d}
+  .foot{text-align:center;font-size:11px;color:var(--dim);margin-top:16px;cursor:pointer} .foot b{color:var(--ink)}
+  @keyframes spin{to{transform:rotate(360deg)}} @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}} @keyframes fade{to{opacity:1}}
+  .hidden{display:none !important}
 </style>
 </head>
 <body>
 <div class="frame">
-  <div class="id-card"><div class="id-avatar">🛡️</div><div class="id-meta"><div class="id-name" id="botName">Loading…</div><div class="id-sub" id="botId">ID: —</div></div><div class="id-status st-scan" id="idStatus"><span class="dot"></span><span id="idStatusText">SCANNING</span></div></div>
-  <button id="soundToggle">🔊 Sound on</button>
+  <div class="id-card"><div class="id-avatar">🛡️</div><div class="id-meta"><div class="id-name" id="botName">ROX Verification</div><div class="id-sub" id="botId">Secure Device Check</div></div><div class="id-status st-scan" id="idStatus"><span class="dot"></span><span id="idStatusText">SCANNING</span></div></div>
   <div class="panel">
-    <div class="stepper" id="stepper"><div class="step active" data-step="1"><span class="num">1</span>SCAN</div><div class="bar"></div><div class="step" data-step="2"><span class="num">2</span>VERIFY</div><div class="bar"></div><div class="step" data-step="3"><span class="num">3</span>DONE</div></div>
-    <div class="rings" id="rings"><div class="ring r1"></div><div class="ring r2 spin"></div><div class="ring r3"></div><div class="glow-dot"></div><div class="core-icon" id="coreIcon">🔍</div></div>
-    <h1 id="title">Scanning Device</h1><div class="sub" id="subtitle">Reading device signals to confirm you're a real, unique user.</div>
+    <div class="stepper"><div class="step active" id="s1"><span class="num">1</span>SCAN</div><div style="width:20px;height:1px;background:var(--line)"></div><div class="step" id="s2"><span class="num">2</span>VERIFY</div><div style="width:20px;height:1px;background:var(--line)"></div><div class="step" id="s3"><span class="num">3</span>DONE</div></div>
+    <div class="rings" id="rings"><div class="ring r1"></div><div class="ring r2 spin"></div><div class="ring r3"></div><div class="core" id="coreIcon">🔍</div></div>
+    <h1 id="title">Scanning Device</h1><div class="sub" id="subtitle">Reading device signals to confirm you're real.</div>
     <div class="log" id="log"></div>
     <button class="cta primary hidden" id="ctaMain">Continue to Bot</button><button class="cta retry hidden" id="ctaRetry">Try Again</button>
   </div>
-  <div class="foot">Designed by <b>Ravi Maker Bot</b></div>
+  <div class="foot" id="watermark">Designed by <b>ROX 🇮🇳</b></div>
 </div>
-<div id="tapUnlock" class="hidden"><div class="big">🔈</div><div class="txt">Tap to enable sound</div><div class="sub2">Your browser blocks audio until you interact with the page</div></div>
 <script>
 (function(){
-  const qs = new URLSearchParams(location.search);
-  const BOT_USERNAME = qs.get('botusername') || '';
-  const BOT_TOKEN = qs.get('bottoken') || '';
-  const WEBHOOK = qs.get('webhook') || '';
-  const HASH = qs.get('hash') || '';
-  const USER_ID = qs.get('user_id') || '';
-  const $ = (id) => document.getElementById(id);
-  const rings = $('rings'), title = $('title'), subtitle = $('subtitle'), log = $('log');
-  const ctaMain = $('ctaMain'), ctaRetry = $('ctaRetry');
-  const idStatus = $('idStatus'), idStatusText = $('idStatusText');
-  const coreIcon = $('coreIcon');
-  const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
-  if (tg) { try { tg.ready(); tg.expand(); } catch(e){} }
-
-  const Sound = (function(){
-    let ctx=null,muted=false,pingTimer=null;
-    const toggleBtn=$('soundToggle'), unlockOverlay=$('tapUnlock');
-    function ensureCtx(){ if(!ctx) ctx=new (window.AudioContext||window.webkitAudioContext)(); return ctx; }
-    function tone(freq,start,dur,type,peakGain){ if(muted) return; const c=ensureCtx(); const osc=c.createOscillator(); const gain=c.createGain(); osc.type=type||'sine'; osc.frequency.setValueAtTime(freq,c.currentTime+start); gain.gain.setValueAtTime(0,c.currentTime+start); gain.gain.linearRampToValueAtTime(peakGain||0.08,c.currentTime+start+0.015); gain.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+start+dur); osc.connect(gain).connect(c.destination); osc.start(c.currentTime+start); osc.stop(c.currentTime+start+dur+0.05); }
-    function sweep(freqFrom,freqTo,start,dur,peakGain){ if(muted) return; const c=ensureCtx(); const osc=c.createOscillator(); const gain=c.createGain(); osc.type='sine'; osc.frequency.setValueAtTime(freqFrom,c.currentTime+start); osc.frequency.exponentialRampToValueAtTime(freqTo,c.currentTime+start+dur); gain.gain.setValueAtTime(0,c.currentTime+start); gain.gain.linearRampToValueAtTime(peakGain||0.07,c.currentTime+start+0.02); gain.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+start+dur); osc.connect(gain).connect(c.destination); osc.start(c.currentTime+start); osc.stop(c.currentTime+start+dur+0.05); }
-    function startScanPing(){ stopScanPing(); sweep(700,1400,0,0.35,0.05); pingTimer=setInterval(()=>tone(1500,0,0.12,'sine',0.045),850); }
-    function stopScanPing(){ if(pingTimer){clearInterval(pingTimer);pingTimer=null;} }
-    function playSuccess(){ stopScanPing(); tone(660,0,0.14,'sine',0.07); tone(880,0.12,0.14,'sine',0.07); tone(1320,0.24,0.22,'sine',0.08); }
-    function playWarn(){ stopScanPing(); tone(660,0,0.14,'sine',0.06); tone(500,0.14,0.22,'sine',0.06); }
-    function playFail(){ stopScanPing(); tone(320,0,0.18,'sawtooth',0.05); tone(220,0.16,0.28,'sawtooth',0.06); }
-    function setMuted(v){ muted=v; toggleBtn.classList.toggle('off',muted); toggleBtn.textContent=muted?'🔇 Sound off':'🔊 Sound on'; if(muted) stopScanPing(); }
-    toggleBtn.addEventListener('click',()=>setMuted(!muted));
-    function tryUnlockAndPlay(after){ ensureCtx(); if(ctx.state==='suspended'){ unlockOverlay.classList.remove('hidden'); const unlock=()=>{ ctx.resume().then(()=>{ unlockOverlay.classList.add('hidden'); unlockOverlay.removeEventListener('click',unlock); if(after) after(); }); }; unlockOverlay.addEventListener('click',unlock); } else { if(after) after(); } }
-    return { startScanPing, stopScanPing, playSuccess, playWarn, playFail, tryUnlockAndPlay, setMuted };
-  })();
-
-  (async function loadBotProfile(){ if(!BOT_TOKEN){ $('botName').textContent=BOT_USERNAME?('@'+BOT_USERNAME):'Verification'; return; } try{ const r=await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getMe`); const d=await r.json(); if(d&&d.ok){ $('botName').textContent=d.result.first_name||('@'+d.result.username); $('botId').textContent='ID: '+d.result.id; } else { $('botName').textContent=BOT_USERNAME?('@'+BOT_USERNAME):'Verification'; } }catch(e){ $('botName').textContent=BOT_USERNAME?('@'+BOT_USERNAME):'Verification'; } })();
-  function setStep(n){ document.querySelectorAll('#stepper .step').forEach(s=>{ const step=parseInt(s.dataset.step,10); s.classList.toggle('active',step===n); s.classList.toggle('done',step<n); }); }
-  function setAccent(color){ rings.style.setProperty('--accent',color); }
-  function logLine(html,delay){ const d=document.createElement('div'); d.innerHTML=html; d.style.animationDelay=delay+'ms'; log.appendChild(d); }
-  function setIdStatus(cls,text){ idStatus.className='id-status '+cls; idStatusText.textContent=text; }
-  async function sha256(str){ const buf=await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str)); return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join(''); }
-  function canvasSignal(){ try{ const c=document.createElement('canvas'); const ctx=c.getContext('2d'); ctx.textBaseline='top'; ctx.font='14px Arial'; ctx.fillText('device-fp-🔐-verify',2,2); return c.toDataURL(); }catch(e){ return 'no-canvas'; } }
-  async function computeFingerprint(){ const parts=[navigator.userAgent,navigator.language,screen.width+'x'+screen.height+'x'+screen.colorDepth,Intl.DateTimeFormat().resolvedOptions().timeZone,navigator.hardwareConcurrency||0,navigator.platform||'',canvasSignal()].join('||'); return await sha256(parts); }
-  async function checkVPN(){ try{ const r=await fetch('https://ipapi.co/json/'); if(!r.ok) return false; const d=await r.json(); const org=(d.org||'').toLowerCase(); const flags=['vpn','proxy','hosting','datacenter','cloud','digitalocean','amazon','ovh','vultr','linode']; return flags.some(f=>org.includes(f)); }catch(e){return false;} }
-  function checkCloneApp(){ if(!tg) return true; const officialPlatforms=['android','ios','tdesktop','weba','web','macos','windows']; const platform=(tg.platform||'').toLowerCase(); const hasInitData=!!(tg.initData&&tg.initData.length>0); if(!hasInitData) return true; if(platform&&!officialPlatforms.includes(platform)) return true; return false; }
-
-  async function postResult(status, message, fp){
-    // 1. TBC ko bhejo - RASTA 2 FIX
+  const qs=new URLSearchParams(location.search);
+  const HASH=qs.get('hash')||qs.get('bot_hash')||''; const USER_ID=qs.get('user_id')||''; const BOT_USERNAME=qs.get('botusername')||qs.get('bot')||'';
+  const $=id=>document.getElementById(id);
+  const title=$('title'), subtitle=$('subtitle'), log=$('log'), ctaMain=$('ctaMain'), ctaRetry=$('ctaRetry'), idStatus=$('idStatus'), idStatusText=$('idStatusText'), coreIcon=$('coreIcon'), rings=$('rings');
+  const tg=(window.Telegram&&window.Telegram.WebApp)?window.Telegram.WebApp:null; if(tg){try{tg.ready();tg.expand();}catch(e){}}
+  $('watermark').onclick=()=>window.open('https://t.me/ROXXOP','_blank');
+  function setStep(n){ document.getElementById('s1').className=n==1?'step active':n>1?'step done':'step'; document.getElementById('s2').className=n==2?'step active':n>2?'step done':'step'; document.getElementById('s3').className=n==3?'step active':'step'; }
+  function setAccent(c){ rings.style.setProperty('--accent',c); }
+  function logLine(h,d){ const el=document.createElement('div'); el.innerHTML=h; el.style.animation='fade .3s forwards'; el.style.animationDelay=d+'ms'; el.style.opacity='0'; log.appendChild(el); }
+  function setIdStatus(cls,t){ idStatus.className='id-status '+cls; idStatusText.textContent=t; }
+  async function sha256(s){ const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)); return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join(''); }
+  function canvasSig(){ try{ const c=document.createElement('canvas'); const x=c.getContext('2d'); x.textBaseline='top'; x.font='14px Arial'; x.fillText('fp-rox-verify',2,2); return c.toDataURL(); }catch(e){return 'no-canvas';} }
+  async function fp(){ const p=[navigator.userAgent,navigator.language,screen.width+'x'+screen.height,Intl.DateTimeFormat().resolvedOptions().timeZone,navigator.hardwareConcurrency||0,canvasSig(),navigator.platform].join('||'); return await sha256(p); }
+  function isClone(){ if(!tg) return true; return !(tg.initData&&tg.initData.length>0); }
+  async function isVpn(){ try{ const r=await fetch('https://ipapi.co/json/'); const d=await r.json(); const o=(d.org||'').toLowerCase(); return ['vpn','proxy','hosting','datacenter'].some(f=>o.includes(f)); }catch(e){return false;} }
+  
+  // RASTA 2 FIX - TBC ko data bhejo
+  function sendToTBC(status, message, fingerprint){
+    const data={ status: status, title: message, message: message, hash: HASH, fp: fingerprint, user_id: USER_ID };
+    console.log("TBC SEND:", data);
     if(tg){
       try{
-        tg.sendData(JSON.stringify({ status: status, title: message, message: message, hash: HASH, fp: fp, user_id: USER_ID }));
-        console.log("TBC sendData sent:", status, message);
-      }catch(e){ console.log(e); }
+        tg.sendData(JSON.stringify(data));
+        setTimeout(()=>{ try{tg.close();}catch(e){} }, 1500);
+      }catch(e){}
     }
-    // 2. Old Render webhook bhi bhejo agar webhook param hai
-    if(!WEBHOOK) return {ok:true};
-    try{
-      const res=await fetch(WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status,message,fp,deviceCheckEnabled:true,hash:HASH,user_id:USER_ID})});
-      return {ok:res.ok};
-    }catch(e){ return {ok:false}; }
   }
 
-  function showResult({ variant, headline, body, icon, cta, payload, fp }){
-    setStep(3); coreIcon.textContent=icon; title.textContent=headline; title.className=variant; subtitle.textContent=body; log.classList.add('hidden'); rings.querySelector('.spin').classList.remove('spin');
-    if(variant==='ok'){ setAccent('var(--teal)'); setIdStatus('st-ok','VERIFIED'); Sound.playSuccess(); }
-    else if(variant==='warn'){ setAccent('var(--amber)'); setIdStatus('st-ok','VERIFIED'); Sound.playWarn(); }
-    else{ setAccent('var(--red)'); setIdStatus('st-bad','BLOCKED'); Sound.playFail(); }
-    if(cta==='continue'){
-      ctaMain.textContent='Continue to Bot'; ctaMain.classList.remove('hidden');
-      ctaMain.onclick=()=>{ if(tg){ try{ setTimeout(()=>tg.close(),500); }catch(e){} } if(BOT_USERNAME) setTimeout(()=>{location.href='https://t.me/'+BOT_USERNAME;},1500); };
-    } else if(cta==='retry'){
-      ctaRetry.classList.remove('hidden'); ctaRetry.onclick=()=>location.reload();
-    }
+  function showResult(variant, head, body, icon, status, message, fingerprint){
+    setStep(3); coreIcon.textContent=icon; title.textContent=head; title.className=variant; subtitle.textContent=body; log.classList.add('hidden'); rings.querySelector('.spin').classList.remove('spin');
+    if(variant=='ok'){ setAccent('var(--teal)'); setIdStatus('st-ok','VERIFIED'); }
+    else if(variant=='warn'){ setAccent('var(--amber)'); setIdStatus('st-warn','ALREADY'); }
+    else{ setAccent('var(--red)'); setIdStatus('st-bad','BLOCKED'); }
+    sendToTBC(status, message, fingerprint);
+    if(status=='pass'){ ctaMain.classList.remove('hidden'); ctaMain.onclick=()=>{ if(tg) try{tg.close();}catch(e){} }; }
+    else{ ctaRetry.classList.remove('hidden'); ctaRetry.onclick=()=>location.reload(); }
   }
 
   async function run(){
-    Sound.tryUnlockAndPlay(()=>Sound.startScanPing()); Sound.startScanPing(); setAccent('var(--violet)'); setStep(1);
-    logLine('<span class="ok-tag">›</span> checking display… <span class="ok-tag">ok</span>',0);
-    logLine('<span class="ok-tag">›</span> checking timezone… <span class="ok-tag">ok</span>',300);
-    logLine('<span class="ok-tag">›</span> checking hardware profile… <span class="ok-tag">ok</span>',600);
-    const fpPromise=computeFingerprint(); await new Promise(r=>setTimeout(r,1500));
-    setStep(2); title.textContent='Verifying Device'; subtitle.textContent='Processing result…'; setIdStatus('st-scan','VERIFYING');
-    const fp=await fpPromise; logLine('<span class="ok-tag">›</span> device hash <span class="hash">'+fp.slice(0,24)+'…</span>',0);
-    const alreadyKey='ff_verified_'+fp; const already=sessionStorage.getItem(alreadyKey);
-    const [isVpn,isClone]=await Promise.all([checkVPN(),Promise.resolve(checkCloneApp())]);
-    await new Promise(r=>setTimeout(r,900));
-    let payload;
-    if(isVpn){ payload={status:'fail', message:'VPN Detected'}; }
-    else if(isClone){ payload={status:'fail', message:'Clone App Detected'}; }
-    else if(already){ payload={status:'pass', message:'Already Verified'}; }
-    else{ payload={status:'pass', message:'Verified Successfully'}; sessionStorage.setItem(alreadyKey,'1'); }
-    const sent=await postResult(payload.status,payload.message,fp);
-    if(!sent.ok && WEBHOOK){
-      showResult({variant:'bad',headline:'Verification Failed',body:'We could not reach the bot to confirm your result. Please try again.',icon:'✕',cta:'retry',payload,fp}); return;
-    }
-    if(payload.status==='pass' && payload.message==='Verified Successfully'){
-      showResult({variant:'ok',headline:'Verified Successfully',body:'Your device is now verified. Redirecting to bot...',icon:'✅',cta:'continue',payload,fp});
-    } else if(payload.status==='pass' && payload.message==='Already Verified'){
-      showResult({variant:'warn',headline:'Already Verified',body:'Your device is already verified.',icon:'✔️',cta:'continue',payload,fp});
-    } else if(payload.message==='VPN Detected'){
-      showResult({variant:'bad',headline:'VPN Detected',body:'VPN/Proxy not allowed. Disable it.',icon:'🛡️',cta:'retry',payload,fp});
-    } else {
-      showResult({variant:'bad',headline:'Clone App Detected',body:'Use official Telegram app only.',icon:'
+    setAccent('var(--violet)'); setStep(1);
+    logLine('› checking display… <span style="color:var(--teal)">ok</span>',0);
+    logLine('› checking timezone… <span style="color:var(--teal)">ok</span>',300);
+    logLine('› checking hardware… <span style="color:var(--teal)">ok</span>',600);
+    const fpp=fp(); await new Promise(r=>setTimeout(r,1200));
+    setStep(2); title.textContent='Verifying Device'; subtitle.textContent='Processing... 0%'; setIdStatus('st-scan','VERIFYING');
+    const fingerprint=await fpp; logLine('› device hash <span style="color:var(--violet)">'+fingerprint.slice(0,20)+'…</span>',0);
+    const [vpn, clone]=await Promise.all([isVpn(), Promise.resolve(isClone())]);
+    // 5-10 sec delay with stops at 30-40% and 70-80%
+    let prog=0;
+    const timer=setInterval(()=>{
+      prog+=Math.random()*8;
+      if(prog>=30 && prog<40){ subtitle.textContent='Processing... '+Math.floor(prog)+'% - Checking network'; return; }
+      if(prog>=70 && prog<80){ subtitle.textContent='Processing... '+Math.floor(prog)+'% - Finalizing'; return; }
+      subtitle.textContent='Processing... '+Math.min(99, Math.floor(prog))+'%';
+      if(prog>=100){
+        clearInterval(timer);
+        if(vpn){ showResult('bad','VPN Detected','VPN/Proxy not allowed. Disable it.','🛡️','fail','VPN Detected',fingerprint); }
+        else if(clone){ showResult('bad','Clone App Detected','Use official Telegram app only.','📱','fail','Clone App Detected',fingerprint); }
+        else{
+          const key='ff_verified_'+fingerprint;
+          if(sessionStorage.getItem(key)){ showResult('warn','Already Verified','Your device is already verified.','✔️','pass','Already Verified',fingerprint); }
+          else{ sessionStorage.setItem(key,'1'); showResult('ok','Verified Successfully','Your device is now verified. Redirecting...','✅','pass','Verified Successfully',fingerprint); }
+        }
+      }
+    }, 350);
+  }
+  run();
+})();
+</script>
+</body>
+</html>
