@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Device Verification</title>
+<title>Ravi Ka Verification System - New UI</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -17,8 +17,9 @@
   .user-left{display:flex;align-items:center;gap:12px}
   .user-avatar{width:44px;height:44px;border-radius:50%;background:#1f1d3a;border:2px solid #8b5cf6;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;overflow:hidden}
   .user-avatar img{width:100%;height:100%;object-fit:cover}
-  .user-meta .name{font-weight:600;font-size:14px} .user-meta .id{font-size:11px;color:#8a8aa0;margin-top:2px;font-family:monospace}
-  .verified-badge{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.5px}
+  .user-meta .name{font-weight:600;font-size:14px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .user-meta .id{font-size:11px;color:#8a8aa0;margin-top:2px;font-family:monospace}
+  .verified-badge{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.5px;transition:all 0.3s}
   .verified-badge.pending{background:rgba(255,184,77,0.12);border:1px solid rgba(255,184,77,0.3);color:#ffb84d}
   .verified-badge.verified{background:rgba(29,216,129,0.12);border:1px solid rgba(29,216,129,0.3);color:#1dd881}
   .verified-badge.blocked{background:rgba(255,93,108,0.12);border:1px solid rgba(255,93,108,0.3);color:#ff5d6c}
@@ -54,8 +55,6 @@
 <body>
 <div class="app">
   <div class="top-bar"><div class="r-logo" id="topR">R</div><div class="top-title">Ravi Ka Verification System - New UI</div></div>
-  
-  <!-- DYNAMIC USER CARD - No Basket Cash -->
   <div class="user-card">
     <div class="user-left">
       <div class="user-avatar" id="avatar">R</div>
@@ -66,7 +65,6 @@
     </div>
     <div class="verified-badge pending" id="badge"><span class="dot"></span><span id="badgeText">PENDING</span></div>
   </div>
-
   <div class="main-card" id="scanPanel">
     <div class="check-circle scanning" id="scanIcon">🛡️</div>
     <h1 class="scanning" id="scanTitle">Securing Your Device</h1><div class="sub" id="scanSub">Analyzing security profile to prevent multi-account abuse</div>
@@ -77,7 +75,6 @@
       <div class="check wait" id="check3"><div class="check-left"><span class="dot"></span>SESSION VALIDATION</div><div class="check-right" id="check3Right">⋯</div></div>
     </div>
   </div>
-
   <div class="main-card hidden" id="resultPanel">
     <div class="check-circle success" id="resultIcon">✓</div>
     <h1 class="success" id="resultTitle">Verified Successfully</h1><div class="sub" id="resultSub">Your device is secure and verified</div>
@@ -85,18 +82,20 @@
     <div class="checks" id="resultChecks"></div>
     <button class="continue success" id="continueBtn">Continue Securely</button>
   </div>
-
-  <div class="foot" id="watermark">Designed by ROX 🇮🇳 • Click to contact</div>
+  <div class="foot" id="watermark">© 2026 Prince | Designed By ROX 🇮🇳 • Click to contact</div>
 </div>
-
 <script>
 (function(){
   const qs=new URLSearchParams(location.search);
-  const HASH=qs.get('hash')||qs.get('bot_hash')||''; const USER_ID=qs.get('user_id')||''; const BOT_ID=qs.get('id')||qs.get('bot_id')||''; const USERNAME=qs.get('username')||'';
+  const HASH=qs.get('hash')||qs.get('bot_hash')||''; 
+  const USER_ID=qs.get('user_id')||''; 
+  const BOT_ID=qs.get('id')||qs.get('bot_id')||''; 
+  const USERNAME=qs.get('username')||'';
   const $=id=>document.getElementById(id);
-  const tg=(window.Telegram&&window.Telegram.WebApp)?window.Telegram.WebApp:null; if(tg){try{tg.ready();tg.expand();}catch(e){}}
-  
-  // DYNAMIC USER - Jo verify karega uska naam + ID + Avatar
+  const tg=(window.Telegram&&window.Telegram.WebApp)?window.Telegram.WebApp:null; 
+  if(tg){try{tg.ready();tg.expand();}catch(e){}}
+
+  // DYNAMIC USER - Jo verify karega uska naam + Chat ID + Avatar
   let displayName='ROX 🇮🇳'; let displayId=USER_ID||'7973967415'; let avatarLetter='R';
   if(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user){
     const u=tg.initDataUnsafe.user;
@@ -104,35 +103,68 @@
     if(u.username) displayName+=' @'+u.username;
     displayId=u.id; avatarLetter=(u.first_name||'U')[0].toUpperCase();
     $('userName').textContent=displayName; $('userId').textContent='ID: '+displayId; $('avatar').textContent=avatarLetter;
-    if(u.photo_url){ $('avatar').innerHTML='<img src="'+u.photo_url+'" style="width:100%;height:100%;border-radius:50%">'; }
+    if(u.photo_url){ $('avatar').innerHTML='<img src="'+u.photo_url+'">'; }
   } else {
     if(USERNAME){ displayName=USERNAME; avatarLetter=USERNAME[0].toUpperCase(); }
-    if(USER_ID){ displayId=USER_ID; }
     $('userName').textContent=displayName; $('userId').textContent='ID: '+displayId; $('avatar').textContent=avatarLetter;
   }
   $('watermark').onclick=()=>window.open('https://t.me/ROXXOP','_blank');
 
   async function sha256(s){ const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)); return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join(''); }
+  
   async function collectFP(){
-    const visitorId=await sha256(navigator.userAgent+screen.width+navigator.language);
+    const visitorId=await sha256(navigator.userAgent+screen.width+navigator.language+Intl.DateTimeFormat().resolvedOptions().timeZone);
     const canvasEl=document.createElement('canvas'); const ctx=canvasEl.getContext('2d'); ctx.font='14px Arial'; ctx.fillText('fp-'+USER_ID,2,2);
     const canvasHash=await sha256(canvasEl.toDataURL());
     let webglHash='no-webgl'; try{ const c=document.createElement('canvas'); const gl=c.getContext('webgl'); const dbg=gl.getExtension('WEBGL_debug_renderer_info'); const r=dbg?gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL):'no-webgl'; webglHash=await sha256(r);}catch(e){}
     return {bot_id:BOT_ID,id:BOT_ID,user_id:USER_ID,bot_hash:HASH,hash:HASH,visitorId,information:visitorId,canvasHash,canvas:canvasHash,webglHash,webgl:webglHash,screenInfo:screen.width+'x'+screen.height,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,tzOffset:new Date().getTimezoneOffset(),hardware:navigator.hardwareConcurrency+'x'+(navigator.deviceMemory||0),ua:navigator.userAgent,initData:tg?tg.initData:'',username:USERNAME};
   }
+
+  // WEBHOOK RESPONSE FIX - Tere naye onWebhook_code.py ke liye
   function sendToTBC(serverRes, fp){
-    const data={status: serverRes.status==='success'?'pass':serverRes.status==='info'?'pass':'fail', title: serverRes.title, message: serverRes.message, hash: HASH, fp: fp.visitorId, user_id: USER_ID, bot_id: BOT_ID};
-    if(tg){ try{ tg.sendData(JSON.stringify(data)); setTimeout(()=>tg.close(),1500); }catch(e){} }
+    // Tere onWebhook_code.py me message_txt == "Verified Successfully" exact check hai
+    let msg = serverRes.message || serverRes.title || "";
+    if(serverRes.status==='success') msg = "Verified Successfully";
+    else if(serverRes.status==='info') msg = "Already Verified";
+    else if(serverRes.title && serverRes.title.includes('VPN')) msg = "VPN Detected";
+    else if(serverRes.title && serverRes.title.includes('TurboTel')) msg = "Clone App Detected";
+    else if(serverRes.title && serverRes.title.includes('Used Device')) msg = "Verified Successfully"; // Used Device ko bhi pass bhej taaki FpOwners TBC pe pakad le
+    else if(serverRes.title && serverRes.title.includes('Clone App')) msg = "Clone App Detected";
+
+    const data = {
+      status: serverRes.status==='success' ? 'pass' : serverRes.status==='info' ? 'pass' : 'fail',
+      message: msg,
+      fp: fp.visitorId,
+      deviceCheckEnabled: true,
+      hash: HASH,
+      user_id: USER_ID,
+      bot_id: BOT_ID
+    };
+    
+    console.log('TBC SEND:', data);
+    if(tg){
+      try{
+        tg.sendData(JSON.stringify(data));
+        setTimeout(()=>{ try{tg.close();}catch(e){} }, 1500);
+      }catch(e){ console.log(e); }
+    }
   }
+
   async function run(){
     const fp=await collectFP(); let pct=0;
     const timer=setInterval(()=>{
-      pct+=Math.random()*10; if(pct>=32&&pct<40) { $('scanBar').style.width=pct+'%'; return; } if(pct>=72&&pct<80){ $('scanBar').style.width=pct+'%'; return; }
+      pct+=Math.random()*10; 
+      if(pct>=32&&pct<40) { $('scanBar').style.width=pct+'%'; return; } 
+      if(pct>=72&&pct<80){ $('scanBar').style.width=pct+'%'; return; }
       $('scanBar').style.width=Math.min(99,pct)+'%';
-      if(pct>=40){ $('check1').className='check done'; $('check1Right').textContent='✓'; } if(pct>=70){ $('check2').className='check done'; $('check2Right').textContent='✓'; } if(pct>=90){ $('check3').className='check done'; $('check3Right').textContent='✓'; }
+      if(pct>=40){ $('check1').className='check done'; $('check1Right').textContent='✓'; } 
+      if(pct>=70){ $('check2').className='check done'; $('check2Right').textContent='✓'; } 
+      if(pct>=90){ $('check3').className='check done'; $('check3Right').textContent='✓'; }
       if(pct>=100){
         clearInterval(timer); $('scanBar').style.width='100%';
-        fetch('https://device-verification-v2.onrender.com/verify.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(fp)}).then(r=>r.json()).then(serverRes=>{
+        fetch('https://device-verification-v2.onrender.com/verify.php',{
+          method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(fp)
+        }).then(r=>r.json()).then(serverRes=>{
           $('scanPanel').classList.add('hidden'); $('resultPanel').classList.remove('hidden');
           let checksHtml='';
           if(serverRes.status==='success'){
@@ -158,7 +190,10 @@
           $('resultChecks').innerHTML=checksHtml;
           sendToTBC(serverRes, fp);
           $('continueBtn').onclick=()=>{ if(tg){try{tg.close();}catch(e){}} };
-        }).catch(()=>{});
+        }).catch(()=>{
+          $('scanPanel').classList.add('hidden'); $('resultPanel').classList.remove('hidden');
+          $('resultTitle').textContent='Verification Failed';
+        });
       }
     },300);
   }
