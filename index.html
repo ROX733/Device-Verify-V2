@@ -3,147 +3,164 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ROX Device Verification</title>
+<title>Device Verification</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#0a0e1f;--card:#12182f;--line:rgba(255,255,255,0.06);--ink:#e7ecf5;--dim:#8a94ad;--teal:#2fe6b8;--violet:#8b7bff;--red:#ff5d6c;--amber:#ffb84d;--teal-dim:rgba(47,230,184,0.12);--violet-dim:rgba(139,123,255,0.12);--red-dim:rgba(255,93,108,0.12)}
-  *{box-sizing:border-box;margin:0;padding:0} body{background:radial-gradient(80% 60% at 50% 0%, #1a1f4a 0%, #0a0e1f 60%), var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
-  .frame{width:100%;max-width:380px}
-  .top{display:flex;flex-direction:column;align-items:center;margin-bottom:18px}
-  .logo{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#6c5cff,#8b7bff);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;box-shadow:0 8px 24px rgba(139,123,255,0.35);margin-bottom:10px}
-  .brand{font-family:'Space Grotesk',sans-serif;font-weight:700;letter-spacing:2px;font-size:13px} .brand-sub{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);letter-spacing:1px;margin-top:2px}
-  .panel{background:linear-gradient(180deg,#151c36,#11162d);border:1px solid var(--line);border-radius:24px;padding:28px 20px 20px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
-  .shield{width:72px;height:72px;margin:0 auto 16px;border-radius:18px;background:radial-gradient(60% 60% at 50% 30%, #1e2747, #151a33);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:28px;position:relative}
-  .shield::after{content:'';position:absolute;inset:-12px;border-radius:28px;border:1px solid rgba(139,123,255,0.12)}
-  h1{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;margin-bottom:6px} .sub{font-size:12px;color:var(--dim);line-height:1.4;margin-bottom:16px}
-  .badges{display:flex;gap:8px;justify-content:center;margin-bottom:16px} .badge{font-family:'JetBrains Mono',monospace;font-size:9px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.04);border:1px solid var(--line);display:flex;align-items:center;gap:5px} .badge .dot{width:5px;height:5px;border-radius:50%;background:var(--teal);box-shadow:0 0 6px var(--teal)}
-  .progress-wrap{margin-bottom:18px;text-align:left} .progress-head{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);margin-bottom:6px} .bar{height:4px;background:rgba(255,255,255,0.06);border-radius:999px;overflow:hidden} .bar-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--violet),var(--teal));transition:width 0.3s}
-  .checks{display:flex;flex-direction:column;gap:10px;text-align:left} .check{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
-  .check-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0} .check-icon.wait{background:rgba(255,255,255,0.05)} .check-icon.ok{background:var(--teal-dim);color:var(--teal)} .check-icon.bad{background:var(--red-dim);color:var(--red)}
-  .check-meta{flex:1} .check-title{font-size:12px;font-weight:600;letter-spacing:0.5px} .check-sub{font-size:11px;color:var(--dim);margin-top:2px} .check-status{width:14px;height:14px;border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:9px} .check-status.ok{border-color:var(--teal);background:var(--teal);color:#04231b} .check-status.bad{border-color:var(--red);background:var(--red);color:#fff}
-  .result-icon{width:72px;height:72px;margin:0 auto 14px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px} .result-icon.bad{background:var(--red-dim);border:1px solid rgba(255,93,108,0.2)} .result-icon.ok{background:var(--teal-dim);border:1px solid rgba(47,230,184,0.2)} .result-icon.warn{background:rgba(255,184,77,0.12);border:1px solid rgba(255,184,77,0.2)}
-  h2{font-family:'Space Grotesk',sans-serif;font-size:18px;margin-bottom:6px} h2.bad{color:var(--red)} h2.ok{color:var(--teal)} h2.warn{color:var(--amber)} .result-sub{font-size:12px;color:var(--dim);line-height:1.5;margin-bottom:18px}
-  .cta{width:100%;border:none;border-radius:14px;padding:14px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;cursor:pointer} .cta.bad{background:var(--red);color:#fff} .cta.ok{background:var(--teal);color:#04231b} .cta.warn{background:var(--amber);color:#2a1a00}
-  .foot{margin-top:16px;display:flex;justify-content:center} .foot-pill{font-size:10px;color:var(--dim);background:rgba(255,255,255,0.04);border:1px solid var(--line);padding:6px 12px;border-radius:999px;cursor:pointer} .foot-pill b{color:var(--ink)}
-  .hidden{display:none !important} @keyframes spin{to{transform:rotate(360deg)}} @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0a0a14;color:#e7e7f0;font-family:'Inter',sans-serif;display:flex;justify-content:center}
+  .app{width:100%;max-width:420px;background:linear-gradient(180deg,#0f0f1f 0%,#0a0a14 100%);min-height:100vh;padding-bottom:20px}
+  .top-bar{height:56px;display:flex;align-items:center;gap:10px;padding:0 14px;background:#141428;border-bottom:1px solid rgba(255,255,255,0.06)}
+  .r-logo{width:36px;height:36px;border-radius:10px;background:#8b5cf6;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:'Space Grotesk',sans-serif;font-size:16px}
+  .top-title{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px}
+  .user-card{margin:16px;background:#151328;border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:14px;display:flex;align-items:center;justify-content:space-between}
+  .user-left{display:flex;align-items:center;gap:12px}
+  .user-avatar{width:44px;height:44px;border-radius:50%;background:#1f1d3a;border:2px solid #8b5cf6;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;overflow:hidden}
+  .user-avatar img{width:100%;height:100%;object-fit:cover}
+  .user-meta .name{font-weight:600;font-size:14px} .user-meta .id{font-size:11px;color:#8a8aa0;margin-top:2px;font-family:monospace}
+  .verified-badge{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.5px}
+  .verified-badge.pending{background:rgba(255,184,77,0.12);border:1px solid rgba(255,184,77,0.3);color:#ffb84d}
+  .verified-badge.verified{background:rgba(29,216,129,0.12);border:1px solid rgba(29,216,129,0.3);color:#1dd881}
+  .verified-badge.blocked{background:rgba(255,93,108,0.12);border:1px solid rgba(255,93,108,0.3);color:#ff5d6c}
+  .verified-badge.already{background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.3);color:#3b82f6}
+  .verified-badge .dot{width:8px;height:8px;border-radius:50%}
+  .pending .dot{background:#ffb84d;box-shadow:0 0 8px #ffb84d;animation:pulse 1s infinite}
+  .verified .dot{background:#1dd881;box-shadow:0 0 8px #1dd881}
+  .blocked .dot{background:#ff5d6c;box-shadow:0 0 8px #ff5d6c}
+  .already .dot{background:#3b82f6;box-shadow:0 0 8px #3b82f6}
+  .main-card{margin:0 16px;background:#151328;border:1px solid rgba(255,255,255,0.06);border-radius:24px;padding:28px 20px 20px;text-align:center}
+  .check-circle{width:84px;height:84px;margin:0 auto 18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:38px;transition:all 0.5s}
+  .check-circle.scanning{background:#1f1d3a;border:2px solid #8b5cf6;animation:spinPulse 1.5s infinite}
+  .check-circle.success{background:#1dd881;box-shadow:0 0 40px rgba(29,216,129,0.4);color:#fff}
+  .check-circle.failed{background:#ff5d6c;box-shadow:0 0 40px rgba(255,93,108,0.4);color:#fff}
+  .check-circle.already{background:#3b82f6;box-shadow:0 0 40px rgba(59,130,246,0.4);color:#fff}
+  @keyframes spinPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}} @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:6px} h1.success{color:#1dd881} h1.failed{color:#ff5d6c} h1.scanning{color:#e7e7f0} h1.already{color:#3b82f6}
+  .sub{font-size:12px;color:#8a8aa0;margin-bottom:18px;line-height:1.4}
+  .purple-bar{height:8px;background:rgba(255,255,255,0.06);border-radius:999px;overflow:hidden;margin-bottom:20px} .purple-fill{height:100%;width:0%;background:#8b5cf6;border-radius:999px;transition:width 0.4s}
+  .checks{text-align:left;display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+  .check{display:flex;align-items:center;justify-content:space-between;font-size:11px;letter-spacing:0.5px} .check-left{display:flex;align-items:center;gap:8px} .check-left .dot{width:6px;height:6px;border-radius:50%}
+  .check.wait .check-left{color:#6a6a80} .check.wait .dot{background:#6a6a80}
+  .check.done .check-left{color:#1dd881} .check.done .dot{background:#1dd881;box-shadow:0 0 6px #1dd881}
+  .check.fail .check-left{color:#ff5d6c} .check.fail .dot{background:#ff5d6c;box-shadow:0 0 6px #ff5d6c}
+  .check.already .check-left{color:#3b82f6} .check.already .dot{background:#3b82f6;box-shadow:0 0 6px #3b82f6}
+  .continue{width:100%;padding:15px;border:none;border-radius:14px;font-weight:600;font-size:14px;cursor:pointer}
+  .continue.success{background:#8b5cf6;color:#fff;box-shadow:0 8px 24px rgba(139,92,246,0.3)}
+  .continue.failed{background:#ff5d6c;color:#fff} .continue.already{background:#3b82f6;color:#fff}
+  .foot{padding:20px;text-align:center;font-size:10px;color:#5a5a70;cursor:pointer}
+  .hidden{display:none !important}
 </style>
 </head>
 <body>
-<div class="frame">
-  <div class="top"><div class="logo">ROX</div><div class="brand">DEVICE VERIFICATION</div><div class="brand-sub" id="deviceId">ID: 82611507</div></div>
-  <div class="panel" id="scanPanel">
-    <div class="shield" id="shield">🛡️</div>
-    <h1>Securing Your Device</h1><div class="sub">Analyzing security profile to prevent multi-account abuse</div>
-    <div class="badges"><div class="badge"><span class="dot" style="animation:pulse 1s infinite"></span><span id="badge1">SCANNING</span></div><div class="badge">⚡ FAST SCAN</div></div>
-    <div class="progress-wrap"><div class="progress-head"><span id="progressText">INITIALIZING</span><span id="progressPct">4%</span></div><div class="bar"><div class="bar-fill" id="barFill"></div></div></div>
+<div class="app">
+  <div class="top-bar"><div class="r-logo" id="topR">R</div><div class="top-title">Ravi Ka Verification System - New UI</div></div>
+  
+  <!-- DYNAMIC USER CARD - No Basket Cash -->
+  <div class="user-card">
+    <div class="user-left">
+      <div class="user-avatar" id="avatar">R</div>
+      <div class="user-meta">
+        <div class="name" id="userName">Loading...</div>
+        <div class="id" id="userId">ID: ...</div>
+      </div>
+    </div>
+    <div class="verified-badge pending" id="badge"><span class="dot"></span><span id="badgeText">PENDING</span></div>
+  </div>
+
+  <div class="main-card" id="scanPanel">
+    <div class="check-circle scanning" id="scanIcon">🛡️</div>
+    <h1 class="scanning" id="scanTitle">Securing Your Device</h1><div class="sub" id="scanSub">Analyzing security profile to prevent multi-account abuse</div>
+    <div class="purple-bar"><div class="purple-fill" id="scanBar"></div></div>
     <div class="checks">
-      <div class="check" id="check1"><div class="check-icon wait" id="check1Icon">🔍</div><div class="check-meta"><div class="check-title">DEVICE INTEGRITY</div><div class="check-sub" id="check1Sub">Waiting...</div></div><div class="check-status" id="check1Status"></div></div>
-      <div class="check" id="check2"><div class="check-icon wait" id="check2Icon">🌐</div><div class="check-meta"><div class="check-title">NETWORK SECURITY</div><div class="check-sub" id="check2Sub">Waiting...</div></div><div class="check-status" id="check2Status"></div></div>
-      <div class="check" id="check3"><div class="check-icon wait" id="check3Icon">🔐</div><div class="check-meta"><div class="check-title">SESSION VALIDATION</div><div class="check-sub" id="check3Sub">Waiting...</div></div><div class="check-status" id="check3Status"></div></div>
+      <div class="check wait" id="check1"><div class="check-left"><span class="dot"></span>DEVICE INTEGRITY</div><div class="check-right" id="check1Right">⋯</div></div>
+      <div class="check wait" id="check2"><div class="check-left"><span class="dot"></span>NETWORK SECURITY</div><div class="check-right" id="check2Right">⋯</div></div>
+      <div class="check wait" id="check3"><div class="check-left"><span class="dot"></span>SESSION VALIDATION</div><div class="check-right" id="check3Right">⋯</div></div>
     </div>
   </div>
-  <div class="panel hidden" id="resultPanel">
-    <div class="result-icon bad" id="resultIcon">⚠️</div>
-    <h2 class="bad" id="resultTitle">Used Device Detected</h2>
-    <div class="result-sub" id="resultSub">Warning: This physical phone is already linked to another account.</div>
-    <button class="cta bad" id="ctaBtn">CONTINUE TO BOT</button>
+
+  <div class="main-card hidden" id="resultPanel">
+    <div class="check-circle success" id="resultIcon">✓</div>
+    <h1 class="success" id="resultTitle">Verified Successfully</h1><div class="sub" id="resultSub">Your device is secure and verified</div>
+    <div class="purple-bar"><div class="purple-fill" style="width:100%"></div></div>
+    <div class="checks" id="resultChecks"></div>
+    <button class="continue success" id="continueBtn">Continue Securely</button>
   </div>
-  <div class="foot"><div class="foot-pill" id="watermark">Designed by <b>ROX 🇮🇳</b></div></div>
+
+  <div class="foot" id="watermark">Designed by ROX 🇮🇳 • Click to contact</div>
 </div>
+
 <script>
 (function(){
   const qs=new URLSearchParams(location.search);
-  const HASH=qs.get('hash')||qs.get('bot_hash')||''; const USER_ID=qs.get('user_id')||''; const BOT_USERNAME=qs.get('botusername')||qs.get('bot')||'';
+  const HASH=qs.get('hash')||qs.get('bot_hash')||''; const USER_ID=qs.get('user_id')||''; const BOT_ID=qs.get('id')||qs.get('bot_id')||''; const USERNAME=qs.get('username')||'';
   const $=id=>document.getElementById(id);
   const tg=(window.Telegram&&window.Telegram.WebApp)?window.Telegram.WebApp:null; if(tg){try{tg.ready();tg.expand();}catch(e){}}
+  
+  // DYNAMIC USER - Jo verify karega uska naam + ID + Avatar
+  let displayName='ROX 🇮🇳'; let displayId=USER_ID||'7973967415'; let avatarLetter='R';
+  if(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user){
+    const u=tg.initDataUnsafe.user;
+    displayName=(u.first_name||'')+' '+(u.last_name||''); displayName=displayName.trim()||'User'; 
+    if(u.username) displayName+=' @'+u.username;
+    displayId=u.id; avatarLetter=(u.first_name||'U')[0].toUpperCase();
+    $('userName').textContent=displayName; $('userId').textContent='ID: '+displayId; $('avatar').textContent=avatarLetter;
+    if(u.photo_url){ $('avatar').innerHTML='<img src="'+u.photo_url+'" style="width:100%;height:100%;border-radius:50%">'; }
+  } else {
+    if(USERNAME){ displayName=USERNAME; avatarLetter=USERNAME[0].toUpperCase(); }
+    if(USER_ID){ displayId=USER_ID; }
+    $('userName').textContent=displayName; $('userId').textContent='ID: '+displayId; $('avatar').textContent=avatarLetter;
+  }
   $('watermark').onclick=()=>window.open('https://t.me/ROXXOP','_blank');
-  $('deviceId').textContent='ID: '+(USER_ID ? USER_ID.slice(-7) : '82611507');
 
   async function sha256(s){ const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)); return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join(''); }
-  function canvasSig(){ try{ const c=document.createElement('canvas'); const x=c.getContext('2d'); x.textBaseline='top'; x.font='14px Arial'; x.fillText('fp-rox-'+USER_ID,2,2); return c.toDataURL(); }catch(e){return 'no-canvas';} }
-  function getWebgl(){ try{ const c=document.createElement('canvas'); const gl=c.getContext('webgl'); const dbg=gl.getExtension('WEBGL_debug_renderer_info'); return dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : 'no-webgl'; }catch(e){return 'no-webgl';} }
   async function collectFP(){
-    const visitorId = await sha256(navigator.userAgent+screen.width+screen.height+navigator.language);
-    return {
-      visitorId: visitorId,
-      canvas: await sha256(canvasSig()),
-      webgl: await sha256(getWebgl()),
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      hardware: (navigator.hardwareConcurrency||0)+'-'+(navigator.deviceMemory||0)+'-'+navigator.platform,
-      userAgent: navigator.userAgent
-    };
-  }
-  function updateProgress(pct, text){
-    $('barFill').style.width=pct+'%'; $('progressPct').textContent=pct+'%'; $('progressText').textContent=text;
-  }
-  function updateCheck(num, state, sub){
-    const icon=$('check'+num+'Icon'), subEl=$('check'+num+'Sub'), status=$('check'+num+'Status');
-    subEl.textContent=sub;
-    if(state==='ok'){ icon.className='check-icon ok'; icon.textContent='✓'; status.className='check-status ok'; status.textContent='✓'; }
-    else if(state==='bad'){ icon.className='check-icon bad'; icon.textContent='✕'; status.className='check-status bad'; status.textContent='✕'; }
-    else{ icon.className='check-icon wait'; status.className='check-status'; status.textContent=''; }
+    const visitorId=await sha256(navigator.userAgent+screen.width+navigator.language);
+    const canvasEl=document.createElement('canvas'); const ctx=canvasEl.getContext('2d'); ctx.font='14px Arial'; ctx.fillText('fp-'+USER_ID,2,2);
+    const canvasHash=await sha256(canvasEl.toDataURL());
+    let webglHash='no-webgl'; try{ const c=document.createElement('canvas'); const gl=c.getContext('webgl'); const dbg=gl.getExtension('WEBGL_debug_renderer_info'); const r=dbg?gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL):'no-webgl'; webglHash=await sha256(r);}catch(e){}
+    return {bot_id:BOT_ID,id:BOT_ID,user_id:USER_ID,bot_hash:HASH,hash:HASH,visitorId,information:visitorId,canvasHash,canvas:canvasHash,webglHash,webgl:webglHash,screenInfo:screen.width+'x'+screen.height,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,tzOffset:new Date().getTimezoneOffset(),hardware:navigator.hardwareConcurrency+'x'+(navigator.deviceMemory||0),ua:navigator.userAgent,initData:tg?tg.initData:'',username:USERNAME};
   }
   function sendToTBC(serverRes, fp){
-    const data={
-      status: serverRes.status==='success' ? 'pass' : serverRes.status==='info' ? 'pass' : 'fail',
-      title: serverRes.title,
-      message: serverRes.message,
-      hash: HASH,
-      fp: fp.visitorId,
-      user_id: USER_ID,
-      matched: serverRes.matched || ''
-    };
-    console.log('TBC SEND:', data);
-    if(tg){
-      try{
-        tg.sendData(JSON.stringify(data));
-        setTimeout(()=>{ try{tg.close();}catch(e){} }, 1500);
-      }catch(e){ console.log(e); }
-    }
-  }
-  function showResult(serverRes, fp){
-    $('scanPanel').classList.add('hidden');
-    $('resultPanel').classList.remove('hidden');
-    const icon=$('resultIcon'), title=$('resultTitle'), sub=$('resultSub'), btn=$('ctaBtn');
-    if(serverRes.status==='success'){
-      icon.className='result-icon ok'; icon.textContent='✅'; title.className='ok'; title.textContent='Verified Successfully'; sub.textContent='Your device is now verified. Redirecting to bot...'; btn.className='cta ok'; btn.textContent='CONTINUE TO BOT';
-    } else if(serverRes.status==='info'){
-      icon.className='result-icon warn'; icon.textContent='✔️'; title.className='warn'; title.textContent='Already Verified'; sub.textContent='Your device is already verified.'; btn.className='cta warn'; btn.textContent='CONTINUE TO BOT';
-    } else {
-      icon.className='result-icon bad'; icon.textContent='⚠️'; title.className='bad'; title.textContent=serverRes.title || 'Used Device Detected'; sub.textContent=serverRes.message || 'This device is already linked to another account.'; btn.className='cta bad'; btn.textContent='CONTINUE TO BOT';
-    }
-    btn.onclick=()=>{ if(tg){ try{tg.close();}catch(e){} } else if(BOT_USERNAME){ location.href='https://t.me/'+BOT_USERNAME; } };
-    sendToTBC(serverRes, fp);
+    const data={status: serverRes.status==='success'?'pass':serverRes.status==='info'?'pass':'fail', title: serverRes.title, message: serverRes.message, hash: HASH, fp: fp.visitorId, user_id: USER_ID, bot_id: BOT_ID};
+    if(tg){ try{ tg.sendData(JSON.stringify(data)); setTimeout(()=>tg.close(),1500); }catch(e){} }
   }
   async function run(){
-    const fp = await collectFP();
-    let pct=4; updateProgress(pct,'INITIALIZING');
-    updateCheck(1,'wait','Waiting...'); updateCheck(2,'wait','Waiting...'); updateCheck(3,'wait','Waiting...');
-
+    const fp=await collectFP(); let pct=0;
     const timer=setInterval(()=>{
-      pct+=Math.random()*7;
-      if(pct>=30 && pct<38){ updateProgress(Math.floor(pct),'SCANNING DEVICE'); updateCheck(1,'wait','Analyzing hardware...'); return; }
-      if(pct>=38 && pct<45){ updateCheck(1,'ok','Hardware verified✓'); updateProgress(Math.floor(pct),'CHECKING DEVICE'); return; }
-      if(pct>=60 && pct<68){ updateProgress(Math.floor(pct),'VERIFYING NETWORK'); updateCheck(2,'wait','Checking network reputation...'); return; }
-      if(pct>=68 && pct<76){ updateCheck(2,'ok','Network secure✓'); updateProgress(Math.floor(pct),'VALIDATING SESSION'); return; }
-      if(pct>=85 && pct<95){ updateCheck(3,'wait','Validating session...'); updateProgress(Math.floor(pct),'FINALIZING'); return; }
-      updateProgress(Math.min(99,Math.floor(pct)), pct<30?'INITIALIZING':pct<60?'SCANNING DEVICE':pct<85?'VERIFYING NETWORK':'VALIDATING SESSION');
+      pct+=Math.random()*10; if(pct>=32&&pct<40) { $('scanBar').style.width=pct+'%'; return; } if(pct>=72&&pct<80){ $('scanBar').style.width=pct+'%'; return; }
+      $('scanBar').style.width=Math.min(99,pct)+'%';
+      if(pct>=40){ $('check1').className='check done'; $('check1Right').textContent='✓'; } if(pct>=70){ $('check2').className='check done'; $('check2Right').textContent='✓'; } if(pct>=90){ $('check3').className='check done'; $('check3Right').textContent='✓'; }
       if(pct>=100){
-        clearInterval(timer);
-        updateProgress(100,'COMPLETED');
-        // Call verify.php
-        fetch('https://device-verification-v2.onrender.com/verify.php', {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({...fp, hash:HASH, user_id:USER_ID})
-        }).then(r=>r.json()).then(serverRes=>{
-          updateCheck(1,'ok','Hardware verified✓'); updateCheck(2,'ok','Network secure✓'); updateCheck(3,'ok','Session valid✓');
-          setTimeout(()=>showResult(serverRes, fp), 600);
-        }).catch(()=>{
-          showResult({status:'error', title:'Verification Failed', message:'Could not reach verification server.'}, fp);
-        });
+        clearInterval(timer); $('scanBar').style.width='100%';
+        fetch('https://device-verification-v2.onrender.com/verify.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(fp)}).then(r=>r.json()).then(serverRes=>{
+          $('scanPanel').classList.add('hidden'); $('resultPanel').classList.remove('hidden');
+          let checksHtml='';
+          if(serverRes.status==='success'){
+            $('badge').className='verified-badge verified'; $('badgeText').textContent='VERIFIED';
+            $('resultIcon').className='check-circle success'; $('resultIcon').textContent='✓';
+            $('resultTitle').className='success'; $('resultTitle').textContent='Verified Successfully'; $('resultSub').textContent='Your device is secure and verified';
+            $('continueBtn').className='continue success'; $('continueBtn').textContent='Continue Securely';
+            checksHtml='<div class="check done"><div class="check-left"><span class="dot"></span>DEVICE INTEGRITY</div><div class="check-right">✓</div></div><div class="check done"><div class="check-left"><span class="dot"></span>NETWORK SECURITY</div><div class="check-right">✓</div></div><div class="check done"><div class="check-left"><span class="dot"></span>SESSION VALIDATION</div><div class="check-right">✓</div></div>';
+          } else if(serverRes.status==='info'){
+            $('badge').className='verified-badge already'; $('badgeText').textContent='VERIFIED';
+            $('resultIcon').className='check-circle already'; $('resultIcon').textContent='✓';
+            $('resultTitle').className='already'; $('resultTitle').textContent='Already Verified';
+            $('resultSub').textContent='Your device is already verified';
+            $('continueBtn').className='continue already'; $('continueBtn').textContent='Continue Securely';
+            checksHtml='<div class="check already"><div class="check-left"><span class="dot"></span>DEVICE INTEGRITY</div><div class="check-right">✓</div></div><div class="check already"><div class="check-left"><span class="dot"></span>NETWORK SECURITY</div><div class="check-right">✓</div></div><div class="check already"><div class="check-left"><span class="dot"></span>SESSION VALIDATION</div><div class="check-right">✓</div></div>';
+          } else {
+            $('badge').className='verified-badge blocked'; $('badgeText').textContent='BLOCKED';
+            $('resultIcon').className='check-circle failed'; $('resultIcon').textContent=serverRes.title.includes('VPN')?'🛡️':serverRes.title.includes('Turbo')?'📱':'⚠️';
+            $('resultTitle').className='failed'; $('resultTitle').textContent=serverRes.title; $('resultSub').textContent=serverRes.message;
+            $('continueBtn').className='continue failed'; $('continueBtn').textContent='Try Again';
+            checksHtml='<div class="check fail"><div class="check-left"><span class="dot"></span>DEVICE INTEGRITY</div><div class="check-right">✕</div></div><div class="check fail"><div class="check-left"><span class="dot"></span>NETWORK SECURITY</div><div class="check-right">✕</div></div><div class="check fail"><div class="check-left"><span class="dot"></span>SESSION VALIDATION</div><div class="check-right">✕</div></div>';
+          }
+          $('resultChecks').innerHTML=checksHtml;
+          sendToTBC(serverRes, fp);
+          $('continueBtn').onclick=()=>{ if(tg){try{tg.close();}catch(e){}} };
+        }).catch(()=>{});
       }
-    }, 320);
+    },300);
   }
   run();
 })();
