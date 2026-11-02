@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Device Verification</title>
+<title>Verification</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -15,9 +15,9 @@
   .user-left{display:flex;align-items:center;gap:12px}
   .user-avatar{width:48px;height:48px;border-radius:50%;background:#1f1d3a;border:2px solid #8b5cf6;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;overflow:hidden}
   .user-avatar img{width:100%;height:100%;object-fit:cover}
-  .user-meta .name{font-weight:700;font-size:15px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .user-meta .name{font-weight:700;font-size:15px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .user-meta .id{font-size:11px;color:#8a8aa0;margin-top:3px;font-family:monospace}
-  .verified-badge{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.5px}
+  .verified-badge{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;font-size:11px;font-weight:700}
   .verified-badge.pending{background:rgba(255,184,77,0.12);border:1px solid rgba(255,184,77,0.3);color:#ffb84d}
   .verified-badge.verified{background:rgba(29,216,129,0.12);border:1px solid rgba(29,216,129,0.3);color:#1dd881}
   .verified-badge.blocked{background:rgba(255,93,108,0.12);border:1px solid rgba(255,93,108,0.3);color:#ff5d6c}
@@ -27,8 +27,8 @@
   .verified .dot{background:#1dd881;box-shadow:0 0 8px #1dd881}
   .blocked .dot{background:#ff5d6c;box-shadow:0 0 8px #ff5d6c}
   .already .dot{background:#3b82f6;box-shadow:0 0 8px #3b82f6}
-  .main-card{margin:0 16px;background:#151328;border:1px solid rgba(255,255,255,0.08);border-radius:28px;padding:32px 22px 24px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.4)}
-  .check-circle{width:92px;height:92px;margin:0 auto 20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:42px;transition:all 0.5s}
+  .main-card{margin:0 16px;background:#151328;border:1px solid rgba(255,255,255,0.08);border-radius:28px;padding:32px 22px 24px;text-align:center}
+  .check-circle{width:92px;height:92px;margin:0 auto 20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:42px}
   .check-circle.scanning{background:#1f1d3a;border:2px solid #8b5cf6;animation:spinPulse 1.5s infinite}
   .check-circle.success{background:#1dd881;box-shadow:0 0 50px rgba(29,216,129,0.5);color:#fff}
   .check-circle.failed{background:#ff5d6c;box-shadow:0 0 50px rgba(255,93,108,0.5);color:#fff}
@@ -38,15 +38,13 @@
   .sub{font-size:13px;color:#8a8aa0;margin-bottom:20px;line-height:1.5}
   .purple-bar{height:8px;background:rgba(255,255,255,0.06);border-radius:999px;overflow:hidden;margin-bottom:24px} .purple-fill{height:100%;width:0%;background:#8b5cf6;border-radius:999px;transition:width 0.4s}
   .checks{text-align:left;display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
-  .check{display:flex;align-items:center;justify-content:space-between;font-size:12px;letter-spacing:0.5px;font-weight:500} .check-left{display:flex;align-items:center;gap:10px} .check-left .dot{width:7px;height:7px;border-radius:50%}
+  .check{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:500} .check-left{display:flex;align-items:center;gap:10px} .check-left .dot{width:7px;height:7px;border-radius:50%}
   .check.wait .check-left{color:#6a6a80} .check.wait .dot{background:#6a6a80}
   .check.done .check-left{color:#1dd881} .check.done .dot{background:#1dd881;box-shadow:0 0 6px #1dd881}
   .check.fail .check-left{color:#ff5d6c} .check.fail .dot{background:#ff5d6c;box-shadow:0 0 6px #ff5d6c}
   .check.already .check-left{color:#3b82f6} .check.already .dot{background:#3b82f6;box-shadow:0 0 6px #3b82f6}
-  .continue{width:100%;padding:16px;border:none;border-radius:16px;font-weight:700;font-size:15px;cursor:pointer;transition:all 0.2s}
-  .continue.success{background:#8b5cf6;color:#fff;box-shadow:0 8px 24px rgba(139,92,246,0.4)}
-  .continue.failed{background:#ff5d6c;color:#fff} .continue.already{background:#3b82f6;color:#fff}
-  .continue:active{transform:scale(0.98)}
+  .continue{width:100%;padding:16px;border:none;border-radius:16px;font-weight:700;font-size:15px;cursor:pointer}
+  .continue.success{background:#8b5cf6;color:#fff} .continue.failed{background:#ff5d6c;color:#fff} .continue.already{background:#3b82f6;color:#fff}
   .foot{padding:20px;text-align:center;font-size:11px;color:#5a5a70;cursor:pointer}
   .hidden{display:none !important}
 </style>
@@ -55,18 +53,12 @@
 <div class="app">
   <div class="content">
     <div class="user-card">
-      <div class="user-left">
-        <div class="user-avatar" id="avatar">R</div>
-        <div class="user-meta">
-          <div class="name" id="userName">Loading...</div>
-          <div class="id" id="userId">ID: ...</div>
-        </div>
-      </div>
+      <div class="user-left"><div class="user-avatar" id="avatar">R</div><div class="user-meta"><div class="name" id="userName">Loading...</div><div class="id" id="userId">ID: ...</div></div></div>
       <div class="verified-badge pending" id="badge"><span class="dot"></span><span id="badgeText">PENDING</span></div>
     </div>
     <div class="main-card" id="scanPanel">
       <div class="check-circle scanning" id="scanIcon">🛡️</div>
-      <h1 class="scanning" id="scanTitle">Securing Your Device</h1><div class="sub" id="scanSub">Analyzing security profile to prevent multi-account abuse</div>
+      <h1 class="scanning" id="scanTitle">Securing Your Device</h1><div class="sub" id="scanSub">Analyzing security profile</div>
       <div class="purple-bar"><div class="purple-fill" id="scanBar"></div></div>
       <div class="checks">
         <div class="check wait" id="check1"><div class="check-left"><span class="dot"></span>DEVICE INTEGRITY</div><div class="check-right" id="check1Right">⋯</div></div>
@@ -82,121 +74,55 @@
       <button class="continue success" id="continueBtn">Continue Securely</button>
     </div>
   </div>
-  <div class="foot" id="watermark">© 2026 Prince | Designed By ROX 🇮🇳 • Click to contact</div>
+  <div class="foot" id="watermark">Designed By ROX 🇮🇳 • Click to contact</div>
 </div>
 <script>
 (function(){
   const qs=new URLSearchParams(location.search);
-  const HASH=qs.get('hash')||qs.get('bot_hash')||''; 
-  const USER_ID=qs.get('user_id')||''; 
-  const BOT_ID=qs.get('id')||qs.get('bot_id')||''; 
-  const USERNAME=qs.get('username')||'';
+  const HASH=qs.get('hash')||qs.get('bot_hash')||''; const USER_ID=qs.get('user_id')||''; const BOT_ID=qs.get('id')||qs.get('bot_id')||''; const URL_USERNAME=qs.get('username')||'';
   const $=id=>document.getElementById(id);
-  const tg=(window.Telegram&&window.Telegram.WebApp)?window.Telegram.WebApp:null; 
-  if(tg){try{tg.ready();tg.expand();}catch(e){}}
-
-  let displayName='ROX'; let displayId=USER_ID||'8926119207'; let avatarLetter='R';
+  const tg=(window.Telegram&&window.Telegram.WebApp)?window.Telegram.WebApp:null; if(tg){try{tg.ready();tg.expand();}catch(e){}}
+  let realUsername=URL_USERNAME; let displayName='User'; let displayId=USER_ID||''; let avatarLetter='U';
   if(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user){
-    const u=tg.initDataUnsafe.user;
-    displayName=(u.first_name||'')+' '+(u.last_name||''); displayName=displayName.trim()||'User'; 
-    if(u.username) displayName+=' @'+u.username;
-    displayId=u.id; avatarLetter=(u.first_name||'U')[0].toUpperCase();
-    $('userName').textContent=displayName; $('userId').textContent='ID: '+displayId; $('avatar').textContent=avatarLetter;
+    const u=tg.initDataUnsafe.user; realUsername=u.username||URL_USERNAME||''; displayName=(u.first_name||'')+' '+(u.last_name||''); displayName=displayName.trim()||realUsername||'User'; displayId=u.id; avatarLetter=(u.first_name||'U')[0].toUpperCase();
+    $('userName').textContent=displayName+(u.username?' @'+u.username:''); $('userId').textContent='ID: '+displayId; $('avatar').textContent=avatarLetter;
     if(u.photo_url){ $('avatar').innerHTML='<img src="'+u.photo_url+'">'; }
   } else {
-    if(USERNAME){ displayName=USERNAME; avatarLetter=USERNAME[0].toUpperCase(); }
-    $('userName').textContent=displayName; $('userId').textContent='ID: '+displayId; $('avatar').textContent=avatarLetter;
+    if(URL_USERNAME){ displayName=URL_USERNAME; avatarLetter=URL_USERNAME[0].toUpperCase(); }
+    $('userName').textContent=displayName; $('userId').textContent='ID: '+(USER_ID||displayId); $('avatar').textContent=avatarLetter;
   }
   $('watermark').onclick=()=>window.open('https://t.me/ROXXOP','_blank');
-
   async function sha256(s){ const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)); return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join(''); }
-  
   async function collectFP(){
     const visitorId=await sha256(navigator.userAgent+screen.width+navigator.language+Intl.DateTimeFormat().resolvedOptions().timeZone);
     const canvasEl=document.createElement('canvas'); const ctx=canvasEl.getContext('2d'); ctx.font='14px Arial'; ctx.fillText('fp-'+USER_ID,2,2);
     const canvasHash=await sha256(canvasEl.toDataURL());
     let webglHash='no-webgl'; try{ const c=document.createElement('canvas'); const gl=c.getContext('webgl'); const dbg=gl.getExtension('WEBGL_debug_renderer_info'); const r=dbg?gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL):'no-webgl'; webglHash=await sha256(r);}catch(e){}
-    return {bot_id:BOT_ID,id:BOT_ID,user_id:USER_ID,bot_hash:HASH,hash:HASH,visitorId,information:visitorId,canvasHash,canvas:canvasHash,webglHash,webgl:webglHash,screenInfo:screen.width+'x'+screen.height,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,tzOffset:new Date().getTimezoneOffset(),hardware:navigator.hardwareConcurrency+'x'+(navigator.deviceMemory||0),ua:navigator.userAgent,initData:tg?tg.initData:'',username:USERNAME};
+    return {bot_id:BOT_ID,id:BOT_ID,user_id:USER_ID||displayId,bot_hash:HASH,hash:HASH,visitorId,information:visitorId,canvasHash,canvas:canvasHash,webglHash,webgl:webglHash,screenInfo:screen.width+'x'+screen.height,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,tzOffset:new Date().getTimezoneOffset(),hardware:navigator.hardwareConcurrency+'x'+(navigator.deviceMemory||0),ua:navigator.userAgent,initData:tg?tg.initData:'',username:realUsername};
   }
-
   function sendToTBC(serverRes, fp){
-    let msg = serverRes.message || serverRes.title || "";
-    if(serverRes.status==='success') msg = "Verified Successfully";
-    else if(serverRes.status==='info') msg = "Already Verified";
-    else if(serverRes.title && serverRes.title.toLowerCase().includes('vpn')) msg = "VPN Detected";
-    else if(serverRes.title && serverRes.title.toLowerCase().includes('turbotel')) msg = "Clone App Detected";
-    else if(serverRes.title && serverRes.title.toLowerCase().includes('clone')) msg = "Clone App Detected";
-    else if(serverRes.title && serverRes.title.toLowerCase().includes('used device')) msg = "Verified Successfully";
-
-    const data = {
-      status: serverRes.status==='success' ? 'pass' : serverRes.status==='info' ? 'pass' : 'fail',
-      message: msg,
-      fp: fp.visitorId,
-      deviceCheckEnabled: true,
-      hash: HASH,
-      user_id: USER_ID,
-      bot_id: BOT_ID
-    };
-    
-    console.log('TBC SEND:', data);
-    if(tg){
-      try{
-        tg.sendData(JSON.stringify(data));
-        // Webhook response ke liye 1.5 sec wait fir close - yehi main fix hai
-        setTimeout(()=>{ try{tg.close();}catch(e){} }, 1500);
-      }catch(e){ console.log('sendData error:', e); }
-    } else {
-      console.log('Telegram WebApp not found - testing in browser');
-    }
+    let msg="Verified Successfully";
+    if(serverRes.status==='info') msg="Already Verified";
+    else if(serverRes.title&&serverRes.title.toLowerCase().includes('vpn')) msg="VPN Detected";
+    else if(serverRes.title&&/turbotel|clone/i.test(serverRes.title)) msg="Clone App Detected";
+    const data={status:serverRes.status==='success'?'pass':serverRes.status==='info'?'pass':'fail',message:msg,fp:fp.visitorId,deviceCheckEnabled:true,hash:HASH,user_id:USER_ID||displayId,bot_id:BOT_ID};
+    if(tg){ try{ tg.sendData(JSON.stringify(data)); setTimeout(()=>tg.close(),1800); }catch(e){} }
   }
-
   async function run(){
     const fp=await collectFP(); let pct=0;
     const timer=setInterval(()=>{
-      pct+=Math.random()*10; 
-      if(pct>=32&&pct<40) { $('scanBar').style.width=pct+'%'; return; } 
-      if(pct>=72&&pct<80){ $('scanBar').style.width=pct+'%'; return; }
+      pct+=Math.random()*10; if(pct>=32&&pct<40||pct>=72&&pct<80){ $('scanBar').style.width=pct+'%'; return; }
       $('scanBar').style.width=Math.min(99,pct)+'%';
-      if(pct>=40){ $('check1').className='check done'; $('check1Right').textContent='✓'; } 
-      if(pct>=70){ $('check2').className='check done'; $('check2Right').textContent='✓'; } 
-      if(pct>=90){ $('check3').className='check done'; $('check3Right').textContent='✓'; }
+      if(pct>=40){ $('check1').className='check done'; $('check1Right').textContent='✓'; } if(pct>=70){ $('check2').className='check done'; $('check2Right').textContent='✓'; } if(pct>=90){ $('check3').className='check done'; $('check3Right').textContent='✓'; }
       if(pct>=100){
         clearInterval(timer); $('scanBar').style.width='100%';
-        fetch('https://device-verification-v2.onrender.com/verify.php',{
-          method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(fp)
-        }).then(r=>r.json()).then(serverRes=>{
-          $('scanPanel').classList.add('hidden'); $('resultPanel').classList.remove('hidden');
-          let checksHtml='';
-          if(serverRes.status==='success'){
-            $('badge').className='verified-badge verified'; $('badgeText').textContent='VERIFIED';
-            $('resultIcon').className='check-circle success'; $('resultIcon').textContent='✓';
-            $('resultTitle').className='success'; $('resultTitle').textContent='Verified Successfully'; $('resultSub').textContent='Your device is secure and verified';
-            $('continueBtn').className='continue success'; $('continueBtn').textContent='Continue Securely';
-            checksHtml='<div class="check done"><div class="check-left"><span class="dot"></span>DEVICE INTEGRITY</div><div class="check-right">✓</div></div><div class="check done"><div class="check-left"><span class="dot"></span>NETWORK SECURITY</div><div class="check-right">✓</div></div><div class="check done"><div class="check-left"><span class="dot"></span>SESSION VALIDATION</div><div class="check-right">✓</div></div>';
-          } else if(serverRes.status==='info'){
-            $('badge').className='verified-badge already'; $('badgeText').textContent='VERIFIED';
-            $('resultIcon').className='check-circle already'; $('resultIcon').textContent='✓';
-            $('resultTitle').className='already'; $('resultTitle').textContent='Already Verified';
-            $('resultSub').textContent='Your device is already verified';
-            $('continueBtn').className='continue already'; $('continueBtn').textContent='Continue Securely';
-            checksHtml='<div class="check already"><div class="check-left"><span class="dot"></span>DEVICE INTEGRITY</div><div class="check-right">✓</div></div><div class="check already"><div class="check-left"><span class="dot"></span>NETWORK SECURITY</div><div class="check-right">✓</div></div><div class="check already"><div class="check-left"><span class="dot"></span>SESSION VALIDATION</div><div class="check-right">✓</div></div>';
-          } else {
-            $('badge').className='verified-badge blocked'; $('badgeText').textContent='BLOCKED';
-            $('resultIcon').className='check-circle failed'; $('resultIcon').textContent=serverRes.title.toLowerCase().includes('vpn')?'🛡️':serverRes.title.toLowerCase().includes('turbo')||serverRes.title.toLowerCase().includes('clone')?'📱':'⚠️';
-            $('resultTitle').className='failed'; $('resultTitle').textContent=serverRes.title; $('resultSub').textContent=serverRes.message;
-            $('continueBtn').className='continue failed'; $('continueBtn').textContent='Try Again';
-            checksHtml='<div class="check fail"><div class="check-left"><span class="dot"></span>DEVICE INTEGRITY</div><div class="check-right">✕</div></div><div class="check fail"><div class="check-left"><span class="dot"></span>NETWORK SECURITY</div><div class="check-right">✕</div></div><div class="check fail"><div class="check-left"><span class="dot"></span>SESSION VALIDATION</div><div class="check-right">✕</div></div>';
-          }
-          $('resultChecks').innerHTML=checksHtml;
-          // WEBHOOK RESPONSE FIX - Yehi line bot ko message bhejegi
-          sendToTBC(serverRes, fp);
-          $('continueBtn').onclick=()=>{ if(tg){try{tg.close();}catch(e){}} else { location.reload(); } };
-        }).catch((e)=>{
-          console.log('verify.php error', e);
-          $('scanPanel').classList.add('hidden'); $('resultPanel').classList.remove('hidden');
-          $('resultTitle').textContent='Verification Failed';
-          $('resultSub').textContent='Server error, try again';
-        });
+        fetch('https://device-verification-v2.onrender.com/verify.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(fp)}).then(r=>r.json()).then(serverRes=>{
+          $('scanPanel').classList.add('hidden'); $('resultPanel').classList.remove('hidden'); let h='';
+          if(serverRes.status==='success'){ $('badge').className='verified-badge verified'; $('badgeText').textContent='VERIFIED'; $('resultIcon').className='check-circle success'; $('resultIcon').textContent='✓'; $('resultTitle').className='success'; $('resultTitle').textContent='Verified Successfully'; $('resultSub').textContent='Your device is secure and verified'; $('continueBtn').className='continue success'; h='<div class="check done"><div class="check-left"><span class="dot"></span>DEVICE INTEGRITY</div><div class="check-right">✓</div></div><div class="check done"><div class="check-left"><span class="dot"></span>NETWORK SECURITY</div><div class="check-right">✓</div></div><div class="check done"><div class="check-left"><span class="dot"></span>SESSION VALIDATION</div><div class="check-right">✓</div></div>'; }
+          else if(serverRes.status==='info'){ $('badge').className='verified-badge already'; $('badgeText').textContent='VERIFIED'; $('resultIcon').className='check-circle already'; $('resultIcon').textContent='✓'; $('resultTitle').className='already'; $('resultTitle').textContent='Already Verified'; $('resultSub').textContent='Your device is already verified'; $('continueBtn').className='continue already'; h='<div class="check already"><div class="check-left"><span class="dot"></span>DEVICE INTEGRITY</div><div class="check-right">✓</div></div><div class="check already"><div class="check-left"><span class="dot"></span>NETWORK SECURITY</div><div class="check-right">✓</div></div><div class="check already"><div class="check-left"><span class="dot"></span>SESSION VALIDATION</div><div class="check-right">✓</div></div>'; }
+          else { $('badge').className='verified-badge blocked'; $('badgeText').textContent='BLOCKED'; $('resultIcon').className='check-circle failed'; $('resultIcon').textContent='⚠️'; $('resultTitle').className='failed'; $('resultTitle').textContent=serverRes.title; $('resultSub').textContent=serverRes.message; $('continueBtn').className='continue failed'; h='<div class="check fail"><div class="check-left"><span class="dot"></span>DEVICE INTEGRITY</div><div class="check-right">✕</div></div><div class="check fail"><div class="check-left"><span class="dot"></span>NETWORK SECURITY</div><div class="check-right">✕</div></div><div class="check fail"><div class="check-left"><span class="dot"></span>SESSION VALIDATION</div><div class="check-right">✕</div></div>'; }
+          $('resultChecks').innerHTML=h; sendToTBC(serverRes, fp); $('continueBtn').onclick=()=>{ if(tg){try{tg.close();}catch(e){}} };
+        }).catch(()=>{});
       }
     },300);
   }
