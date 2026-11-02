@@ -1,8 +1,11 @@
+
 <?php
+error_reporting(0);
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 
 header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
@@ -16,61 +19,91 @@ function respond($data, $code = 200) {
     http_response_code($code);
     echo json_encode(
         $data,
-        JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT
+        JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
     );
     exit;
 }
 
-/* Create data directory */
+if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'], true)) {
+    respond(['ok' => false, 'msg' => 'GET or POST required']);
+}
+
+/* Read POST form fields, JSON body, or legacy GET fields */
+$input = $_POST;
+
+if (empty($input) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $raw = file_get_contents('php://input');
+    $jsonInput = json_decode($raw, true);
+
+    if (is_array($jsonInput)) {
+        $input = $jsonInput;
+    }
+}
+
+function getValue($key, $input) {
+    if (isset($input[$key])) {
+        return trim((string)$input[$key]);
+    }
+
+    if (isset($_GET[$key])) {
+        return trim((string)$_GET[$key]);
+    }
+
+    return '';
+}
+
+$botHash = getValue('botHash', $input);
+$botUsername = getValue('bot', $input);
+$botToken = getValue('bot_token', $input);
+$webhookUrl = getValue('webhook_url', $input);
+$userId = getValue('user_id', $input);
+
+/* Data directory */
 $dataDir = __DIR__ . '/data';
 
-if (!is_dir($dataDir)) {
-    if (!mkdir($dataDir, 0755, true) && !is_dir($dataDir)) {
-        respond(['ok' => false, 'msg' => 'Cannot create data directory'], 500);
-    }
+if (!is_dir($dataDir) && !@mkdir($dataDir, 0750, true) && !is_dir($dataDir)) {
+    respond(['ok' => false, 'msg' => 'Cannot create data directory']);
 }
 
 $botsFile = $dataDir . '/bots.json';
 
-/* Read request values */
-$botHash = trim($_POST['botHash'] ?? $_GET['botHash'] ?? '');
-$botUsername = trim($_POST['bot'] ?? $_GET['bot'] ?? '');
-$botToken = trim($_POST['bot_token'] ?? $_GET['bot_token'] ?? '');
-$webhookUrl = trim($_POST['webhook_url'] ?? $_GET['webhook_url'] ?? '');
-$userId = trim($_POST['user_id'] ?? $_GET['user_id'] ?? '');
-
-/*
- * bot_id is intentionally NOT used for validation.
- * The actual ID is obtained securely from Telegram getMe.
- */
-
-/* Validate hash */
+/* Validate registration hash */
 if (!preg_match('/^[a-zA-Z0-9]{20,100}$/', $botHash)) {
-    respond(['ok' => false, 'msg' => 'Invalid or missing botHash'], 400);
+    respond(['ok' => false, 'msg' => 'Invalid or missing botHash']);
 }
 
-/* Validate token */
-if ($botToken === '') {
-    respond(['ok' => false, 'msg' => 'Bot token missing'], 400);
-}
-
-/* Validate user ID */
+/* Validate Telegram user ID */
 if ($userId === '' || !ctype_digit($userId)) {
-    respond(['ok' => false, 'msg' => 'Invalid or missing Telegram user ID'], 400);
+    respond(['ok' => false, 'msg' => 'Invalid Telegram user ID']);
 }
 
-/* Validate webhook */
+/* Validate token format without revealing it */
+if (!preg_match('/^[0-9]{6,15}:[A-Za-z0-9_-]{20,}$/', $botToken)) {
+    respond([
+        'ok' => false,
+        'msg' => 'Bot token format is invalid. Check Bot.info().token and regenerate the token if needed.'
+    ]);
+}
+
+/* Validate HTTPS webhook */
 if (
     !filter_var($webhookUrl, FILTER_VALIDATE_URL) ||
-    strtolower((string)parse_url($webhookUrl, PHP_URL_SCHEME)) !== 'https'
+    strtolower((string)parse_url($webhookUrl, PHP_URL_SCHEME)) !== 'https' ||
+    empty(parse_url($webhookUrl, PHP_URL_HOST))
 ) {
-    respond(['ok' => false, 'msg' => 'Invalid HTTPS webhook URL'], 400);
+    respond(['ok' => false, 'msg' => 'Invalid HTTPS webhook URL']);
 }
 
-/* Verify token directly with Telegram */
+/* Telegram getMe validation */
 function telegramGetMe($token) {
-    $url = 'https://api.telegram.org/bot' . $token . '/getMe';
+    if (!function_exists('curl_init')) {
+        return [
+            'ok' => false,
+            'error' => 'PHP cURL extension is not enabled'
+        ];
+    }
 
+    $url = 'https://api.telegram.org/bot' . $token . '/getMe';
     $ch = curl_init($url);
 
     curl_setopt_array($ch, [
@@ -79,42 +112,54 @@ function telegramGetMe($token) {
         CURLOPT_TIMEOUT => 20,
         CURLOPT_SSL_VERIFYPEER => true,
         CURLOPT_SSL_VERIFYHOST => 2,
-        CURLOPT_USERAGENT => 'DeviceVerification/2.0'
+        CURLOPT_FOLLOWLOCATION => false,
+        CURLOPT_USERAGENT => 'DeviceVerification/2.1'
     ]);
 
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $error = curl_error($ch);
+    $body = curl_exec($ch);
+    $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
 
     curl_close($ch);
 
-    if ($response === false || $httpCode !== 200) {
+    if ($body === false) {
         return [
             'ok' => false,
-            'error' => $error ?: 'Telegram API HTTP error'
+            'error' => 'Connection to Telegram failed: ' . $curlError
         ];
     }
 
-    $result = json_decode($response, true);
+    $data = json_decode($body, true);
 
-    if (!is_array($result) || empty($result['ok'])) {
+    if (!is_array($data)) {
         return [
             'ok' => false,
-            'error' => 'Telegram rejected this bot token'
+            'error' => 'Telegram returned invalid JSON. HTTP ' . $httpCode
         ];
     }
 
-    return $result;
+    if ($httpCode !== 200 || empty($data['ok'])) {
+        $description = $data['description'] ?? 'Unknown Telegram API error';
+
+        return [
+            'ok' => false,
+            'error' => 'Telegram API HTTP ' . $httpCode . ': ' . $description
+        ];
+    }
+
+    return $data;
 }
 
 $telegram = telegramGetMe($botToken);
 
 if (empty($telegram['ok'])) {
+    error_log('Device verification getMe failed: ' . ($telegram['error'] ?? 'Unknown'));
+
     respond([
         'ok' => false,
-        'msg' => 'Telegram token verification failed',
+        'msg' => 'Telegram bot token verification failed',
         'details' => $telegram['error'] ?? 'Unknown Telegram error'
-    ], 401);
+    ]);
 }
 
 $telegramBot = $telegram['result'] ?? [];
@@ -123,34 +168,31 @@ $actualBotId = (string)($telegramBot['id'] ?? '');
 $actualUsername = ltrim((string)($telegramBot['username'] ?? ''), '@');
 
 if ($actualBotId === '' || $actualUsername === '') {
-    respond(['ok' => false, 'msg' => 'Telegram did not return bot details'], 400);
+    respond(['ok' => false, 'msg' => 'Telegram did not return valid bot details']);
 }
 
-/* Check username, but do not compare supplied bot_id */
+/* Check supplied username against actual bot */
 if (
     $botUsername !== '' &&
     strtolower(ltrim($botUsername, '@')) !== strtolower($actualUsername)
 ) {
     respond([
         'ok' => false,
-        'msg' => 'Bot username does not match token',
+        'msg' => 'Bot username does not match the supplied bot token',
         'actual_bot' => '@' . $actualUsername
-    ], 400);
+    ]);
 }
 
-/*
- * Atomic read + update + write.
- * Exclusive lock is held for the entire operation.
- */
-$fp = fopen($botsFile, 'c+');
+/* Atomic database update */
+$fp = @fopen($botsFile, 'c+');
 
 if (!$fp) {
-    respond(['ok' => false, 'msg' => 'Cannot open bots database'], 500);
+    respond(['ok' => false, 'msg' => 'Cannot open bots database']);
 }
 
 if (!flock($fp, LOCK_EX)) {
     fclose($fp);
-    respond(['ok' => false, 'msg' => 'Cannot lock bots database'], 500);
+    respond(['ok' => false, 'msg' => 'Cannot lock bots database']);
 }
 
 rewind($fp);
@@ -164,15 +206,16 @@ if ($content === false || trim($content) === '') {
     if (!is_array($bots)) {
         flock($fp, LOCK_UN);
         fclose($fp);
-        respond(['ok' => false, 'msg' => 'Bots database contains invalid JSON'], 500);
+        respond(['ok' => false, 'msg' => 'bots.json contains invalid JSON']);
     }
 }
 
-/* Find registration for this bot + this Telegram user */
+/* Find this bot + owner registration */
 $foundIndex = -1;
 
 foreach ($bots as $index => $bot) {
     if (
+        is_array($bot) &&
         (string)($bot['telegram_bot_id'] ?? '') === $actualBotId &&
         (string)($bot['telegram_user_id'] ?? '') === $userId
     ) {
@@ -183,55 +226,63 @@ foreach ($bots as $index => $bot) {
 
 $now = date('Y-m-d H:i:s');
 
-if ($foundIndex >= 0) {
-    /* Update only this user's registration */
-    $registrationId = $bots[$foundIndex]['id'] ?? bin2hex(random_bytes(8));
+try {
+    if ($foundIndex >= 0) {
+        $registrationId = $bots[$foundIndex]['id'] ?? bin2hex(random_bytes(8));
 
-    $bots[$foundIndex]['id'] = $registrationId;
-    $bots[$foundIndex]['random_id'] = $registrationId;
-    $bots[$foundIndex]['bot_hash'] = $botHash;
-    $bots[$foundIndex]['bot_username'] = '@' . $actualUsername;
-    $bots[$foundIndex]['bot_username_clean'] = $actualUsername;
-    $bots[$foundIndex]['bot_token'] = $botToken;
-    $bots[$foundIndex]['webhook_url'] = $webhookUrl;
-    $bots[$foundIndex]['telegram_bot_id'] = $actualBotId;
-    $bots[$foundIndex]['telegram_user_id'] = $userId;
-    $bots[$foundIndex]['status'] = 'active';
-    $bots[$foundIndex]['last_activity'] = $now;
+        $bots[$foundIndex]['id'] = $registrationId;
+        $bots[$foundIndex]['random_id'] = $registrationId;
+        $bots[$foundIndex]['bot_hash'] = $botHash;
+        $bots[$foundIndex]['bot_username'] = '@' . $actualUsername;
+        $bots[$foundIndex]['bot_username_clean'] = $actualUsername;
+        $bots[$foundIndex]['bot_token'] = $botToken;
+        $bots[$foundIndex]['webhook_url'] = $webhookUrl;
+        $bots[$foundIndex]['telegram_bot_id'] = $actualBotId;
+        $bots[$foundIndex]['telegram_user_id'] = $userId;
+        $bots[$foundIndex]['status'] = 'active';
+        $bots[$foundIndex]['last_activity'] = $now;
+    } else {
+        $registrationId = bin2hex(random_bytes(8));
 
-} else {
-    $registrationId = bin2hex(random_bytes(8));
-
-    $bots[] = [
-        'id' => $registrationId,
-        'random_id' => $registrationId,
-        'bot_hash' => $botHash,
-        'bot_username' => '@' . $actualUsername,
-        'bot_username_clean' => $actualUsername,
-        'bot_token' => $botToken,
-        'webhook_url' => $webhookUrl,
-        'telegram_bot_id' => $actualBotId,
-        'telegram_user_id' => $userId,
-        'status' => 'active',
-        'created_at' => $now,
-        'last_activity' => $now
-    ];
+        $bots[] = [
+            'id' => $registrationId,
+            'random_id' => $registrationId,
+            'bot_hash' => $botHash,
+            'bot_username' => '@' . $actualUsername,
+            'bot_username_clean' => $actualUsername,
+            'bot_token' => $botToken,
+            'webhook_url' => $webhookUrl,
+            'telegram_bot_id' => $actualBotId,
+            'telegram_user_id' => $userId,
+            'status' => 'active',
+            'created_at' => $now,
+            'last_activity' => $now
+        ];
+    }
+} catch (Throwable $e) {
+    flock($fp, LOCK_UN);
+    fclose($fp);
+    respond(['ok' => false, 'msg' => 'Could not prepare registration record']);
 }
 
-/* Save while lock is held */
 $json = json_encode(
     $bots,
-    JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
+    JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
 );
 
 if ($json === false) {
     flock($fp, LOCK_UN);
     fclose($fp);
-    respond(['ok' => false, 'msg' => 'Could not encode bots database'], 500);
+    respond(['ok' => false, 'msg' => 'Could not encode bots database']);
 }
 
 rewind($fp);
-ftruncate($fp, 0);
+
+if (!ftruncate($fp, 0)) {
+    flock($fp, LOCK_UN);
+    fclose($fp);
+    respond(['ok' => false, 'msg' => 'Could not clear bots database for update']);
+}
 
 $written = fwrite($fp, $json);
 fflush($fp);
@@ -239,11 +290,11 @@ fflush($fp);
 flock($fp, LOCK_UN);
 fclose($fp);
 
-if ($written === false) {
-    respond(['ok' => false, 'msg' => 'Could not save bot registration'], 500);
+if ($written === false || $written !== strlen($json)) {
+    respond(['ok' => false, 'msg' => 'Could not completely save bot registration']);
 }
 
-/* Return Telegram's actual bot ID */
+/* Success response: never return the bot token */
 respond([
     'ok' => true,
     'msg' => 'Bot registration saved successfully',
