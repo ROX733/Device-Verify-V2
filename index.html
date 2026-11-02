@@ -3,23 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Ravi Ka Verification System - New UI</title>
+<title>Device Verification</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:#0a0a14;color:#e7e7f0;font-family:'Inter',sans-serif;display:flex;justify-content:center}
-  .app{width:100%;max-width:420px;background:linear-gradient(180deg,#0f0f1f 0%,#0a0a14 100%);min-height:100vh;padding-bottom:20px}
-  .top-bar{height:56px;display:flex;align-items:center;gap:10px;padding:0 14px;background:#141428;border-bottom:1px solid rgba(255,255,255,0.06)}
-  .r-logo{width:36px;height:36px;border-radius:10px;background:#8b5cf6;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:'Space Grotesk',sans-serif;font-size:16px}
-  .top-title{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px}
-  .user-card{margin:16px;background:#151328;border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:14px;display:flex;align-items:center;justify-content:space-between}
+  body{background:#0a0a14;color:#e7e7f0;font-family:'Inter',sans-serif;display:flex;justify-content:center;min-height:100vh}
+  .app{width:100%;max-width:420px;background:linear-gradient(180deg,#0f0f1f 0%,#0a0a14 100%);min-height:100vh;display:flex;flex-direction:column}
+  .content{flex:1;display:flex;flex-direction:column;justify-content:center;padding:20px 0}
+  .user-card{margin:0 16px 20px;background:#151328;border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:16px;display:flex;align-items:center;justify-content:space-between}
   .user-left{display:flex;align-items:center;gap:12px}
-  .user-avatar{width:44px;height:44px;border-radius:50%;background:#1f1d3a;border:2px solid #8b5cf6;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;overflow:hidden}
+  .user-avatar{width:48px;height:48px;border-radius:50%;background:#1f1d3a;border:2px solid #8b5cf6;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;overflow:hidden}
   .user-avatar img{width:100%;height:100%;object-fit:cover}
-  .user-meta .name{font-weight:600;font-size:14px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .user-meta .id{font-size:11px;color:#8a8aa0;margin-top:2px;font-family:monospace}
-  .verified-badge{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.5px;transition:all 0.3s}
+  .user-meta .name{font-weight:700;font-size:15px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .user-meta .id{font-size:11px;color:#8a8aa0;margin-top:3px;font-family:monospace}
+  .verified-badge{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.5px}
   .verified-badge.pending{background:rgba(255,184,77,0.12);border:1px solid rgba(255,184,77,0.3);color:#ffb84d}
   .verified-badge.verified{background:rgba(29,216,129,0.12);border:1px solid rgba(29,216,129,0.3);color:#1dd881}
   .verified-badge.blocked{background:rgba(255,93,108,0.12);border:1px solid rgba(255,93,108,0.3);color:#ff5d6c}
@@ -29,58 +27,60 @@
   .verified .dot{background:#1dd881;box-shadow:0 0 8px #1dd881}
   .blocked .dot{background:#ff5d6c;box-shadow:0 0 8px #ff5d6c}
   .already .dot{background:#3b82f6;box-shadow:0 0 8px #3b82f6}
-  .main-card{margin:0 16px;background:#151328;border:1px solid rgba(255,255,255,0.06);border-radius:24px;padding:28px 20px 20px;text-align:center}
-  .check-circle{width:84px;height:84px;margin:0 auto 18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:38px;transition:all 0.5s}
+  .main-card{margin:0 16px;background:#151328;border:1px solid rgba(255,255,255,0.08);border-radius:28px;padding:32px 22px 24px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.4)}
+  .check-circle{width:92px;height:92px;margin:0 auto 20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:42px;transition:all 0.5s}
   .check-circle.scanning{background:#1f1d3a;border:2px solid #8b5cf6;animation:spinPulse 1.5s infinite}
-  .check-circle.success{background:#1dd881;box-shadow:0 0 40px rgba(29,216,129,0.4);color:#fff}
-  .check-circle.failed{background:#ff5d6c;box-shadow:0 0 40px rgba(255,93,108,0.4);color:#fff}
-  .check-circle.already{background:#3b82f6;box-shadow:0 0 40px rgba(59,130,246,0.4);color:#fff}
+  .check-circle.success{background:#1dd881;box-shadow:0 0 50px rgba(29,216,129,0.5);color:#fff}
+  .check-circle.failed{background:#ff5d6c;box-shadow:0 0 50px rgba(255,93,108,0.5);color:#fff}
+  .check-circle.already{background:#3b82f6;box-shadow:0 0 50px rgba(59,130,246,0.5);color:#fff}
   @keyframes spinPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}} @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
-  h1{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:6px} h1.success{color:#1dd881} h1.failed{color:#ff5d6c} h1.scanning{color:#e7e7f0} h1.already{color:#3b82f6}
-  .sub{font-size:12px;color:#8a8aa0;margin-bottom:18px;line-height:1.4}
-  .purple-bar{height:8px;background:rgba(255,255,255,0.06);border-radius:999px;overflow:hidden;margin-bottom:20px} .purple-fill{height:100%;width:0%;background:#8b5cf6;border-radius:999px;transition:width 0.4s}
-  .checks{text-align:left;display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
-  .check{display:flex;align-items:center;justify-content:space-between;font-size:11px;letter-spacing:0.5px} .check-left{display:flex;align-items:center;gap:8px} .check-left .dot{width:6px;height:6px;border-radius:50%}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;margin-bottom:8px} h1.success{color:#1dd881} h1.failed{color:#ff5d6c} h1.scanning{color:#e7e7f0} h1.already{color:#3b82f6}
+  .sub{font-size:13px;color:#8a8aa0;margin-bottom:20px;line-height:1.5}
+  .purple-bar{height:8px;background:rgba(255,255,255,0.06);border-radius:999px;overflow:hidden;margin-bottom:24px} .purple-fill{height:100%;width:0%;background:#8b5cf6;border-radius:999px;transition:width 0.4s}
+  .checks{text-align:left;display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
+  .check{display:flex;align-items:center;justify-content:space-between;font-size:12px;letter-spacing:0.5px;font-weight:500} .check-left{display:flex;align-items:center;gap:10px} .check-left .dot{width:7px;height:7px;border-radius:50%}
   .check.wait .check-left{color:#6a6a80} .check.wait .dot{background:#6a6a80}
   .check.done .check-left{color:#1dd881} .check.done .dot{background:#1dd881;box-shadow:0 0 6px #1dd881}
   .check.fail .check-left{color:#ff5d6c} .check.fail .dot{background:#ff5d6c;box-shadow:0 0 6px #ff5d6c}
   .check.already .check-left{color:#3b82f6} .check.already .dot{background:#3b82f6;box-shadow:0 0 6px #3b82f6}
-  .continue{width:100%;padding:15px;border:none;border-radius:14px;font-weight:600;font-size:14px;cursor:pointer}
-  .continue.success{background:#8b5cf6;color:#fff;box-shadow:0 8px 24px rgba(139,92,246,0.3)}
+  .continue{width:100%;padding:16px;border:none;border-radius:16px;font-weight:700;font-size:15px;cursor:pointer;transition:all 0.2s}
+  .continue.success{background:#8b5cf6;color:#fff;box-shadow:0 8px 24px rgba(139,92,246,0.4)}
   .continue.failed{background:#ff5d6c;color:#fff} .continue.already{background:#3b82f6;color:#fff}
-  .foot{padding:20px;text-align:center;font-size:10px;color:#5a5a70;cursor:pointer}
+  .continue:active{transform:scale(0.98)}
+  .foot{padding:20px;text-align:center;font-size:11px;color:#5a5a70;cursor:pointer}
   .hidden{display:none !important}
 </style>
 </head>
 <body>
 <div class="app">
-  <div class="top-bar"><div class="r-logo" id="topR">R</div><div class="top-title">Ravi Ka Verification System - New UI</div></div>
-  <div class="user-card">
-    <div class="user-left">
-      <div class="user-avatar" id="avatar">R</div>
-      <div class="user-meta">
-        <div class="name" id="userName">Loading...</div>
-        <div class="id" id="userId">ID: ...</div>
+  <div class="content">
+    <div class="user-card">
+      <div class="user-left">
+        <div class="user-avatar" id="avatar">R</div>
+        <div class="user-meta">
+          <div class="name" id="userName">Loading...</div>
+          <div class="id" id="userId">ID: ...</div>
+        </div>
+      </div>
+      <div class="verified-badge pending" id="badge"><span class="dot"></span><span id="badgeText">PENDING</span></div>
+    </div>
+    <div class="main-card" id="scanPanel">
+      <div class="check-circle scanning" id="scanIcon">🛡️</div>
+      <h1 class="scanning" id="scanTitle">Securing Your Device</h1><div class="sub" id="scanSub">Analyzing security profile to prevent multi-account abuse</div>
+      <div class="purple-bar"><div class="purple-fill" id="scanBar"></div></div>
+      <div class="checks">
+        <div class="check wait" id="check1"><div class="check-left"><span class="dot"></span>DEVICE INTEGRITY</div><div class="check-right" id="check1Right">⋯</div></div>
+        <div class="check wait" id="check2"><div class="check-left"><span class="dot"></span>NETWORK SECURITY</div><div class="check-right" id="check2Right">⋯</div></div>
+        <div class="check wait" id="check3"><div class="check-left"><span class="dot"></span>SESSION VALIDATION</div><div class="check-right" id="check3Right">⋯</div></div>
       </div>
     </div>
-    <div class="verified-badge pending" id="badge"><span class="dot"></span><span id="badgeText">PENDING</span></div>
-  </div>
-  <div class="main-card" id="scanPanel">
-    <div class="check-circle scanning" id="scanIcon">🛡️</div>
-    <h1 class="scanning" id="scanTitle">Securing Your Device</h1><div class="sub" id="scanSub">Analyzing security profile to prevent multi-account abuse</div>
-    <div class="purple-bar"><div class="purple-fill" id="scanBar"></div></div>
-    <div class="checks">
-      <div class="check wait" id="check1"><div class="check-left"><span class="dot"></span>DEVICE INTEGRITY</div><div class="check-right" id="check1Right">⋯</div></div>
-      <div class="check wait" id="check2"><div class="check-left"><span class="dot"></span>NETWORK SECURITY</div><div class="check-right" id="check2Right">⋯</div></div>
-      <div class="check wait" id="check3"><div class="check-left"><span class="dot"></span>SESSION VALIDATION</div><div class="check-right" id="check3Right">⋯</div></div>
+    <div class="main-card hidden" id="resultPanel">
+      <div class="check-circle success" id="resultIcon">✓</div>
+      <h1 class="success" id="resultTitle">Verified Successfully</h1><div class="sub" id="resultSub">Your device is secure and verified</div>
+      <div class="purple-bar"><div class="purple-fill" style="width:100%"></div></div>
+      <div class="checks" id="resultChecks"></div>
+      <button class="continue success" id="continueBtn">Continue Securely</button>
     </div>
-  </div>
-  <div class="main-card hidden" id="resultPanel">
-    <div class="check-circle success" id="resultIcon">✓</div>
-    <h1 class="success" id="resultTitle">Verified Successfully</h1><div class="sub" id="resultSub">Your device is secure and verified</div>
-    <div class="purple-bar"><div class="purple-fill" style="width:100%"></div></div>
-    <div class="checks" id="resultChecks"></div>
-    <button class="continue success" id="continueBtn">Continue Securely</button>
   </div>
   <div class="foot" id="watermark">© 2026 Prince | Designed By ROX 🇮🇳 • Click to contact</div>
 </div>
@@ -95,8 +95,7 @@
   const tg=(window.Telegram&&window.Telegram.WebApp)?window.Telegram.WebApp:null; 
   if(tg){try{tg.ready();tg.expand();}catch(e){}}
 
-  // DYNAMIC USER - Jo verify karega uska naam + Chat ID + Avatar
-  let displayName='ROX 🇮🇳'; let displayId=USER_ID||'7973967415'; let avatarLetter='R';
+  let displayName='ROX'; let displayId=USER_ID||'8926119207'; let avatarLetter='R';
   if(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user){
     const u=tg.initDataUnsafe.user;
     displayName=(u.first_name||'')+' '+(u.last_name||''); displayName=displayName.trim()||'User'; 
@@ -120,16 +119,14 @@
     return {bot_id:BOT_ID,id:BOT_ID,user_id:USER_ID,bot_hash:HASH,hash:HASH,visitorId,information:visitorId,canvasHash,canvas:canvasHash,webglHash,webgl:webglHash,screenInfo:screen.width+'x'+screen.height,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,tzOffset:new Date().getTimezoneOffset(),hardware:navigator.hardwareConcurrency+'x'+(navigator.deviceMemory||0),ua:navigator.userAgent,initData:tg?tg.initData:'',username:USERNAME};
   }
 
-  // WEBHOOK RESPONSE FIX - Tere naye onWebhook_code.py ke liye
   function sendToTBC(serverRes, fp){
-    // Tere onWebhook_code.py me message_txt == "Verified Successfully" exact check hai
     let msg = serverRes.message || serverRes.title || "";
     if(serverRes.status==='success') msg = "Verified Successfully";
     else if(serverRes.status==='info') msg = "Already Verified";
-    else if(serverRes.title && serverRes.title.includes('VPN')) msg = "VPN Detected";
-    else if(serverRes.title && serverRes.title.includes('TurboTel')) msg = "Clone App Detected";
-    else if(serverRes.title && serverRes.title.includes('Used Device')) msg = "Verified Successfully"; // Used Device ko bhi pass bhej taaki FpOwners TBC pe pakad le
-    else if(serverRes.title && serverRes.title.includes('Clone App')) msg = "Clone App Detected";
+    else if(serverRes.title && serverRes.title.toLowerCase().includes('vpn')) msg = "VPN Detected";
+    else if(serverRes.title && serverRes.title.toLowerCase().includes('turbotel')) msg = "Clone App Detected";
+    else if(serverRes.title && serverRes.title.toLowerCase().includes('clone')) msg = "Clone App Detected";
+    else if(serverRes.title && serverRes.title.toLowerCase().includes('used device')) msg = "Verified Successfully";
 
     const data = {
       status: serverRes.status==='success' ? 'pass' : serverRes.status==='info' ? 'pass' : 'fail',
@@ -145,8 +142,11 @@
     if(tg){
       try{
         tg.sendData(JSON.stringify(data));
+        // Webhook response ke liye 1.5 sec wait fir close - yehi main fix hai
         setTimeout(()=>{ try{tg.close();}catch(e){} }, 1500);
-      }catch(e){ console.log(e); }
+      }catch(e){ console.log('sendData error:', e); }
+    } else {
+      console.log('Telegram WebApp not found - testing in browser');
     }
   }
 
@@ -182,17 +182,20 @@
             checksHtml='<div class="check already"><div class="check-left"><span class="dot"></span>DEVICE INTEGRITY</div><div class="check-right">✓</div></div><div class="check already"><div class="check-left"><span class="dot"></span>NETWORK SECURITY</div><div class="check-right">✓</div></div><div class="check already"><div class="check-left"><span class="dot"></span>SESSION VALIDATION</div><div class="check-right">✓</div></div>';
           } else {
             $('badge').className='verified-badge blocked'; $('badgeText').textContent='BLOCKED';
-            $('resultIcon').className='check-circle failed'; $('resultIcon').textContent=serverRes.title.includes('VPN')?'🛡️':serverRes.title.includes('Turbo')?'📱':'⚠️';
+            $('resultIcon').className='check-circle failed'; $('resultIcon').textContent=serverRes.title.toLowerCase().includes('vpn')?'🛡️':serverRes.title.toLowerCase().includes('turbo')||serverRes.title.toLowerCase().includes('clone')?'📱':'⚠️';
             $('resultTitle').className='failed'; $('resultTitle').textContent=serverRes.title; $('resultSub').textContent=serverRes.message;
             $('continueBtn').className='continue failed'; $('continueBtn').textContent='Try Again';
             checksHtml='<div class="check fail"><div class="check-left"><span class="dot"></span>DEVICE INTEGRITY</div><div class="check-right">✕</div></div><div class="check fail"><div class="check-left"><span class="dot"></span>NETWORK SECURITY</div><div class="check-right">✕</div></div><div class="check fail"><div class="check-left"><span class="dot"></span>SESSION VALIDATION</div><div class="check-right">✕</div></div>';
           }
           $('resultChecks').innerHTML=checksHtml;
+          // WEBHOOK RESPONSE FIX - Yehi line bot ko message bhejegi
           sendToTBC(serverRes, fp);
-          $('continueBtn').onclick=()=>{ if(tg){try{tg.close();}catch(e){}} };
-        }).catch(()=>{
+          $('continueBtn').onclick=()=>{ if(tg){try{tg.close();}catch(e){}} else { location.reload(); } };
+        }).catch((e)=>{
+          console.log('verify.php error', e);
           $('scanPanel').classList.add('hidden'); $('resultPanel').classList.remove('hidden');
           $('resultTitle').textContent='Verification Failed';
+          $('resultSub').textContent='Server error, try again';
         });
       }
     },300);
