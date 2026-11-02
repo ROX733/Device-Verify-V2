@@ -3,969 +3,340 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Device Verification</title>
-
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-
-:root{
- --purple:#8b45f7;
- --purple2:#635bff;
- --green:#10d9a0;
- --red:#ff536c;
- --blue:#579aff;
-}
-
-body{
- background:#080510;
- color:#eeeaff;
- font-family:'Inter',sans-serif;
- min-height:100vh;
- display:flex;
- justify-content:center;
- overflow-x:hidden;
-}
-
-.app{
- position:relative;
- width:100%;
- max-width:480px;
- min-height:100vh;
- min-height:100dvh;
- overflow:hidden;
- display:flex;
- flex-direction:column;
- background:
- radial-gradient(ellipse at 50% 45%,rgba(112,48,210,.16),transparent 55%),
- linear-gradient(180deg,#100824 0%,#090512 100%);
-}
-
-.bubbles{
- position:absolute;
- inset:0;
- overflow:hidden;
- pointer-events:none;
- z-index:0;
-}
-
-.bubble{
- position:absolute;
- border-radius:50%;
- background:rgba(139,92,246,.12);
- animation:float 9s infinite ease-in-out;
-}
-
+:root{--purple:#8b45f7;--green:#10d9a0;--red:#ff536c;--blue:#579aff}
+body{background:#080510;color:#eeeaff;font-family:Inter,sans-serif;min-height:100vh;min-height:100dvh}
+.app{position:relative;width:100%;max-width:480px;min-height:100vh;min-height:100dvh;margin:auto;overflow:hidden;display:flex;flex-direction:column;background:radial-gradient(ellipse at 50% 45%,rgba(112,48,210,.16),transparent 55%),linear-gradient(180deg,#100824,#090512)}
+.bubbles{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.bubble{position:absolute;border-radius:50%;background:rgba(139,92,246,.12);animation:float 9s infinite ease-in-out}
 .b1{width:14px;height:14px;left:18%;top:13%}
 .b2{width:38px;height:38px;right:13%;top:29%;animation-delay:2s}
 .b3{width:24px;height:24px;left:9%;top:70%;animation-delay:4s}
 .b4{width:12px;height:12px;right:20%;top:82%;animation-delay:1s}
 .b5{width:30px;height:30px;left:45%;top:91%;animation-delay:3s}
-
-@keyframes float{
- 0%,100%{transform:translateY(0)}
- 50%{transform:translateY(-25px)}
-}
-
-.content{
- position:relative;
- z-index:2;
- flex:1;
- display:flex;
- flex-direction:column;
- padding:22px 0 10px;
-}
-
-.user-card{
- margin:0 16px;
- min-height:104px;
- padding:16px;
- display:flex;
- align-items:center;
- justify-content:space-between;
- gap:10px;
- background:linear-gradient(120deg,rgba(30,18,57,.96),rgba(18,12,39,.96));
- border:1px solid rgba(151,91,255,.22);
- border-radius:25px;
- box-shadow:0 12px 35px rgba(0,0,0,.2);
-}
-
-.user-left{
- display:flex;
- align-items:center;
- gap:12px;
- min-width:0;
-}
-
-.user-avatar{
- width:58px;
- height:58px;
- flex-shrink:0;
- border-radius:50%;
- background:linear-gradient(135deg,#963cff,#5e58ff);
- border:2px solid #8b5cf6;
- display:flex;
- align-items:center;
- justify-content:center;
- font-weight:700;
- font-size:22px;
- overflow:hidden;
- box-shadow:0 0 18px rgba(139,92,246,.35);
-}
-
-.user-avatar img{
- width:100%;
- height:100%;
- object-fit:cover;
-}
-
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-25px)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes spinPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.content{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;padding:22px 0 10px}
+.user-card{margin:0 16px;min-height:104px;padding:16px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:linear-gradient(120deg,rgba(30,18,57,.96),rgba(18,12,39,.96));border:1px solid rgba(151,91,255,.22);border-radius:25px;box-shadow:0 12px 35px #0003}
+.user-left{display:flex;align-items:center;gap:12px;min-width:0}
+.user-avatar{width:58px;height:58px;flex-shrink:0;border-radius:50%;background:linear-gradient(135deg,#963cff,#5e58ff);border:2px solid #8b5cf6;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:22px;overflow:hidden;box-shadow:0 0 18px #8b5cf659}
+.user-avatar img{width:100%;height:100%;object-fit:cover}
 .user-meta{min-width:0}
-
-.user-meta .name{
- font-weight:700;
- font-size:15px;
- max-width:190px;
- overflow:hidden;
- text-overflow:ellipsis;
- white-space:nowrap;
-}
-
-.user-meta .id{
- font-size:12px;
- color:#9992bb;
- margin-top:5px;
- font-family:monospace;
-}
-
-.verified-badge{
- display:flex;
- align-items:center;
- justify-content:center;
- gap:7px;
- padding:10px 13px;
- border-radius:30px;
- font-size:11px;
- font-weight:700;
- letter-spacing:1px;
- white-space:nowrap;
- flex-shrink:0;
-}
-
-.verified-badge.pending{
- background:rgba(255,184,77,.10);
- border:1px solid rgba(255,184,77,.3);
- color:#ffbf5e;
-}
-
-.verified-badge.verified{
- background:rgba(16,217,160,.10);
- border:1px solid rgba(16,217,160,.35);
- color:var(--green);
-}
-
-.verified-badge.blocked{
- background:rgba(255,83,108,.10);
- border:1px solid rgba(255,83,108,.35);
- color:var(--red);
-}
-
-.verified-badge.already{
- background:rgba(87,154,255,.10);
- border:1px solid rgba(87,154,255,.35);
- color:var(--blue);
-}
-
-.verified-badge .dot{
- width:8px;
- height:8px;
- border-radius:50%;
- background:currentColor;
- box-shadow:0 0 9px currentColor;
-}
-
+.name{font-weight:700;font-size:15px;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.id{font-size:12px;color:#9992bb;margin-top:5px;font-family:monospace}
+.verified-badge{display:flex;align-items:center;gap:7px;padding:10px 13px;border-radius:30px;font-size:11px;font-weight:700;letter-spacing:1px;white-space:nowrap;flex-shrink:0}
+.pending{background:#ffb84d1a;border:1px solid #ffb84d4d;color:#ffbf5e}
+.verified{background:#10d9a01a;border:1px solid #10d9a059;color:var(--green)}
+.blocked{background:#ff536c1a;border:1px solid #ff536c59;color:var(--red)}
+.already{background:#579aff1a;border:1px solid #579aff59;color:var(--blue)}
+.dot{width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 9px currentColor}
 .pending .dot{animation:pulse 1s infinite}
-
-.main-card{
- position:relative;
- margin:24px 16px 20px;
- padding:42px 22px 32px;
- text-align:center;
- border-radius:34px;
- border:1px solid rgba(139,92,246,.30);
- background:
- radial-gradient(circle at 50% 15%,rgba(111,55,210,.17),transparent 45%),
- linear-gradient(145deg,rgba(31,19,62,.97),rgba(15,10,34,.98));
- box-shadow:0 0 35px rgba(102,54,210,.10),
- inset 0 0 30px rgba(139,92,246,.04);
- overflow:hidden;
-}
-
-.main-card:before{
- content:"";
- position:absolute;
- inset:0;
- border-radius:inherit;
- pointer-events:none;
- background:radial-gradient(circle at 50% 0%,rgba(151,87,255,.10),transparent 45%);
-}
-
+.main-card{position:relative;margin:24px 16px 20px;padding:42px 22px 32px;text-align:center;border-radius:34px;border:1px solid #8b5cf64d;background:radial-gradient(circle at 50% 15%,#6f37d22b,transparent 45%),linear-gradient(145deg,#1f133ef7,#0f0a22fa);box-shadow:0 0 35px #6636d21a,inset 0 0 30px #8b5cf60a;overflow:hidden}
 .main-card>*{position:relative;z-index:1}
-
-.check-circle{
- width:118px;
- height:118px;
- margin:0 auto 30px;
- border-radius:50%;
- display:flex;
- align-items:center;
- justify-content:center;
- font-size:54px;
- font-weight:700;
-}
-
-.check-circle.scanning{
- color:#c5a3ff;
- background:radial-gradient(circle,#34205e,#17102e);
- border:2px solid #8750ee;
- box-shadow:0 0 0 12px rgba(139,92,246,.09),0 0 35px rgba(139,92,246,.35);
- animation:spinPulse 1.6s infinite;
-}
-
-.check-circle.success{
- color:#fff;
- background:linear-gradient(145deg,#16e4ad,#05b88f);
- box-shadow:0 0 0 12px rgba(16,217,160,.10),0 0 45px rgba(16,217,160,.35);
-}
-
-.check-circle.failed{
- color:#fff;
- background:linear-gradient(145deg,#ff647d,#ed3155);
- box-shadow:0 0 0 12px rgba(255,83,108,.10),0 0 45px rgba(255,83,108,.30);
-}
-
-.check-circle.already{
- color:#fff;
- background:linear-gradient(145deg,#69aaff,#2869e9);
- box-shadow:0 0 0 12px rgba(87,154,255,.10),0 0 45px rgba(87,154,255,.35);
-}
-
-@keyframes spinPulse{
- 0%,100%{transform:scale(1)}
- 50%{transform:scale(1.06)}
-}
-
-@keyframes pulse{
- 0%,100%{opacity:1}
- 50%{opacity:.4}
-}
-
-h1{
- font-family:'Space Grotesk',sans-serif;
- font-size:27px;
- font-weight:700;
- margin-bottom:12px;
- line-height:1.25;
-}
-
-h1.success{color:var(--green)}
-h1.failed{color:var(--red)}
-h1.scanning{color:#eeeaff}
-h1.already{color:var(--blue)}
-
-.sub{
- font-size:14px;
- color:#9992bb;
- margin-bottom:25px;
- line-height:1.7;
-}
-
-.purple-bar{
- height:9px;
- background:rgba(255,255,255,.07);
- border-radius:999px;
- overflow:hidden;
- margin-bottom:28px;
-}
-
-.purple-fill{
- height:100%;
- width:0%;
- background:linear-gradient(90deg,#a13cff,#625bff);
- border-radius:999px;
- transition:width .65s ease;
- box-shadow:0 0 12px rgba(139,92,246,.5);
-}
-
-.checks{
- text-align:left;
- display:flex;
- flex-direction:column;
- gap:17px;
- margin-bottom:30px;
-}
-
-.check{
- display:flex;
- align-items:center;
- justify-content:space-between;
- font-size:12px;
- font-weight:600;
- letter-spacing:.5px;
-}
-
-.check-left{
- display:flex;
- align-items:center;
- gap:12px;
-}
-
-.check-left .dot{
- width:9px;
- height:9px;
- border-radius:50%;
-}
-
-.check.wait .check-left{color:#77718e}
-.check.wait .dot{background:#77718e}
-
-.check.running .check-left{color:#c09aff}
-.check.running .dot{
- background:#a76bff;
- box-shadow:0 0 10px #a76bff;
- animation:pulse .7s infinite;
-}
-
-.check.done .check-left{color:var(--green)}
-.check.done .dot{
- background:var(--green);
- box-shadow:0 0 9px var(--green);
-}
-
-.check.fail .check-left{color:var(--red)}
-.check.fail .dot{
- background:var(--red);
- box-shadow:0 0 9px var(--red);
-}
-
-.check.already .check-left{color:var(--blue)}
-.check.already .dot{
- background:var(--blue);
- box-shadow:0 0 9px var(--blue);
-}
-
-.continue{
- width:100%;
- padding:19px 14px;
- border:none;
- border-radius:19px;
- font-weight:700;
- font-size:16px;
- cursor:pointer;
- letter-spacing:.3px;
- transition:transform .2s;
-}
-
+.check-circle{width:118px;height:118px;margin:0 auto 30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:54px}
+.check-circle.scanning{color:#c5a3ff;background:radial-gradient(circle,#34205e,#17102e);border:2px solid #8750ee;box-shadow:0 0 0 12px #8b5cf617,0 0 35px #8b5cf659;animation:spinPulse 1.6s infinite}
+.check-circle.success{color:white;background:linear-gradient(145deg,#16e4ad,#05b88f);box-shadow:0 0 0 12px #10d9a01a,0 0 45px #10d9a059}
+.check-circle.failed{color:white;background:linear-gradient(145deg,#ff647d,#ed3155)}
+.check-circle.already{color:white;background:linear-gradient(145deg,#69aaff,#2869e9)}
+h1{font-family:'Space Grotesk',sans-serif;font-size:27px;margin-bottom:12px;line-height:1.25}
+h1.success{color:var(--green)}h1.failed{color:var(--red)}h1.scanning{color:#eeeaff}h1.already{color:var(--blue)}
+.sub{font-size:14px;color:#9992bb;margin-bottom:25px;line-height:1.7;overflow-wrap:anywhere}
+.purple-bar{height:9px;background:#ffffff12;border-radius:999px;overflow:hidden;margin-bottom:28px}
+.purple-fill{height:100%;width:0;background:linear-gradient(90deg,#a13cff,#625bff);border-radius:999px;transition:width .65s;box-shadow:0 0 12px #8b5cf680}
+.checks{display:flex;flex-direction:column;gap:17px;margin-bottom:30px}
+.check{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:600;letter-spacing:.5px}
+.check-left{display:flex;align-items:center;gap:12px}
+.check-left .dot{width:9px;height:9px}
+.check.wait{color:#77718e}.check.wait .dot{background:#77718e}
+.check.running{color:#c09aff}.check.running .dot{background:#a76bff;animation:pulse .7s infinite}
+.check.done{color:var(--green)}.check.done .dot{background:var(--green)}
+.check.fail{color:var(--red)}.check.fail .dot{background:var(--red)}
+.check.already{color:var(--blue)}.check.already .dot{background:var(--blue)}
+.continue{width:100%;padding:19px 14px;border:0;border-radius:19px;font-weight:700;font-size:16px;cursor:pointer}
 .continue:active{transform:scale(.97)}
-
-.continue.success{
- background:linear-gradient(110deg,#973cff,#4c65ff);
- color:#fff;
- box-shadow:0 10px 30px rgba(117,69,255,.30);
-}
-
-.continue.failed{
- background:linear-gradient(110deg,#ff7187,#ec3159);
- color:#fff;
- box-shadow:0 10px 30px rgba(255,83,108,.25);
-}
-
-.continue.already{
- background:linear-gradient(110deg,#70aaff,#2869e9);
- color:#fff;
- box-shadow:0 10px 30px rgba(87,154,255,.25);
-}
-
-.foot{
- position:relative;
- z-index:2;
- padding:25px 15px 30px;
- text-align:center;
- font-size:12px;
- color:#8d83b2;
-}
-
+.continue.success{background:linear-gradient(110deg,#973cff,#4c65ff);color:white}
+.continue.failed{background:linear-gradient(110deg,#ff7187,#ec3159);color:white}
+.continue.already{background:linear-gradient(110deg,#70aaff,#2869e9);color:white}
+.foot{position:relative;z-index:2;padding:25px 15px 30px;text-align:center;font-size:12px;color:#8d83b2}
 .hidden{display:none!important}
-
-@media(max-width:360px){
- .main-card{padding:32px 17px 26px}
- .user-card{padding:13px}
- .user-avatar{width:48px;height:48px}
- .user-meta .name{max-width:120px}
- .verified-badge{padding:8px 9px;font-size:10px}
- h1{font-size:23px}
-}
-
+@media(max-width:360px){.main-card{padding:32px 17px 26px}.user-card{padding:13px}.user-avatar{width:48px;height:48px}.user-meta .name{max-width:120px}.verified-badge{padding:8px 9px;font-size:10px}h1{font-size:23px}}
 </style>
 </head>
 
 <body>
-
 <div class="app">
-
 <div class="bubbles">
- <div class="bubble b1"></div>
- <div class="bubble b2"></div>
- <div class="bubble b3"></div>
- <div class="bubble b4"></div>
- <div class="bubble b5"></div>
+<div class="bubble b1"></div><div class="bubble b2"></div>
+<div class="bubble b3"></div><div class="bubble b4"></div><div class="bubble b5"></div>
 </div>
 
 <div class="content">
-
 <div class="user-card">
- <div class="user-left">
-  <div class="user-avatar" id="avatar">U</div>
-  <div class="user-meta">
-   <div class="name" id="userName">Loading...</div>
-   <div class="id" id="userId">ID: ...</div>
-  </div>
- </div>
-
- <div class="verified-badge pending" id="badge">
-  <span class="dot"></span>
-  <span id="badgeText">SCANNING</span>
- </div>
+<div class="user-left">
+<div class="user-avatar" id="avatar">U</div>
+<div class="user-meta">
+<div class="name" id="userName">Loading...</div>
+<div class="id" id="userId">ID: ...</div>
+</div>
+</div>
+<div class="verified-badge pending" id="badge">
+<span class="dot"></span><span id="badgeText">SCANNING</span>
+</div>
 </div>
 
 <div class="main-card" id="scanPanel">
-
- <div class="check-circle scanning" id="scanIcon">🛡️</div>
-
- <h1 class="scanning" id="scanTitle">Securing Your Device</h1>
-
- <div class="sub" id="scanSub">Initializing security checks...</div>
-
- <div class="purple-bar">
-  <div class="purple-fill" id="scanBar"></div>
- </div>
-
- <div class="checks">
-
-  <div class="check wait" id="check1">
-   <div class="check-left">
-    <span class="dot"></span>DEVICE INTEGRITY
-   </div>
-   <div id="check1Right">⋯</div>
-  </div>
-
-  <div class="check wait" id="check2">
-   <div class="check-left">
-    <span class="dot"></span>NETWORK SECURITY
-   </div>
-   <div id="check2Right">⋯</div>
-  </div>
-
-  <div class="check wait" id="check3">
-   <div class="check-left">
-    <span class="dot"></span>SESSION VALIDATION
-   </div>
-   <div id="check3Right">⋯</div>
-  </div>
-
- </div>
+<div class="check-circle scanning" id="scanIcon">🛡️</div>
+<h1 class="scanning" id="scanTitle">Securing Your Device</h1>
+<div class="sub" id="scanSub">Initializing security checks...</div>
+<div class="purple-bar"><div class="purple-fill" id="scanBar"></div></div>
+<div class="checks">
+<div class="check wait" id="check1"><div class="check-left"><span class="dot"></span>DEVICE INTEGRITY</div><span id="check1Right">⋯</span></div>
+<div class="check wait" id="check2"><div class="check-left"><span class="dot"></span>NETWORK SECURITY</div><span id="check2Right">⋯</span></div>
+<div class="check wait" id="check3"><div class="check-left"><span class="dot"></span>SESSION VALIDATION</div><span id="check3Right">⋯</span></div>
+</div>
 </div>
 
 <div class="main-card hidden" id="resultPanel">
-
- <div class="check-circle success" id="resultIcon">✓</div>
-
- <h1 class="success" id="resultTitle">Verified Successfully</h1>
-
- <div class="sub" id="resultSub">Your device is secure and verified</div>
-
- <div class="purple-bar">
-  <div class="purple-fill" id="resultBar" style="width:100%"></div>
- </div>
-
- <div class="checks" id="resultChecks"></div>
-
- <button class="continue success" id="continueBtn">Continue Securely</button>
-
+<div class="check-circle success" id="resultIcon">✓</div>
+<h1 class="success" id="resultTitle">Verified Successfully</h1>
+<div class="sub" id="resultSub">Your device is secure and verified.</div>
+<div class="purple-bar"><div class="purple-fill" id="resultBar" style="width:100%"></div></div>
+<div class="checks" id="resultChecks"></div>
+<button class="continue success" id="continueBtn">Continue Securely</button>
+</div>
 </div>
 
-</div>
-
-<div class="foot" id="watermark">
- © 2026 • Designed By ROX 🇮🇳
-</div>
-
+<div class="foot">© 2026 • Designed By ROX 🇮🇳</div>
 </div>
 
 <script>
-(function(){
-
 'use strict';
 
-const API_URL =
-'https://device-verification-v2.onrender.com/verify.php';
+(function(){
+const API_URL='https://device-verification-v2.onrender.com/verify.php';
+const qs=new URLSearchParams(location.search);
+const HASH=qs.get('hash')||qs.get('bot_hash')||'';
+const URL_USER_ID=qs.get('user_id')||'';
+const BOT_ID=qs.get('bot_id')||qs.get('id')||'';
+const URL_USERNAME=qs.get('username')||'';
+const $=id=>document.getElementById(id);
+const tg=window.Telegram?.WebApp||null;
+let completed=false;
+let audioContext=null;
 
-const qs = new URLSearchParams(location.search);
-
-const HASH = qs.get('hash') || qs.get('bot_hash') || '';
-const USER_ID = qs.get('user_id') || '';
-const BOT_ID = qs.get('id') || qs.get('bot_id') || '';
-const URL_USERNAME = qs.get('username') || '';
-
-const $ = id => document.getElementById(id);
-
-const tg = window.Telegram && window.Telegram.WebApp
- ? window.Telegram.WebApp : null;
-
-let realUsername = URL_USERNAME;
-let displayId = USER_ID;
-let completed = false;
-let audioContext = null;
-
-if(tg){
- try{
-  tg.ready();
-  tg.expand();
- }catch(e){}
-}
-
-/* USER DETAILS */
+if(tg){try{tg.ready();tg.expand();}catch(e){}}
 
 function loadUser(){
-
- const u = tg?.initDataUnsafe?.user;
-
- if(u){
-
-  realUsername = u.username || URL_USERNAME || '';
-
-  const displayName =
-   ((u.first_name || '')+' '+(u.last_name || '')).trim()
-   || realUsername || 'User';
-
-  displayId = String(u.id);
-
-  $('userName').textContent =
-   displayName + (u.username ? ' @'+u.username : '');
-
-  $('userId').textContent = 'ID: '+displayId;
-
-  $('avatar').textContent =
-   (u.first_name || 'U').charAt(0).toUpperCase();
-
-  if(u.photo_url){
-
-   const img = document.createElement('img');
-
-   img.src = u.photo_url;
-   img.alt = 'Avatar';
-   img.referrerPolicy = 'no-referrer';
-
-   img.onerror = function(){
-    this.remove();
-   };
-
-   $('avatar').replaceChildren(img);
-  }
-
- }else{
-
-  const name = URL_USERNAME || 'User';
-
-  $('userName').textContent = name;
-  $('userId').textContent = 'ID: '+displayId;
-  $('avatar').textContent = name.charAt(0).toUpperCase();
- }
+const u=tg?.initDataUnsafe?.user;
+if(u){
+const name=((u.first_name||'')+' '+(u.last_name||'')).trim()||u.username||'User';
+$('userName').textContent=name+(u.username?' @'+u.username:'');
+$('userId').textContent='ID: '+u.id;
+$('avatar').textContent=(u.first_name||'U').charAt(0).toUpperCase();
+if(u.photo_url){
+const img=document.createElement('img');
+img.src=u.photo_url;img.alt='Avatar';img.onerror=()=>img.remove();
+$('avatar').replaceChildren(img);
 }
-
+}else{
+$('userName').textContent=URL_USERNAME||'User';
+$('userId').textContent='ID: '+URL_USER_ID;
+$('avatar').textContent=(URL_USERNAME||'U').charAt(0).toUpperCase();
+}
+}
 loadUser();
 
-/* DEVICE FINGERPRINT */
+function wait(ms){return new Promise(r=>setTimeout(r,ms));}
+function progress(n){$('scanBar').style.width=n+'%';}
+function check(n,state,right){$('check'+n).className='check '+state;$('check'+n+'Right').textContent=right;}
+function badge(type,label){$('badge').className='verified-badge '+type;$('badgeText').textContent=label;}
 
-async function sha256(value){
-
- if(!window.crypto?.subtle){
-  throw new Error('Secure fingerprint API unavailable.');
- }
-
- const buffer = await crypto.subtle.digest(
-  'SHA-256',
-  new TextEncoder().encode(value)
- );
-
- return Array.from(new Uint8Array(buffer))
-  .map(x=>x.toString(16).padStart(2,'0'))
-  .join('');
+function sound(){
+try{
+const AC=window.AudioContext||window.webkitAudioContext;
+if(!AC)return;
+audioContext=audioContext||new AC();
+if(audioContext.state==='suspended')audioContext.resume();
+const o=audioContext.createOscillator(),g=audioContext.createGain();
+o.type='sine';o.frequency.setValueAtTime(660,audioContext.currentTime);
+o.frequency.setValueAtTime(880,audioContext.currentTime+.13);
+g.gain.setValueAtTime(.001,audioContext.currentTime);
+g.gain.exponentialRampToValueAtTime(.12,audioContext.currentTime+.03);
+g.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+.4);
+o.connect(g);g.connect(audioContext.destination);o.start();o.stop(audioContext.currentTime+.42);
+}catch(e){}
 }
 
-async function collectFP(){
-
- const visitorId = await sha256(
-  navigator.userAgent+'|'+
-  screen.width+'x'+screen.height+'|'+
-  navigator.language+'|'+
-  Intl.DateTimeFormat().resolvedOptions().timeZone
- );
-
- const canvasEl = document.createElement('canvas');
- const ctx = canvasEl.getContext('2d');
-
- if(!ctx){
-  throw new Error('Canvas fingerprint unavailable.');
- }
-
- canvasEl.width = 220;
- canvasEl.height = 45;
-
- ctx.font = '14px Arial';
- ctx.fillStyle = '#8b5cf6';
- ctx.fillText('device-verification-fingerprint',2,25);
-
- const canvasHash = await sha256(canvasEl.toDataURL());
-
- let webglHash = 'no-webgl';
-
- try{
-
-  const c = document.createElement('canvas');
-  const gl = c.getContext('webgl');
-
-  if(gl){
-
-   const dbg = gl.getExtension('WEBGL_debug_renderer_info');
-
-   const renderer = dbg
-    ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)
-    : 'unknown-renderer';
-
-   webglHash = await sha256(renderer);
-  }
-
- }catch(e){}
-
- return {
-
-  bot_id:BOT_ID,
-  id:BOT_ID,
-
-  user_id:USER_ID || displayId,
-
-  bot_hash:HASH,
-  hash:HASH,
-
-  visitorId:visitorId,
-  information:visitorId,
-
-  canvasHash:canvasHash,
-  canvas:canvasHash,
-
-  webglHash:webglHash,
-  webgl:webglHash,
-
-  screenInfo:screen.width+'x'+screen.height,
-
-  timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,
-
-  tzOffset:new Date().getTimezoneOffset(),
-
-  hardware:
-   (navigator.hardwareConcurrency || 0)+'x'+
-   (navigator.deviceMemory || 0),
-
-  language:navigator.language,
-  platform:navigator.platform,
-  touchPoints:navigator.maxTouchPoints,
-
-  ua:navigator.userAgent,
-
-  initData:tg ? tg.initData : '',
-
-  username:realUsername
- };
+function closeApp(){
+if(tg){try{tg.close();return;}catch(e){}}
 }
-
-/* UI HELPERS */
-
-function setBadge(type,text){
-
- $('badge').className='verified-badge '+type;
- $('badgeText').textContent=text;
-}
-
-function setCheck(number,state,right){
-
- $('check'+number).className='check '+state;
- $('check'+number+'Right').textContent=right;
-}
-
-function updateProgress(value){
-
- $('scanBar').style.width=Math.min(100,value)+'%';
-}
-
-function wait(ms){
-
- return new Promise(resolve=>setTimeout(resolve,ms));
-}
-
-function playCompletionSound(){
-
- try{
-
-  const AudioCtx =
-   window.AudioContext || window.webkitAudioContext;
-
-  if(!AudioCtx) return;
-
-  audioContext = audioContext || new AudioCtx();
-
-  if(audioContext.state === 'suspended'){
-   audioContext.resume().catch(()=>{});
-  }
-
-  const oscillator = audioContext.createOscillator();
-  const gain = audioContext.createGain();
-
-  oscillator.type='sine';
-  oscillator.frequency.setValueAtTime(660,audioContext.currentTime);
-  oscillator.frequency.setValueAtTime(880,audioContext.currentTime+.13);
-
-  gain.gain.setValueAtTime(.001,audioContext.currentTime);
-  gain.gain.exponentialRampToValueAtTime(.12,audioContext.currentTime+.03);
-  gain.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+.4);
-
-  oscillator.connect(gain);
-  gain.connect(audioContext.destination);
-
-  oscillator.start();
-  oscillator.stop(audioContext.currentTime+.42);
-
- }catch(e){}
-}
-
-function completionFeedback(){
-
- try{
-  if(navigator.vibrate){
-   navigator.vibrate([100,50,100]);
-  }
- }catch(e){}
-
- playCompletionSound();
-}
-
-/* ERROR RESULT */
-
-function showError(message){
-
- if(completed) return;
-
- completed=true;
-
- $('scanPanel').classList.add('hidden');
- $('resultPanel').classList.remove('hidden');
-
- setBadge('blocked','FAILED');
-
- $('resultIcon').className='check-circle failed';
- $('resultIcon').textContent='⚠️';
-
- $('resultTitle').className='failed';
- $('resultTitle').textContent='Verification Failed';
-
- $('resultSub').textContent=message || 'Please try again.';
-
- $('resultBar').style.background=
-  'linear-gradient(90deg,#ff7187,#ed3159)';
-
- $('resultChecks').innerHTML=
-  '<div class="check fail">'+
-  '<div class="check-left"><span class="dot"></span>VERIFICATION FAILED</div>'+
-  '<div>✕</div></div>';
-
- $('continueBtn').className='continue failed';
- $('continueBtn').textContent='Close';
-
- $('continueBtn').onclick=closeTelegram;
-}
-
-/* RESULT SCREEN */
 
 function showResult(data){
+if(completed)return;
+completed=true;
+$('scanPanel').classList.add('hidden');
+$('resultPanel').classList.remove('hidden');
 
- if(completed) return;
+const status=String(data.status||'').toLowerCase();
+const same=data.same_device===true||String(data.same_device).toLowerCase()==='true';
+const success=['success','pass'].includes(status);
+const info=status==='info';
+let type,title,icon,message,checks;
 
- completed=true;
-
- $('scanPanel').classList.add('hidden');
- $('resultPanel').classList.remove('hidden');
-
- let html='';
-
- const status=String(data.status || '').toLowerCase();
-
- const isSameDevice =
-  data.same_device === true ||
-  String(data.same_device).toLowerCase() === 'true' ||
-  String(data.title || '').toLowerCase().includes('used device');
-
- const isSuccess =
-  status === 'success' ||
-  status === 'pass';
-
- const isInfo = status === 'info';
-
- if(isSameDevice){
-
-  setBadge('already','ALREADY');
-
-  $('resultIcon').className='check-circle already';
-  $('resultIcon').textContent='🛡';
-
-  $('resultTitle').className='already';
-  $('resultTitle').textContent='Already Verified';
-
-  $('resultSub').textContent=
-   'This device has already been used on another account.';
-
-  $('continueBtn').className='continue already';
-
-  html=
-   '<div class="check already"><div class="check-left"><span class="dot"></span>SAME DEVICE DETECTED</div><div>✓</div></div>'+
-   '<div class="check already"><div class="check-left"><span class="dot"></span>ACCESS ALLOWED</div><div>✓</div></div>';
-
- }else if(isInfo){
-
-  setBadge('already','ALREADY');
-
-  $('resultIcon').className='check-circle already';
-  $('resultIcon').textContent='✓';
-
-  $('resultTitle').className='already';
-  $('resultTitle').textContent='Already Verified';
-
-  $('resultSub').textContent=
-   data.message || 'Your device is already verified.';
-
-  $('continueBtn').className='continue already';
-
-  html=
-   '<div class="check already"><div class="check-left"><span class="dot"></span>DEVICE ALREADY VERIFIED</div><div>✓</div></div>';
-
- }else if(isSuccess){
-
-  setBadge('verified','VERIFIED');
-
-  $('resultIcon').className='check-circle success';
-  $('resultIcon').textContent='✓';
-
-  $('resultTitle').className='success';
-  $('resultTitle').textContent='Verified Successfully';
-
-  $('resultSub').textContent=
-   data.message || 'Your device is secure and verified.';
-
-  $('continueBtn').className='continue success';
-
-  html=
-   '<div class="check done"><div class="check-left"><span class="dot"></span>DEVICE INTEGRITY</div><div>✓</div></div>'+
-   '<div class="check done"><div class="check-left"><span class="dot"></span>NETWORK SECURITY</div><div>✓</div></div>'+
-   '<div class="check done"><div class="check-left"><span class="dot"></span>SESSION VALIDATION</div><div>✓</div></div>';
-
- }else{
-
-  setBadge('blocked','BLOCKED');
-
-  $('resultIcon').className='check-circle failed';
-  $('resultIcon').textContent='⚠️';
-
-  $('resultTitle').className='failed';
-  $('resultTitle').textContent=data.title || 'Verification Failed';
-
-  $('resultSub').textContent=
-   data.message || 'Your device could not be verified.';
-
-  $('continueBtn').className='continue failed';
-
-  html=
-   '<div class="check fail"><div class="check-left"><span class="dot"></span>VERIFICATION FAILED</div><div>✕</div></div>';
- }
-
- $('resultChecks').innerHTML=html;
-
- $('continueBtn').textContent=
-  status==='success' || status==='pass' || isInfo || isSameDevice
-   ? 'Continue Securely'
-   : 'Close';
-
- $('continueBtn').onclick=closeTelegram;
-
- completionFeedback();
+if(same){
+type='already';title='Already Verified';icon='🛡️';
+message=data.message||'Same device detected. You are still allowed to continue.';
+checks=['SAME DEVICE DETECTED','ACCESS ALLOWED'];
+}else if(info){
+type='already';title='Already Verified';icon='✓';
+message=data.message||'Your device is already verified.';
+checks=['DEVICE ALREADY VERIFIED'];
+}else if(success){
+type='success';title='Verified Successfully';icon='✓';
+message=data.message||'Your device is secure and verified.';
+checks=['DEVICE INTEGRITY','NETWORK SECURITY','SESSION VALIDATION'];
+}else{
+type='failed';title=data.title||'Verification Failed';icon='⚠️';
+message=data.message||'Your device could not be verified.';
+checks=['VERIFICATION FAILED'];
 }
 
-function closeTelegram(){
-
- if(tg){
-  try{
-   tg.close();
-   return;
-  }catch(e){}
- }
-
- window.close();
+$('resultIcon').className='check-circle '+type;
+$('resultIcon').textContent=icon;
+$('resultTitle').className=type;
+$('resultTitle').textContent=title;
+$('resultSub').textContent=message;
+badge(type,type==='success'?'VERIFIED':type==='already'?'ALREADY':'FAILED');
+$('resultChecks').innerHTML=checks.map(x=>'<div class="check '+(type==='failed'?'fail':type)+'"><div class="check-left"><span class="dot"></span>'+x+'</div><span>'+(type==='failed'?'✕':'✓')+'</span></div>').join('');
+$('continueBtn').className='continue '+type;
+$('continueBtn').textContent=type==='failed'?'Close':'Continue Securely';
+$('continueBtn').onclick=closeApp;
+if(type!=='failed'){
+try{navigator.vibrate?.([100,50,100]);}catch(e){}
+sound();
+}
 }
 
-/* PROGRESS STAGES */
-
-async function stage(number,percent,message){
-
- if(completed) return;
-
- setCheck(number,'running','...');
- $('scanSub').textContent=message;
-
- updateProgress(percent);
-
- await wait(850);
-
- if(completed) return;
-
- setCheck(number,'done','✓');
+function showError(message){
+showResult({status:'error',title:'Verification Failed',message:message});
 }
 
-/* SERVER REQUEST */
+async function sha256(value){
+if(!crypto?.subtle)throw new Error('Secure fingerprint API unavailable.');
+const buffer=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value));
+return Array.from(new Uint8Array(buffer)).map(x=>x.toString(16).padStart(2,'0')).join('');
+}
 
-async function sendVerification(fp){
+async function collectFingerprint(){
+const visitorId=await sha256([
+navigator.userAgent,screen.width+'x'+screen.height,
+navigator.language,Intl.DateTimeFormat().resolvedOptions().timeZone,
+navigator.hardwareConcurrency||0
+].join('|'));
 
- const controller = new AbortController();
+const canvas=document.createElement('canvas');
+canvas.width=220;canvas.height=45;
+const ctx=canvas.getContext('2d');
+if(!ctx)throw new Error('Canvas fingerprint unavailable.');
+ctx.font='14px Arial';ctx.fillStyle='#8b5cf6';
+ctx.fillText('device-verification-fingerprint',2,25);
+const canvasHash=await sha256(canvas.toDataURL());
 
- const timeout = setTimeout(()=>{
-  controller.abort();
- },25000);
+let webglHash='no-webgl';
+try{
+const c=document.createElement('canvas');
+const gl=c.getContext('webgl');
+if(gl){
+const dbg=gl.getExtension('WEBGL_debug_renderer_info');
+const renderer=dbg?gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL):'unknown';
+webglHash=await sha256(renderer);
+}
+}catch(e){}
 
- try{
+return {
+botId:BOT_ID,
+userId:URL_USER_ID,
+bot_hash:HASH,
+initData:tg?tg.initData:'',
+visitorId:visitorId,
+canvasHash:canvasHash,
+webglHash:webglHash,
+screenInfo:screen.width+'x'+screen.height,
+timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,
+tzOffset:String(new Date().getTimezoneOffset()),
+hardware:(navigator.hardwareConcurrency||0)+'x'+(navigator.deviceMemory||0),
+username:tg?.initDataUnsafe?.user?.username||URL_USERNAME
+};
+}
 
-  const response = await fetch(API_URL,{
-   method:'POST',
-   headers:{
-    'Content-Type':'application/json'
-   },
-   body:JSON.stringify(fp),
-   signal:controller.signal
-  });
+async function run(){
+if(!HASH||!URL_USER_ID||!BOT_ID){
+showError('Verification link is incomplete. Please reopen the verification button from the bot.');
+return;
+}
+if(!tg||!tg.initData){
+showError('Please open this page using the official Telegram bot verification button.');
+return;
+}
+try{
+$('scanSub').textContent='Checking device integrity...';
+check(1,'running','...');
+progress(15);
+const fp=await collectFingerprint();
+check(1,'done','✓');progress(35);
 
-  const raw = await response.text();
+if(completed)return;
+$('scanSub').textContent='Checking network security...';
+check(2,'running','...');
+await wait(450);
+check(2,'done','✓');progress(60);
 
-  let data;
+if(completed)return;
+$('scanSub').textContent='Validating Telegram session...';
+check(3,'running','...');
+progress(75);
 
-  try{
-   data=JSON.parse(raw);
-  }catch(e){
-   throw new Error('Invalid server response. Contact
+const controller=new AbortController();
+const timeout=setTimeout(()=>controller.abort(),25000);
+let response,raw,data;
+try{
+response=await fetch(API_URL,{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify(fp),
+signal:controller.signal
+});
+raw=await response.text();
+}finally{clearTimeout(timeout);}
+
+try{data=JSON.parse(raw);}catch(e){
+throw new Error('Server returned invalid response. HTTP '+response.status);
+}
+
+if(!response.ok && !data.status){
+throw new Error('Server HTTP '+response.status);
+}
+if(data.status==='success'||data.status==='info'){
+check(3,'done','✓');progress(100);
+await wait(300);
+showResult(data);
+}else{
+showResult(data);
+}
+}catch(e){
+showError(e.name==='AbortError'?'Server request timed out. Please try again.':(e.message||'Unable to connect to verification server.'));
+}
+}
+
+run();
+})();
+</script>
+</body>
+</html>
