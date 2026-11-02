@@ -1,359 +1,324 @@
 
 <?php
+/*
+ * SECURE DEVICE VERIFICATION
+ * - Telegram WebApp initData HMAC validation
+ * - Active bot registration validation
+ * - Bot token verification with Telegram
+ * - Atomic users.json read/write locking
+ * - Same-device detection (allowed)
+ * - Callback delivery to registered webhook
+ */
 
 error_reporting(0);
 ini_set('display_errors', '0');
+ini_set('log_errors', '1');
 
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Cache-Control: no-store, no-cache, must-revalidate');
+header('X-Content-Type-Options: nosniff');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    header('Access-Control-Allow-Methods: POST, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type');
     http_response_code(204);
     exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
+    echo json_encode(['status' => 'error', 'message' => 'POST method required']);
     exit;
 }
 
-$dataDir = __DIR__ . '/data';
-$botsFile = $dataDir . '/bots.json';
-$usersFile = $dataDir . '/users.json';
-$logFile = $dataDir . '/webhook.log';
+header('Access-Control-Allow-Origin: *');
 
-if (!is_dir($dataDir)) {
-    @mkdir($dataDir, 0755, true);
+$DATA_DIR = __DIR__ . '/data';
+$BOTS_FILE = $DATA_DIR . '/bots.json';
+$USERS_FILE = $DATA_DIR . '/users.json';
+$LOG_FILE = $DATA_DIR . '/webhook.log';
+
+if (!is_dir($DATA_DIR)) {
+    @mkdir($DATA_DIR, 0750, true);
 }
 
-if (!file_exists($usersFile)) {
-    file_put_contents($usersFile, '[]', LOCK_EX);
+if (!file_exists($USERS_FILE)) {
+    @file_put_contents($USERS_FILE, '{}', LOCK_EX);
 }
-
-/* --------------------------------
-   JSON RESPONSE
--------------------------------- */
 
 function output($data, $code = 200) {
     http_response_code($code);
-
-    echo json_encode(
-        $data,
-        JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
-    );
-
+    echo json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-/* --------------------------------
-   LOGGING
--------------------------------- */
-
 function writeLog($message) {
-    global $logFile;
-
-    file_put_contents(
-        $logFile,
-        date('Y-m-d H:i:s') . ' ' . $message . PHP_EOL,
-        FILE_APPEND | LOCK_EX
-    );
+    global $LOG_FILE;
+    $line = '[' . date('Y-m-d H:i:s') . '] ' . $message . PHP_EOL;
+    @file_put_contents($LOG_FILE, $line, FILE_APPEND | LOCK_EX);
 }
 
-/* --------------------------------
-   JSON DATABASE
--------------------------------- */
-
-function readDatabase($file) {
-
-    if (!file_exists($file)) {
-        return [];
+function requestUrl($url, $postData = null, $timeout = 8) {
+    if (!function_exists('curl_init')) {
+        return ['ok' => false, 'code' => 0, 'body' => null];
     }
-
-    $fp = fopen($file, 'c+');
-
-    if (!$fp) {
-        return [];
-    }
-
-    flock($fp, LOCK_SH);
-
-    $content = stream_get_contents($fp);
-    $data = json_decode($content, true);
-
-    flock($fp, LOCK_UN);
-    fclose($fp);
-
-    return is_array($data) ? $data : [];
-}
-
-function saveDatabase($file, $data) {
-
-    $fp = fopen($file, 'c+');
-
-    if (!$fp) {
-        return false;
-    }
-
-    flock($fp, LOCK_EX);
-
-    ftruncate($fp, 0);
-    rewind($fp);
-
-    $written = fwrite(
-        $fp,
-        json_encode(
-            $data,
-            JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
-        )
-    );
-
-    fflush($fp);
-    flock($fp, LOCK_UN);
-    fclose($fp);
-
-    return $written !== false;
-}
-
-/* --------------------------------
-   HTTP REQUEST
--------------------------------- */
-
-function requestUrl($url, $postData = null) {
 
     $ch = curl_init($url);
 
     $options = [
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_CONNECTTIMEOUT => 8,
-        CURLOPT_TIMEOUT => 15,
+        CURLOPT_CONNECTTIMEOUT => 4,
+        CURLOPT_TIMEOUT => $timeout,
         CURLOPT_SSL_VERIFYPEER => true,
-        CURLOPT_SSL_VERIFYHOST => 2
+        CURLOPT_SSL_VERIFYHOST => 2,
+        CURLOPT_FOLLOWLOCATION => false,
+        CURLOPT_PROTOCOLS => CURLPROTO_HTTPS | CURLPROTO_HTTP
     ];
 
     if ($postData !== null) {
-
         $options[CURLOPT_POST] = true;
-
-        $options[CURLOPT_POSTFIELDS] = json_encode(
-            $postData,
-            JSON_UNESCAPED_SLASHES
-        );
-
-        $options[CURLOPT_HTTPHEADER] = [
-            'Content-Type: application/json',
-            'Accept: application/json'
-        ];
+        $options[CURLOPT_HTTPHEADER] = ['Content-Type: application/json'];
+        $options[CURLOPT_POSTFIELDS] = json_encode($postData);
     }
 
     curl_setopt_array($ch, $options);
 
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $body = curl_exec($ch);
+    $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $error = curl_error($ch);
 
     curl_close($ch);
 
     return [
-        'response' => $response,
-        'http_code' => $httpCode,
+        'ok' => ($body !== false && $code >= 200 && $code < 300),
+        'code' => $code,
+        'body' => $body,
         'error' => $error
     ];
 }
 
-/* --------------------------------
-   TELEGRAM WEB APP VALIDATION
--------------------------------- */
+function readJsonFile($file) {
+    if (!file_exists($file)) {
+        return [];
+    }
 
+    $raw = @file_get_contents($file);
+
+    if ($raw === false || trim($raw) === '') {
+        return [];
+    }
+
+    $data = json_decode($raw, true);
+
+    return is_array($data) ? $data : [];
+}
+
+/*
+ * Telegram WebApp initData validation.
+ */
 function validateTelegram($initData, $token, $expectedUser) {
-
-    if (!$initData || !$token) {
+    if (!$initData || !$token || !$expectedUser) {
         return false;
     }
 
-    parse_str($initData, $fields);
+    $params = [];
+    parse_str($initData, $params);
 
-    $receivedHash = $fields['hash'] ?? '';
-    $authDate = (int)($fields['auth_date'] ?? 0);
-
-    if (!$receivedHash || !$authDate) {
+    if (empty($params['hash']) || empty($params['auth_date']) || empty($params['user'])) {
         return false;
     }
 
-    if (
-        $authDate > time() + 60 ||
-        time() - $authDate > 600
-    ) {
+    $receivedHash = strtolower($params['hash']);
+    unset($params['hash']);
+
+    if (!preg_match('/^[a-f0-9]{64}$/', $receivedHash)) {
         return false;
     }
 
-    unset($fields['hash']);
+    $authDate = (int) $params['auth_date'];
+    $now = time();
 
-    ksort($fields);
-
-    $parts = [];
-
-    foreach ($fields as $key => $value) {
-        $parts[] = $key . '=' . $value;
+    if ($authDate <= 0 || $authDate > ($now + 60) || ($now - $authDate) > 600) {
+        return false;
     }
 
-    $checkString = implode("\n", $parts);
+    ksort($params);
 
-    $secretKey = hash_hmac(
-        'sha256',
-        $token,
-        'WebAppData',
-        true
-    );
+    $dataCheckString = [];
 
-    $calculatedHash = hash_hmac(
-        'sha256',
-        $checkString,
-        $secretKey
-    );
+    foreach ($params as $key => $value) {
+        if (is_array($value)) {
+            return false;
+        }
+
+        $dataCheckString[] = $key . '=' . $value;
+    }
+
+    $dataCheckString = implode("\n", $dataCheckString);
+
+    $secretKey = hash_hmac('sha256', $token, 'WebAppData', true);
+    $calculatedHash = hash_hmac('sha256', $dataCheckString, $secretKey);
 
     if (!hash_equals($calculatedHash, $receivedHash)) {
         return false;
     }
 
-    $telegramUser = json_decode(
-        $fields['user'] ?? '{}',
-        true
-    );
+    $user = json_decode($params['user'], true);
 
-    if (!is_array($telegramUser)) {
+    if (!is_array($user) || !isset($user['id'])) {
         return false;
     }
 
-    return (
-        isset($telegramUser['id']) &&
-        (string)$telegramUser['id'] === (string)$expectedUser
-    );
+    return ((string) $user['id'] === (string) $expectedUser);
 }
 
-/* --------------------------------
-   TBC WEBHOOK CALLBACK
--------------------------------- */
+/*
+ * Webhook callback.
+ * Keep existing callback fields compatible with the bot.
+ */
+function sendCallback($registration, $payload) {
+    $webhook = trim($registration['webhook_url'] ?? '');
 
-function sendCallback($registration, $result) {
+    if (!$webhook || !filter_var($webhook, FILTER_VALIDATE_URL)) {
+        writeLog('Callback rejected: invalid webhook URL');
+        return false;
+    }
 
-    $url = $registration['webhook_url'] ?? '';
+    $parts = parse_url($webhook);
 
     if (
-        !$url ||
-        !filter_var($url, FILTER_VALIDATE_URL) ||
-        parse_url($url, PHP_URL_SCHEME) !== 'https'
+        !$parts ||
+        strtolower($parts['scheme'] ?? '') !== 'https' ||
+        empty($parts['host'])
     ) {
-        writeLog('Invalid callback URL');
+        writeLog('Callback rejected: HTTPS required');
         return false;
     }
 
-    $sameDevice = !empty($result['same_device']);
+    $result = requestUrl($webhook, $payload, 8);
 
-    $callback = [
-        'status' => (
-            $result['status'] === 'success' ||
-            $result['status'] === 'info' ||
-            $sameDevice
-        ) ? 'pass' : 'error',
+    if (!$result['ok']) {
+        writeLog('Callback failed. HTTP=' . $result['code'] . ' Error=' . ($result['error'] ?? ''));
+        return false;
+    }
 
-        'title' => $result['title'] ?? '',
-        'message' => $result['message'] ?? '',
-
-        'fp' => $result['visitorId'] ?? '',
-
-        'bot_id' => $result['bot_id'] ?? '',
-        'user_id' => $result['user_id'] ?? '',
-        'hash' => $result['hash'] ?? '',
-
-        'same_device' => $sameDevice
-    ];
-
-    $request = requestUrl($url, $callback);
-
-    writeLog(
-        'Callback user=' . ($result['user_id'] ?? '') .
-        ' HTTP=' . $request['http_code'] .
-        ' error=' . ($request['error'] ?: 'none')
-    );
-
-    return (
-        $request['response'] !== false &&
-        $request['http_code'] >= 200 &&
-        $request['http_code'] < 300
-    );
+    return true;
 }
 
-/* --------------------------------
-   FINAL RESULT
--------------------------------- */
+function finishVerification($registration, $response, $callbackData) {
+    $delivered = sendCallback($registration, $callbackData);
+    $response['callback_delivered'] = $delivered;
 
-function finishVerification($registration, $result) {
+    if (!$delivered) {
+        writeLog('Callback delivery failed for user ' . ($callbackData['user_id'] ?? 'unknown'));
+    }
 
-    $result['callback_delivered'] = sendCallback(
-        $registration,
-        $result
-    );
-
-    output($result);
+    output($response);
 }
 
-/* --------------------------------
-   READ REQUEST
--------------------------------- */
+/*
+ * Atomic read-modify-write for users.json.
+ * Lock remains held during duplicate check and save.
+ */
+function withUsersLock($file, $callback) {
+    $fp = @fopen($file, 'c+');
 
-$raw = file_get_contents('php://input');
-$data = json_decode($raw, true);
+    if (!$fp) {
+        return ['ok' => false];
+    }
 
-if (!is_array($data)) {
-    output([
-        'status' => 'error',
-        'title' => 'Invalid Request',
-        'message' => 'Invalid JSON request.'
-    ], 400);
+    if (!flock($fp, LOCK_EX)) {
+        fclose($fp);
+        return ['ok' => false];
+    }
+
+    rewind($fp);
+    $raw = stream_get_contents($fp);
+    $users = json_decode($raw ?: '{}', true);
+
+    if (!is_array($users)) {
+        $users = [];
+    }
+
+    $result = $callback($users);
+
+    if (!empty($result['write'])) {
+        $json = json_encode(
+            $users,
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+        );
+
+        if ($json === false) {
+            flock($fp, LOCK_UN);
+            fclose($fp);
+            return ['ok' => false];
+        }
+
+        rewind($fp);
+        if (!ftruncate($fp, 0)) {
+            flock($fp, LOCK_UN);
+            fclose($fp);
+            return ['ok' => false];
+        }
+
+        $written = fwrite($fp, $json);
+
+        if ($written === false || $written !== strlen($json)) {
+            flock($fp, LOCK_UN);
+            fclose($fp);
+            return ['ok' => false];
+        }
+
+        fflush($fp);
+    }
+
+    flock($fp, LOCK_UN);
+    fclose($fp);
+
+    return ['ok' => true, 'result' => $result];
 }
 
-$botId = trim((string)($data['bot_id'] ?? ''));
-$userId = trim((string)($data['user_id'] ?? ''));
+/* ---------------- REQUEST ---------------- */
 
-$hash = trim((string)(
-    $data['bot_hash'] ?? $data['hash'] ?? ''
-));
+$rawInput = file_get_contents('php://input');
+$input = json_decode($rawInput, true);
 
-$initData = (string)($data['initData'] ?? '');
-
-if (!$botId || !$userId || !$hash) {
-
-    output([
-        'status' => 'error',
-        'title' => 'Missing Details',
-        'message' => 'Required verification details are missing.'
-    ], 400);
+if (!is_array($input)) {
+    output(['status' => 'error', 'message' => 'Invalid JSON request'], 400);
 }
 
-/* --------------------------------
-   FIND EXACT REGISTRATION
--------------------------------- */
+$botId = trim((string) ($input['botId'] ?? ''));
+$userId = trim((string) ($input['userId'] ?? ''));
+$hash = trim((string) ($input['bot_hash'] ?? $input['hash'] ?? ''));
+$initData = (string) ($input['initData'] ?? '');
 
-$bots = readDatabase($botsFile);
+if (
+    $botId === '' ||
+    $userId === '' ||
+    $hash === '' ||
+    $initData === '' ||
+    !ctype_digit($botId) ||
+    !ctype_digit($userId)
+) {
+    output(['status' => 'error', 'message' => 'Missing or invalid verification details'], 400);
+}
 
+if (strlen($hash) > 256 || strlen($initData) > 10000) {
+    output(['status' => 'error', 'message' => 'Request too large'], 400);
+}
+
+/* ---------------- REGISTRATION ---------------- */
+
+$bots = readJsonFile($BOTS_FILE);
 $registration = null;
 
 foreach ($bots as $bot) {
-
-    $savedHash = (string)($bot['bot_hash'] ?? '');
-    $savedBotId = (string)($bot['telegram_bot_id'] ?? '');
-    $savedUserId = (string)($bot['telegram_user_id'] ?? '');
-
     if (
-        $savedHash !== '' &&
-        $savedBotId !== '' &&
-        $savedUserId !== '' &&
-        hash_equals($savedHash, $hash) &&
-        $savedBotId === $botId &&
-        $savedUserId === $userId &&
-        ($bot['status'] ?? 'active') === 'active'
+        is_array($bot) &&
+        hash_equals((string) ($bot['bot_hash'] ?? ''), $hash) &&
+        (string) ($bot['telegram_bot_id'] ?? '') === $botId &&
+        (string) ($bot['telegram_user_id'] ?? '') === $userId &&
+        strtolower((string) ($bot['status'] ?? '')) === 'active'
     ) {
         $registration = $bot;
         break;
@@ -361,364 +326,330 @@ foreach ($bots as $bot) {
 }
 
 if (!$registration) {
-
-    writeLog('Registration mismatch user=' . $userId);
-
-    output([
-        'status' => 'error',
-        'title' => 'Invalid Registration',
-        'message' => 'Verification link expired. Reopen verification from your bot.'
-    ], 403);
+    output(['status' => 'error', 'message' => 'Invalid or inactive registration'], 403);
 }
 
-/* --------------------------------
-   BOT TOKEN
--------------------------------- */
+$token = trim((string) ($registration['bot_token'] ?? ''));
 
-$token = $registration['bot_token'] ?? '';
-
-if (!$token) {
-    output([
-        'status' => 'error',
-        'title' => 'Bot Configuration Error',
-        'message' => 'Bot token is missing.'
-    ], 500);
+if ($token === '' || strpos($token, ':') === false) {
+    output(['status' => 'error', 'message' => 'Bot registration token is invalid'], 403);
 }
 
-/* --------------------------------
-   CONFIRM BOT ID WITH TELEGRAM
--------------------------------- */
+/* ---------------- TELEGRAM BOT CHECK ---------------- */
 
-$me = requestUrl(
-    'https://api.telegram.org/bot' . $token . '/getMe'
-);
+$meResult = requestUrl('https://api.telegram.org/bot' . $token . '/getMe', null, 6);
 
-$meData = json_decode(
-    $me['response'] ?: '',
-    true
-);
+if (!$meResult['ok']) {
+    output(['status' => 'error', 'message' => 'Unable to validate Telegram bot'], 503);
+}
+
+$me = json_decode($meResult['body'], true);
 
 if (
-    !($meData['ok'] ?? false) ||
-    (string)($meData['result']['id'] ?? '') !== $botId
+    empty($me['ok']) ||
+    (string) ($me['result']['id'] ?? '') !== $botId
 ) {
-    output([
-        'status' => 'error',
-        'title' => 'Invalid Bot',
-        'message' => 'Telegram bot identity verification failed.'
-    ], 403);
+    output(['status' => 'error', 'message' => 'Bot identity validation failed'], 403);
 }
 
-/* --------------------------------
-   VERIFY TELEGRAM SESSION
--------------------------------- */
+/* ---------------- TELEGRAM WEBAPP VALIDATION ---------------- */
 
 if (!validateTelegram($initData, $token, $userId)) {
+    writeLog('Telegram initData validation failed for user ' . $userId);
+
+    $callback = [
+        'status' => 'error',
+        'title' => 'Verification Failed',
+        'message' => 'Telegram session validation failed',
+        'fp' => '',
+        'bot_id' => $botId,
+        'user_id' => $userId,
+        'hash' => $hash,
+        'same_device' => false
+    ];
 
     finishVerification($registration, [
         'status' => 'error',
-        'title' => 'Session Validation Failed',
-        'message' => 'Invalid or expired Telegram session.',
-        'bot_id' => $botId,
-        'user_id' => $userId,
-        'hash' => $hash
-    ]);
+        'message' => 'Telegram session validation failed'
+    ], $callback);
 }
 
-/* --------------------------------
-   DEVICE INFORMATION
--------------------------------- */
+/* ---------------- DEVICE DATA ---------------- */
 
-$visitorId = (string)($data['visitorId'] ?? '');
-$canvas = (string)($data['canvasHash'] ?? '');
-$webgl = (string)($data['webglHash'] ?? '');
+$visitorId = substr((string) ($input['visitorId'] ?? ''), 0, 256);
+$canvasHash = substr((string) ($input['canvasHash'] ?? ''), 0, 256);
+$webglHash = substr((string) ($input['webglHash'] ?? ''), 0, 256);
+$screenInfo = substr((string) ($input['screenInfo'] ?? ''), 0, 100);
+$timezone = substr((string) ($input['timezone'] ?? ''), 0, 100);
+$tzOffset = substr((string) ($input['tzOffset'] ?? ''), 0, 20);
+$hardware = substr((string) ($input['hardware'] ?? ''), 0, 100);
+$ua = substr((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 500);
+$ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+$username = substr((string) ($input['username'] ?? ''), 0, 100);
 
-$screenInfo = (string)($data['screenInfo'] ?? '');
-$timezone = (string)($data['timezone'] ?? '');
-$tzOffset = (string)($data['tzOffset'] ?? '');
-
-$hardware = (string)($data['hardware'] ?? '');
-$ua = (string)($data['ua'] ?? '');
-
-$username = (string)($data['username'] ?? '');
-
-$ip = $_SERVER['REMOTE_ADDR'] ?? '';
-
-/* --------------------------------
-   UNOFFICIAL APP CHECK
--------------------------------- */
-
-$lowerUA = strtolower($ua);
-
-if (
-    strpos($lowerUA, 'turbotel') !== false ||
-    strpos($lowerUA, 'turbo') !== false
-) {
-
-    finishVerification($registration, [
-        'status' => 'error',
-        'title' => 'Unofficial Telegram App Detected',
-        'message' => 'Please use the official Telegram app.',
-        'bot_id' => $botId,
-        'user_id' => $userId,
-        'hash' => $hash
-    ]);
-}
-
-/* --------------------------------
-   VPN / PROXY CHECK
--------------------------------- */
-
-$vpnDetected = false;
-
-if ($ip && $ip !== '127.0.0.1' && $ip !== '::1') {
-
-    $ipUrl = 'http://ip-api.com/json/' .
-        rawurlencode($ip) .
-        '?fields=status,proxy,hosting';
-
-    $ipResponse = requestUrl($ipUrl);
-
-    $ipData = json_decode(
-        $ipResponse['response'] ?: '',
-        true
-    );
-
-    if (
-        ($ipData['status'] ?? '') === 'success' &&
-        (
-            ($ipData['proxy'] ?? false) === true ||
-            ($ipData['hosting'] ?? false) === true
-        )
-    ) {
-        $vpnDetected = true;
-    }
-}
-
-if ($vpnDetected) {
-
-    finishVerification($registration, [
-        'status' => 'error',
-        'title' => 'VPN Detected',
-        'message' => 'VPN/Proxy detected. Disable VPN and try again.',
-        'bot_id' => $botId,
-        'user_id' => $userId,
-        'hash' => $hash
-    ]);
-}
-
-/* --------------------------------
-   READ USERS DATABASE
--------------------------------- */
-
-$users = readDatabase($usersFile);
-
-/* --------------------------------
-   ALREADY VERIFIED USER
--------------------------------- */
-
-foreach ($users as $existing) {
-
-    if (
-        (string)($existing['bot_id'] ?? '') === $botId &&
-        (string)($existing['user_id'] ?? '') === $userId &&
-        ($existing['status'] ?? '') === 'verified'
-    ) {
-
-        finishVerification($registration, [
-            'status' => 'info',
-            'title' => 'Already Verified',
-            'message' => 'Already Verified.',
-            'visitorId' => $visitorId,
-            'bot_id' => $botId,
-            'user_id' => $userId,
-            'hash' => $hash
-        ]);
-    }
-}
-
-/* --------------------------------
-   SAME DEVICE DETECTION
--------------------------------- */
-
-$matchCount = 0;
-$matchReasons = [];
-$matchedUser = '';
-
-foreach ($users as $existing) {
-
-    if (
-        (string)($existing['bot_id'] ?? '') !== $botId ||
-        ($existing['status'] ?? '') !== 'verified' ||
-        (string)($existing['user_id'] ?? '') === $userId
-    ) {
-        continue;
-    }
-
-    $currentCount = 0;
-    $currentReasons = [];
-
-    if (
-        $visitorId &&
-        !empty($existing['visitorId']) &&
-        hash_equals(
-            (string)$existing['visitorId'],
-            $visitorId
-        ) &&
-        strlen($visitorId) > 10
-    ) {
-        $currentCount++;
-        $currentReasons[] = 'visitorId';
-    }
-
-    if (
-        $canvas &&
-        !empty($existing['canvas']) &&
-        hash_equals(
-            (string)$existing['canvas'],
-            $canvas
-        ) &&
-        strlen($canvas) > 20
-    ) {
-        $currentCount++;
-        $currentReasons[] = 'canvas';
-    }
-
-    if (
-        $webgl &&
-        $webgl !== 'no-webgl' &&
-        !empty($existing['webgl']) &&
-        $webgl === $existing['webgl']
-    ) {
-        $currentCount++;
-        $currentReasons[] = 'webgl';
-    }
-
-    if (
-        $screenInfo &&
-        !empty($existing['screenInfo']) &&
-        $screenInfo === $existing['screenInfo']
-    ) {
-        $currentCount++;
-        $currentReasons[] = 'screen';
-    }
-
-    if (
-        $timezone &&
-        !empty($existing['timezone']) &&
-        $timezone === $existing['timezone'] &&
-        $tzOffset === (string)($existing['tzOffset'] ?? '')
-    ) {
-        $currentCount++;
-        $currentReasons[] = 'timezone';
-    }
-
-    if (
-        $hardware &&
-        !empty($existing['hardware']) &&
-        $hardware === $existing['hardware'] &&
-        $hardware !== '0x0'
-    ) {
-        $currentCount++;
-        $currentReasons[] = 'hardware';
-    }
-
-    if ($currentCount >= 2) {
-
-        $matchCount = $currentCount;
-        $matchReasons = $currentReasons;
-        $matchedUser = (string)$existing['user_id'];
-
-        break;
-    }
-}
-
-/* --------------------------------
-   SAVE VERIFIED USER
--------------------------------- */
-
-$newUser = [
-    'bot_id' => $botId,
-    'user_id' => $userId,
-    'username' => $username,
-
-    'status' => 'verified',
-
-    'type' => $matchCount >= 2
-        ? 'same_device_allowed'
-        : 'verified',
-
-    'same_device' => $matchCount >= 2,
-
-    'matched_with' => $matchedUser,
-    'match_count' => $matchCount,
-    'reasons' => $matchReasons,
-
-    'visitorId' => $visitorId,
-    'canvas' => $canvas,
-    'webgl' => $webgl,
-
-    'screenInfo' => $screenInfo,
+$fp = [
+    'visitor_id' => $visitorId,
+    'canvas_hash' => $canvasHash,
+    'webgl_hash' => $webglHash,
+    'screen_info' => $screenInfo,
     'timezone' => $timezone,
-    'tzOffset' => $tzOffset,
-    'hardware' => $hardware,
-
-    'ua' => $ua,
-    'ip' => $ip,
-
-    'time' => date('Y-m-d H:i:s')
+    'tz_offset' => $tzOffset,
+    'hardware' => $hardware
 ];
 
-$users[] = $newUser;
+/* ---------------- UNOFFICIAL APP CHECK ---------------- */
 
-if (!saveDatabase($usersFile, $users)) {
+$uaLower = strtolower($ua);
+
+if (strpos($uaLower, 'turbotel') !== false || strpos($uaLower, 'turbo') !== false) {
+    $callback = [
+        'status' => 'error',
+        'title' => 'Unsupported App',
+        'message' => 'Please open verification in the official Telegram app.',
+        'fp' => $visitorId,
+        'bot_id' => $botId,
+        'user_id' => $userId,
+        'hash' => $hash,
+        'same_device' => false
+    ];
 
     finishVerification($registration, [
         'status' => 'error',
-        'title' => 'Database Error',
-        'message' => 'Unable to save verification. Please retry.',
-        'bot_id' => $botId,
-        'user_id' => $userId,
-        'hash' => $hash
-    ]);
+        'message' => 'Unsupported Telegram app'
+    ], $callback);
 }
 
-/* --------------------------------
-   SAME DEVICE - ALLOW
--------------------------------- */
+/* ---------------- NETWORK CHECK ---------------- */
 
-if ($matchCount >= 2) {
+/*
+ * ip-api free endpoint uses HTTP.
+ * Lookup failure is logged and does not falsely claim that VPN was checked.
+ * This is a signal, not proof of a user's identity.
+ */
+$networkCheck = 'unavailable';
 
-    finishVerification($registration, [
-        'status' => 'success',
-        'title' => 'Used Device Detected',
-        'message' => 'Same device detected. You are still allowed to continue.',
-        'same_device' => true,
+if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+    $networkResult = requestUrl(
+        'http://ip-api.com/json/' . rawurlencode($ip) . '?fields=status,proxy,hosting',
+        null,
+        3
+    );
 
-        'visitorId' => $visitorId,
+    if ($networkResult['ok']) {
+        $networkData = json_decode($networkResult['body'], true);
 
-        'bot_id' => $botId,
-        'user_id' => $userId,
-        'hash' => $hash
-    ]);
+        if (($networkData['status'] ?? '') === 'success') {
+            $networkCheck = 'checked';
+
+            if (!empty($networkData['proxy']) || !empty($networkData['hosting'])) {
+                $callback = [
+                    'status' => 'error',
+                    'title' => 'Network Check Failed',
+                    'message' => 'Proxy or hosting network detected.',
+                    'fp' => $visitorId,
+                    'bot_id' => $botId,
+                    'user_id' => $userId,
+                    'hash' => $hash,
+                    'same_device' => false
+                ];
+
+                finishVerification($registration, [
+                    'status' => 'error',
+                    'message' => 'Proxy or hosting network detected'
+                ], $callback);
+            }
+        }
+    }
 }
 
-/* --------------------------------
-   NORMAL SUCCESS
--------------------------------- */
+/* ---------------- ATOMIC DEVICE VERIFICATION ---------------- */
+
+$locked = withUsersLock($USERS_FILE, function (&$users) use (
+    $botId,
+    $userId,
+    $visitorId,
+    $canvasHash,
+    $webglHash,
+    $screenInfo,
+    $timezone,
+    $tzOffset,
+    $hardware,
+    $ip,
+    $ua,
+    $username,
+    $fp,
+    $networkCheck
+) {
+    $currentKey = $botId . '_' . $userId;
+
+    /*
+     * Already verified: do not create another record.
+     * Return callback again so a previous callback failure can recover.
+     */
+    if (
+        isset($users[$currentKey]) &&
+        is_array($users[$currentKey]) &&
+        ($users[$currentKey]['status'] ?? '') === 'verified'
+    ) {
+        return [
+            'write' => false,
+            'kind' => 'already'
+        ];
+    }
+
+    $signals = [
+        'visitor_id' => $visitorId,
+        'canvas_hash' => $canvasHash,
+        'webgl_hash' => $webglHash,
+        'screen_info' => $screenInfo,
+        'timezone' => $timezone,
+        'hardware' => $hardware
+    ];
+
+    $matches = [];
+
+    foreach ($users as $key => $old) {
+        if (!is_array($old)) {
+            continue;
+        }
+
+        if ((string) ($old['bot_id'] ?? '') !== (string) $botId) {
+            continue;
+        }
+
+        if ((string) ($old['user_id'] ?? '') === (string) $userId) {
+            continue;
+        }
+
+        $oldFp = $old['fingerprint'] ?? [];
+        if (!is_array($oldFp)) {
+            continue;
+        }
+
+        $matchCount = 0;
+        $reasons = [];
+
+        foreach ($signals as $name => $value) {
+            if ($value === '') {
+                continue;
+            }
+
+            $oldValue = (string) ($oldFp[$name] ?? '');
+
+            if ($oldValue !== '' && hash_equals($oldValue, (string) $value)) {
+                $matchCount++;
+                $reasons[] = $name;
+            }
+        }
+
+        if (
+            $timezone !== '' &&
+            $tzOffset !== '' &&
+            (string) ($oldFp['timezone'] ?? '') === $timezone &&
+            (string) ($oldFp['tz_offset'] ?? '') === $tzOffset
+        ) {
+            if (!in_array('timezone_offset', $reasons, true)) {
+                $matchCount++;
+                $reasons[] = 'timezone_offset';
+            }
+        }
+
+        if ($matchCount >= 2) {
+            $matches[] = [
+                'user_id' => $old['user_id'] ?? '',
+                'match_count' => $matchCount,
+                'reasons' => $reasons
+            ];
+            break;
+        }
+    }
+
+    $sameDevice = !empty($matches);
+    $matchedUser = $sameDevice ? $matches[0]['user_id'] : null;
+    $matchCount = $sameDevice ? $matches[0]['match_count'] : 0;
+    $reasons = $sameDevice ? $matches[0]['reasons'] : [];
+
+    $users[$currentKey] = [
+        'bot_id' => $botId,
+        'user_id' => $userId,
+        'username' => $username,
+        'status' => 'verified',
+        'type' => $sameDevice ? 'same_device_allowed' : 'verified',
+        'same_device' => $sameDevice,
+        'matched_user' => $matchedUser,
+        'match_count' => $matchCount,
+        'match_reasons' => $reasons,
+        'fingerprint' => $fp,
+        'ip' => $ip,
+        'network_check' => $networkCheck,
+        'user_agent' => $ua,
+        'verified_at' => date('Y-m-d H:i:s'),
+        'verified_timestamp' => time()
+    ];
+
+    return [
+        'write' => true,
+        'kind' => $sameDevice ? 'same_device' : 'success',
+        'matched_user' => $matchedUser,
+        'match_count' => $matchCount
+    ];
+});
+
+if (empty($locked['ok'])) {
+    writeLog('Unable to lock users database for user ' . $userId);
+    output(['status' => 'error', 'message' => 'Verification storage temporarily unavailable'], 503);
+}
+
+$result = $locked['result'] ?? [];
+$kind = $result['kind'] ?? 'error';
+
+/* ---------------- RESPONSE + CALLBACK ---------------- */
+
+if ($kind === 'already') {
+    $response = [
+        'status' => 'info',
+        'title' => 'Already Verified',
+        'message' => 'Your device has already been verified.'
+    ];
+
+    $callback = [
+        'status' => 'pass',
+        'title' => 'Already Verified',
+        'message' => 'Your device has already been verified.',
+        'fp' => $visitorId,
+        'bot_id' => $botId,
+        'user_id' => $userId,
+        'hash' => $hash,
+        'same_device' => !empty($users[$botId . '_' . $userId]['same_device'])
+    ];
+
+    finishVerification($registration, $response, $callback);
+}
+
+if ($kind === 'same_device') {
+    $title = 'Used Device Detected';
+    $message = 'Same device detected. You are still allowed to continue.';
+    $sameDevice = true;
+} else {
+    $title = 'Device Verified';
+    $message = 'Your device has been successfully verified.';
+    $sameDevice = false;
+}
+
+$callback = [
+    'status' => 'pass',
+    'title' => $title,
+    'message' => $message,
+    'fp' => $visitorId,
+    'bot_id' => $botId,
+    'user_id' => $userId,
+    'hash' => $hash,
+    'same_device' => $sameDevice
+];
 
 finishVerification($registration, [
     'status' => 'success',
-    'title' => 'Device Verified Successfully',
-    'message' => 'Your device is now verified.',
-
-    'same_device' => false,
-
-    'visitorId' => $visitorId,
-
-    'bot_id' => $botId,
-    'user_id' => $userId,
-    'hash' => $hash
-]);
-
-?>
+    'title' => $title,
+    'message' => $message,
+    'same_device' => $sameDevice
+], $callback);
