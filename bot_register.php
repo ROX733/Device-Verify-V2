@@ -1,85 +1,158 @@
 <?php
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-if($_SERVER['REQUEST_METHOD'] == 'OPTIONS'){ exit; }
+header('Content-Type: application/json; charset=utf-8');
 
 $dataDir = __DIR__ . '/data';
-if(!is_dir($dataDir)){ mkdir($dataDir, 0777, true); }
-$botsFile = $dataDir . '/bots.json';
-$usersFile = $dataDir . '/users.json';
-if(!file_exists($botsFile)){ file_put_contents($botsFile, '[]'); }
-if(!file_exists($usersFile)){ file_put_contents($usersFile, '[]'); }
 
-function curl_get($url){
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0');
-    $res = curl_exec($ch);
+if (!is_dir($dataDir)) {
+    mkdir($dataDir, 0755, true);
+}
+
+function readJsonFile($file) {
+    if (!file_exists($file)) return [];
+
+    $data = json_decode(file_get_contents($file), true);
+    return is_array($data) ? $data : [];
+}
+
+function writeJsonFile($file, $data) {
+    return file_put_contents(
+        $file,
+        json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
+        LOCK_EX
+    ) !== false;
+}
+
+function curlGet($url) {
+    $ch = curl_init($url);
+
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_TIMEOUT => 10,
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_USERAGENT => 'DeviceVerification/2.0'
+    ]);
+
+    $response = curl_exec($ch);
     curl_close($ch);
-    return $res;
+
+    return $response;
 }
 
-$bots = json_decode(file_get_contents($botsFile), true) ?: [];
+$botsFile = $dataDir . '/bots.json';
+$registrationsFile = $dataDir . '/registrations.json';
 
-$botHash = $_GET['botHash'] ?? $_POST['botHash'] ?? $_GET['id'] ?? '';
-$botUsername = $_GET['bot'] ?? $_POST['bot'] ?? '';
-$botToken = $_GET['bot_token'] ?? $_POST['bot_token'] ?? $_GET['token'] ?? '';
-$webhookUrl = $_GET['webhook_url'] ?? $_POST['webhook_url'] ?? $_GET['webhook'] ?? '';
+$botHash = $_GET['botHash'] ?? $_POST['botHash'] ?? '';
+$botUsername = ltrim($_GET['bot'] ?? $_POST['bot'] ?? '', '@');
+$botToken = $_GET['bot_token'] ?? $_POST['bot_token'] ?? '';
+$webhookUrl = $_GET['webhook_url'] ?? $_POST['webhook_url'] ?? '';
+$botId = (string)($_GET['bot_id'] ?? $_POST['bot_id'] ?? '');
+$userId = (string)($_GET['user_id'] ?? $_POST['user_id'] ?? '');
 
-$botUsernameClean = ltrim($botUsername, '@');
-
-if(!$botHash) { echo json_encode(['ok'=>False, 'msg'=>'botHash missing']); exit; }
-if(!$botToken) { echo json_encode(['ok'=>False, 'msg'=>'bot_token missing']); exit; }
-
-$checkJson = curl_get("https://api.telegram.org/bot{$botToken}/getMe");
-$checkData = json_decode($checkJson, true);
-$finalUsername = $botUsernameClean;
-if($checkData && ($checkData['ok']??false)){
-    $finalUsername = $checkData['result']['username'] ?? $botUsernameClean;
+if (!$botHash || strlen($botHash) !== 34) {
+    http_response_code(400);
+    echo json_encode(['ok'=>false, 'msg'=>'Invalid botHash']);
+    exit;
 }
 
-// Same bot = Same ID
-$foundIndex = -1;
-foreach($bots as $idx => $b){
-    $clean = $b['bot_username_clean'] ?? ltrim($b['bot_username']??'', '@');
-    if($clean === $finalUsername) { $foundIndex = $idx; break; }
+if (!$botToken || !$botId || !$userId) {
+    http_response_code(400);
+    echo json_encode(['ok'=>false, 'msg'=>'Missing registration details']);
+    exit;
 }
 
-if($foundIndex >= 0){
-    $responseId = $bots[$foundIndex]['id'];
-    $bots[$foundIndex]['bot_token'] = $botToken;
-    $bots[$foundIndex]['bot_hash'] = $botHash;
-    $bots[$foundIndex]['webhook_url'] = $webhookUrl;
-    $bots[$foundIndex]['bot_username'] = '@'.$finalUsername;
-    $bots[$foundIndex]['bot_username_clean'] = $finalUsername;
-    $bots[$foundIndex]['last_activity'] = date('Y-m-d H:i:s');
-}else{
-    $responseId = substr(md5($finalUsername.time().rand(1000,9999)), 0, 12);
+$parsed = parse_url($webhookUrl);
+
+if (
+    !$parsed ||
+    ($parsed['scheme'] ?? '') !== 'https' ||
+    empty($parsed['host'])
+) {
+    http_response_code(400);
+    echo json_encode(['ok'=>false, 'msg'=>'Invalid HTTPS webhook URL']);
+    exit;
+}
+
+/* Verify bot token */
+$checkJson = curlGet(
+    'https://api.telegram.org/bot' . $botToken . '/getMe'
+);
+
+$checkData = json_decode($checkJson ?: '', true);
+
+if (!($checkData['ok'] ?? false)) {
+    http_response_code(401);
+    echo json_encode(['ok'=>false, 'msg'=>'Telegram bot token validation failed']);
+    exit;
+}
+
+$finalUsername = $checkData['result']['username'] ?? $botUsername;
+
+$bots = readJsonFile($botsFile);
+$registrations = readJsonFile($registrationsFile);
+
+$responseId = '';
+
+/* Find or create bot */
+$found = false;
+
+foreach ($bots as &$bot) {
+    if (
+        ($bot['bot_username_clean'] ?? '') === $finalUsername
+    ) {
+        $bot['bot_token'] = $botToken;
+        $bot['last_activity'] = date('Y-m-d H:i:s');
+        $responseId = $bot['id'];
+        $found = true;
+        break;
+    }
+}
+unset($bot);
+
+if (!$found) {
+    $responseId = bin2hex(random_bytes(8));
+
     $bots[] = [
         'id' => $responseId,
-        'random_id' => $responseId,
-        'bot_hash' => $botHash,
-        'bot_username' => '@'.$finalUsername,
+        'bot_username' => '@' . $finalUsername,
         'bot_username_clean' => $finalUsername,
         'bot_token' => $botToken,
-        'webhook_url' => $webhookUrl,
         'created_at' => date('Y-m-d H:i:s'),
-        'last_activity' => date('Y-m-d H:i:s'),
+        'last_activity' => date('Y-m-d H:i:s')
     ];
 }
 
-file_put_contents($botsFile, json_encode($bots, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES), LOCK_EX);
+/* One registration per user verification session */
+$registrations = array_values(array_filter(
+    $registrations,
+    function($r) use ($botHash) {
+        return ($r['bot_hash'] ?? '') !== $botHash;
+    }
+));
 
-// === TERA WALA FINAL RESPONSE ===
+$registrations[] = [
+    'bot_hash' => $botHash,
+    'bot_id' => $botId,
+    'user_id' => $userId,
+    'bot_username' => $finalUsername,
+    'webhook_url' => $webhookUrl,
+    'bot_token' => $botToken,
+    'created_at' => date('Y-m-d H:i:s')
+];
+
+if (
+    !writeJsonFile($botsFile, $bots) ||
+    !writeJsonFile($registrationsFile, $registrations)
+) {
+    http_response_code(500);
+    echo json_encode(['ok'=>false, 'msg'=>'Database write failed']);
+    exit;
+}
+
 echo json_encode([
-    'ok' => True,
-    'msg' => 'Bot token and webhook URL saved successfully',
+    'ok' => true,
+    'msg' => 'Registration successful',
     'id' => $responseId,
-    'bot' => '@'.$finalUsername
+    'bot' => '@' . $finalUsername
 ]);
 ?>
