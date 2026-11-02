@@ -1,139 +1,534 @@
+
 <?php
-ob_start(); error_reporting(0); ini_set('display_errors',0);
-header('Content-Type: application/json');
+ob_start();
+error_reporting(0);
+ini_set('display_errors', '0');
+
+header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
-if($_SERVER['REQUEST_METHOD']==='OPTIONS'){ echo json_encode(['ok'=>true]); exit; }
 
-$dataDir=__DIR__.'/data'; 
-$usersFile=$dataDir.'/users.json';
-if(!is_dir($dataDir)) @mkdir($dataDir,0777,true);
-if(!file_exists($usersFile)) file_put_contents($usersFile,'[]',LOCK_EX);
-
-function jsonOut($a){ 
-    if(ob_get_length()) ob_clean(); 
-    echo json_encode($a); 
-    exit; 
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
+    exit;
 }
 
-function ipCheck($ip){
-  if($ip=='127.0.0.1' || $ip=='::1') return null;
-  $ch=curl_init("http://ip-api.com/json/{$ip}?fields=proxy,hosting,org,status");
-  curl_setopt_array($ch,[
-    CURLOPT_RETURNTRANSFER=>true,
-    CURLOPT_TIMEOUT=>4,
-    CURLOPT_CONNECTTIMEOUT=>2,
-    CURLOPT_SSL_VERIFYPEER=>false,
-    CURLOPT_USERAGENT=>'Mozilla/5.0'
-  ]);
-  $r=@curl_exec($ch); 
-  $code=curl_getinfo($ch, CURLINFO_HTTP_CODE);
-  @curl_close($ch); 
-  if($code!=200 || !$r) return null; // API fail = skip check, don't block
-  $d=json_decode($r,true);
-  if(($d['status']??'')!=='success') return null;
-  return $d;
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    exit;
 }
 
-$raw=file_get_contents('php://input');
-$in=@json_decode($raw,true)?:[];
-$botId=$in['bot_id']??$in['id']??$_GET['id']??'';
-$uid=$in['user_id']??''; 
-$hash=$in['bot_hash']??$in['hash']??$_GET['bot_hash']??$_GET['hash']??'';
-$vid=$in['visitorId']??''; 
-$info=$in['information']??'';
-$canvas=$in['canvasHash']??''; 
-$webgl=$in['webglHash']??'';
-$screenInfo=$in['screenInfo']??''; 
-$tz=$in['timezone']??''; 
-$tzOff=$in['tzOffset']??'';
-$lang=$in['language']??''; 
-$plat=$in['platform']??''; 
-$hw=$in['hardware']??'';
-$touch=$in['touchPoints']??''; 
-$ua=$in['ua']??$_SERVER['HTTP_USER_AGENT']??'';
-$init=$in['initData']??''; 
-$username=$in['username']??'';
-$ip=$_SERVER['REMOTE_ADDR']??'';
-if(!empty($_SERVER['HTTP_CF_CONNECTING_IP'])) $ip=$_SERVER['HTTP_CF_CONNECTING_IP'];
-if(!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) $ip=explode(',',$_SERVER['HTTP_X_FORWARDED_FOR'])[0];
+$dataDir = __DIR__ . '/data';
+$botsFile = $dataDir . '/bots.json';
+$usersFile = $dataDir . '/users.json';
+$logFile = $dataDir . '/webhook.log';
 
-if(empty($botId)||empty($uid)) jsonOut(['status'=>'error','title'=>'Invalid Request','message'=>'Open via bot button.','hash'=>$hash,'bot_hash'=>$hash]);
-
-// TURBOTEL CHECK
-$low=strtolower($ua);
-if(strpos($low,'turbotel')!==false||strpos($low,'turbo')!==false||empty($init)||strlen($init)<10){
-  $u=@json_decode(@file_get_contents($usersFile),true)?:[];
-  $u[]=['bot_id'=>$botId,'user_id'=>$uid,'username'=>$username,'type'=>'blocked_turbotel','status'=>'blocked','visitorId'=>$vid,'canvas'=>$canvas,'webgl'=>$webgl,'ip'=>$ip,'time'=>date('Y-m-d H:i:s')];
-  file_put_contents($usersFile, json_encode($u,JSON_PRETTY_PRINT), LOCK_EX);
-  jsonOut(['status'=>'error','title'=>'TurboTel Detected','message'=>'TurboTel Detected! Use Official Telegram Only. Banned.','hash'=>$hash,'bot_hash'=>$hash]);
+if (!is_dir($dataDir)) {
+    @mkdir($dataDir, 0755, true);
 }
 
-// VPN CHECK - Agar API fail hua to block mat karo
-if($ip!='127.0.0.1' && $ip!='::1'){
-  $chk=ipCheck(trim($ip));
-  if($chk && (($chk['proxy']??false)===true || ($chk['hosting']??false)===true)){
-    $u=@json_decode(@file_get_contents($usersFile),true)?:[];
-    $u[]=['bot_id'=>$botId,'user_id'=>$uid,'username'=>$username,'type'=>'blocked_vpn','status'=>'blocked','ip'=>$ip,'org'=>$chk['org']??'','time'=>date('Y-m-d H:i:s')];
-    file_put_contents($usersFile, json_encode($u,JSON_PRETTY_PRINT), LOCK_EX);
-    jsonOut(['status'=>'error','title'=>'VPN Detected','message'=>'VPN/Proxy Detected! Disable VPN. Banned.','hash'=>$hash,'bot_hash'=>$hash]);
-  }
+if (!file_exists($usersFile)) {
+    file_put_contents($usersFile, '[]', LOCK_EX);
 }
 
-// LOAD USERS
-$users=@json_decode(@file_get_contents($usersFile),true)?:[];
-if(!is_array($users)) $users=[];
+function jsonOut($data, $code = 200) {
+    if (ob_get_length()) ob_clean();
+    http_response_code($code);
+    echo json_encode($data, JSON_UNESCAPED_SLASHES);
+    exit;
+}
 
-foreach($users as $x){
-  if(($x['bot_id']??'')!=$botId) continue;
-  if(($x['status']??'')!=='verified') continue;
-  
-  // SAME USER - Already Verified
-  if(($x['user_id']??'')==$uid){
-    jsonOut(['status'=>'info','title'=>'Already Verified','message'=>'Already Verified.','hash'=>$hash,'bot_hash'=>$hash]);
-  }
-  
-  // SAME DEVICE CHECK - 2 MATCH REQUIRED
-  $matchCount=0;
-  $reasons=[];
-  
-  $oldVid=explode('x',$x['visitorId']??$x['information']??'')[0]??'';
-  $newVid=explode('x',$vid)[0]??'';
-  if(!empty($oldVid)&&!empty($newVid)&&$oldVid==$newVid&&strlen($oldVid)>10){ $matchCount++; $reasons[]="visitorId"; }
-  if(!empty($canvas)&&!empty($x['canvas']??'')&&$canvas==$x['canvas']&&strlen($canvas)>20){ $matchCount++; $reasons[]="canvas"; }
-  if(!empty($webgl)&&!empty($x['webgl']??'')&&$webgl==$x['webgl']&&$webgl!='no-webgl'&&strlen($webgl)>5){ $matchCount++; $reasons[]="webgl"; }
-  if(!empty($screenInfo)&&!empty($x['screenInfo']??'')&&$screenInfo==$x['screenInfo']){ $matchCount++; $reasons[]="screen"; }
-  if(!empty($tz)&&!empty($x['timezone']??'')&&$tz==$x['timezone']&&strval($tzOff)===strval($x['tzOffset']??'')){ $matchCount++; $reasons[]="timezone"; }
-  if(!empty($hw)&&!empty($x['hardware']??'')&&$hw==$x['hardware']&&$hw!='0x0'&&$hw!=''){ $matchCount++; $reasons[]="hardware"; }
-  
-  if($matchCount>=2){
-    $users[]=[
-      'bot_id'=>$botId,'user_id'=>$uid,'username'=>$username,'type'=>'blocked_same_device','status'=>'blocked',
-      'matched_with'=>$x['user_id'],'match_count'=>$matchCount,'reasons'=>implode(',',$reasons),
-      'visitorId'=>$vid,'canvas'=>$canvas,'webgl'=>$webgl,'screenInfo'=>$screenInfo,'ip'=>$ip,'time'=>date('Y-m-d H:i:s')
+function logEvent($message) {
+    global $logFile;
+
+    file_put_contents(
+        $logFile,
+        date('Y-m-d H:i:s') . ' ' . $message . PHP_EOL,
+        FILE_APPEND | LOCK_EX
+    );
+}
+
+function readJson($file) {
+    if (!file_exists($file)) return [];
+
+    $data = json_decode(file_get_contents($file), true);
+
+    return is_array($data) ? $data : [];
+}
+
+function saveJson($file, $data) {
+    return file_put_contents(
+        $file,
+        json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
+        LOCK_EX
+    ) !== false;
+}
+
+function curlRequest($url, $post = false, $body = null) {
+    $ch = curl_init($url);
+
+    $options = [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_TIMEOUT => 15,
+        CURLOPT_SSL_VERIFYPEER => true
     ];
-    file_put_contents($usersFile, json_encode($users,JSON_PRETTY_PRINT), LOCK_EX);
-    // TITLE = Used Device Detected (isse tere red screen ayega)
-    jsonOut([
-      'status'=>'error',
-      'title'=>'Used Device Detected',
-      'message'=>'Warning: This physical phone is already linked to another account (matched: '.implode(',',$reasons).').',
-      'hash'=>$hash,
-      'bot_hash'=>$hash,
-      'match_reasons'=>$reasons
-    ]);
-  }
+
+    if ($post) {
+        $options[CURLOPT_POST] = true;
+        $options[CURLOPT_POSTFIELDS] = $body;
+        $options[CURLOPT_HTTPHEADER] = [
+            'Content-Type: application/json',
+            'Accept: application/json'
+        ];
+    }
+
+    curl_setopt_array($ch, $options);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
+
+    curl_close($ch);
+
+    return [
+        'response' => $response,
+        'http_code' => $httpCode,
+        'error' => $error
+    ];
 }
 
-// NEW USER - SAVE
-$users[]=[
-  'bot_id'=>$botId,'user_id'=>$uid,'username'=>$username,'type'=>'verified','status'=>'verified',
-  'visitorId'=>$vid,'information'=>$info,'canvas'=>$canvas,'webgl'=>$webgl,'screenInfo'=>$screenInfo,
-  'timezone'=>$tz,'tzOffset'=>$tzOff,'language'=>$lang,'platform'=>$plat,'hardware'=>$hw,'touchPoints'=>$touch,
-  'ua'=>$ua,'ip'=>$ip,'hash'=>$hash,'time'=>date('Y-m-d H:i:s')
-];
-file_put_contents($usersFile, json_encode($users,JSON_PRETTY_PRINT), LOCK_EX);
+/* Validate Telegram Web App initData */
+function validateInitData($initData, $token, $expectedUser) {
+    if (!$initData || !$token) return false;
 
-jsonOut(['status'=>'success','title'=>'Device Verified Successfully','message'=>'Your Device Is Now Verified.','hash'=>$hash,'bot_hash'=>$hash]);
+    parse_str($initData, $fields);
+
+    $receivedHash = $fields['hash'] ?? '';
+    $authDate = (int)($fields['auth_date'] ?? 0);
+
+    if (!$receivedHash || !$authDate) return false;
+
+    if (time() - $authDate > 600 || $authDate > time() + 60) {
+        return false;
+    }
+
+    unset($fields['hash']);
+    ksort($fields);
+
+    $parts = [];
+
+    foreach ($fields as $key => $value) {
+        $parts[] = $key . '=' . $value;
+    }
+
+    $checkString = implode("\n", $parts);
+
+    $secretKey = hash_hmac(
+        'sha256',
+        $token,
+        'WebAppData',
+        true
+    );
+
+    $calculatedHash = hash_hmac(
+        'sha256',
+        $checkString,
+        $secretKey
+    );
+
+    if (!hash_equals($calculatedHash, $receivedHash)) {
+        return false;
+    }
+
+    $telegramUser = json_decode($fields['user'] ?? '{}', true);
+
+    return isset($telegramUser['id']) &&
+        (string)$telegramUser['id'] === (string)$expectedUser;
+}
+
+/* Send JSON callback to TeleBot Creator */
+function sendToTBC($registration, $result) {
+    $url = $registration['webhook_url'] ?? '';
+
+    if (
+        !$url ||
+        !filter_var($url, FILTER_VALIDATE_URL) ||
+        parse_url($url, PHP_URL_SCHEME) !== 'https'
+    ) {
+        logEvent('Invalid webhook URL');
+        return false;
+    }
+
+    $callback = [
+        'status' => in_array(
+            $result['status'],
+            ['success', 'info'],
+            true
+        ) ? 'pass' : 'error',
+
+        'title' => $result['title'] ?? '',
+        'message' => $result['message'] ?? '',
+        'fp' => $result['visitorId'] ?? '',
+        'bot_id' => $result['bot_id'] ?? '',
+        'user_id' => $result['user_id'] ?? '',
+        'hash' => $result['hash'] ?? ''
+    ];
+
+    $request = curlRequest(
+        $url,
+        true,
+        json_encode($callback, JSON_UNESCAPED_SLASHES)
+    );
+
+    logEvent(
+        'Webhook HTTP=' . $request['http_code'] .
+        ' error=' . ($request['error'] ?: 'none')
+    );
+
+    return (
+        $request['response'] !== false &&
+        $request['http_code'] >= 200 &&
+        $request['http_code'] < 300
+    );
+}
+
+/* Return result and notify TBC */
+function finish($registration, $result) {
+    $delivered = sendToTBC($registration, $result);
+
+    $result['callback_delivered'] = $delivered;
+
+    jsonOut($result);
+}
+
+/* Read JSON request */
+$raw = file_get_contents('php://input');
+$in = json_decode($raw, true);
+
+if (!is_array($in)) {
+    jsonOut([
+        'status' => 'error',
+        'title' => 'Invalid Request',
+        'message' => 'Invalid JSON request.'
+    ], 400);
+}
+
+$botId = (string)($in['bot_id'] ?? '');
+$userId = (string)($in['user_id'] ?? '');
+$hash = (string)($in['bot_hash'] ?? $in['hash'] ?? '');
+
+if (!$botId || !$userId || !$hash) {
+    jsonOut([
+        'status' => 'error',
+        'title' => 'Invalid Request',
+        'message' => 'Missing verification details.'
+    ], 400);
+}
+
+/* Find registration in existing bots.json */
+$bots = readJson($botsFile);
+$registration = null;
+
+foreach ($bots as $bot) {
+    if (
+        isset($bot['bot_hash']) &&
+        hash_equals((string)$bot['bot_hash'], $hash)
+    ) {
+        $registration = $bot;
+        break;
+    }
+}
+
+if (!$registration) {
+    logEvent('Registration not found: ' . $hash);
+
+    jsonOut([
+        'status' => 'error',
+        'title' => 'Invalid Registration',
+        'message' => 'Please reopen verification from your bot.'
+    ], 403);
+}
+
+$token = $registration['bot_token'] ?? '';
+
+if (!$token || empty($registration['webhook_url'])) {
+    jsonOut([
+        'status' => 'error',
+        'title' => 'Registration Error',
+        'message' => 'Bot registration is incomplete.'
+    ], 403);
+}
+
+/* Confirm actual Telegram bot ID */
+$me = curlRequest(
+    'https://api.telegram.org/bot' . $token . '/getMe'
+);
+
+$meData = json_decode($me['response'] ?: '', true);
+
+if (
+    !($meData['ok'] ?? false) ||
+    (string)($meData['result']['id'] ?? '') !== $botId
+) {
+    logEvent('Telegram bot identity mismatch');
+
+    jsonOut([
+        'status' => 'error',
+        'title' => 'Invalid Bot',
+        'message' => 'Bot identity validation failed.'
+    ], 403);
+}
+
+/* Validate Telegram user session */
+$initData = (string)($in['initData'] ?? '');
+
+if (!validateInitData($initData, $token, $userId)) {
+    logEvent('Invalid Telegram initData for user ' . $userId);
+
+    finish($registration, [
+        'status' => 'error',
+        'title' => 'Session Validation Failed',
+        'message' => 'Invalid or expired Telegram session.',
+        'bot_id' => $botId,
+        'user_id' => $userId,
+        'hash' => $hash
+    ]);
+}
+
+/* Read fingerprint */
+$vid = (string)($in['visitorId'] ?? '');
+$info = (string)($in['information'] ?? '');
+$canvas = (string)($in['canvasHash'] ?? '');
+$webgl = (string)($in['webglHash'] ?? '');
+$screenInfo = (string)($in['screenInfo'] ?? '');
+$tz = (string)($in['timezone'] ?? '');
+$tzOff = (string)($in['tzOffset'] ?? '');
+$hw = (string)($in['hardware'] ?? '');
+$ua = (string)($in['ua'] ?? '');
+$username = (string)($in['username'] ?? '');
+
+$ip = $_SERVER['REMOTE_ADDR'] ?? '';
+
+/* Unofficial app check */
+$low = strtolower($ua);
+
+if (
+    strpos($low, 'turbotel') !== false ||
+    strpos($low, 'turbo') !== false
+) {
+    finish($registration, [
+        'status' => 'error',
+        'title' => 'Unofficial Telegram App Detected',
+        'message' => 'Please use the official Telegram app.',
+        'bot_id' => $botId,
+        'user_id' => $userId,
+        'hash' => $hash
+    ]);
+}
+
+/* VPN / Proxy check */
+$vpnDetected = false;
+
+if ($ip && $ip !== '127.0.0.1' && $ip !== '::1') {
+    $ipUrl = 'http://ip-api.com/json/' .
+        rawurlencode($ip) .
+        '?fields=proxy,hosting,status';
+
+    $ipResponse = curlRequest($ipUrl);
+    $ipData = json_decode($ipResponse['response'] ?: '', true);
+
+    if (
+        ($ipData['status'] ?? '') === 'success' &&
+        (
+            ($ipData['proxy'] ?? false) === true ||
+            ($ipData['hosting'] ?? false) === true
+        )
+    ) {
+        $vpnDetected = true;
+    }
+}
+
+if ($vpnDetected) {
+    finish($registration, [
+        'status' => 'error',
+        'title' => 'VPN Detected',
+        'message' => 'VPN/Proxy Detected. Disable VPN and try again.',
+        'bot_id' => $botId,
+        'user_id' => $userId,
+        'hash' => $hash
+    ]);
+}
+
+/* Load users */
+$users = readJson($usersFile);
+
+/* Check same user */
+foreach ($users as $x) {
+    if (
+        (string)($x['bot_id'] ?? '') === $botId &&
+        (string)($x['user_id'] ?? '') === $userId &&
+        ($x['status'] ?? '') === 'verified'
+    ) {
+        finish($registration, [
+            'status' => 'info',
+            'title' => 'Already Verified',
+            'message' => 'Already Verified.',
+            'visitorId' => $vid,
+            'bot_id' => $botId,
+            'user_id' => $userId,
+            'hash' => $hash
+        ]);
+    }
+}
+
+/* Same-device detection */
+$matchCount = 0;
+$reasons = [];
+$matchedUser = '';
+
+foreach ($users as $x) {
+    if (
+        (string)($x['bot_id'] ?? '') !== $botId ||
+        ($x['status'] ?? '') !== 'verified' ||
+        (string)($x['user_id'] ?? '') === $userId
+    ) {
+        continue;
+    }
+
+    /* Reset matches for each previous account */
+    $currentMatches = 0;
+    $currentReasons = [];
+
+    $oldVid = (string)($x['visitorId'] ?? '');
+
+    if (
+        $vid && $oldVid &&
+        hash_equals($oldVid, $vid) &&
+        strlen($vid) > 10
+    ) {
+        $currentMatches++;
+        $currentReasons[] = 'visitorId';
+    }
+
+    if (
+        $canvas &&
+        !empty($x['canvas']) &&
+        hash_equals((string)$x['canvas'], $canvas) &&
+        strlen($canvas) > 20
+    ) {
+        $currentMatches++;
+        $currentReasons[] = 'canvas';
+    }
+
+    if (
+        $webgl &&
+        !empty($x['webgl']) &&
+        $webgl !== 'no-webgl' &&
+        $webgl === $x['webgl']
+    ) {
+        $currentMatches++;
+        $currentReasons[] = 'webgl';
+    }
+
+    if (
+        $screenInfo &&
+        !empty($x['screenInfo']) &&
+        $screenInfo === $x['screenInfo']
+    ) {
+        $currentMatches++;
+        $currentReasons[] = 'screen';
+    }
+
+    if (
+        $tz &&
+        !empty($x['timezone']) &&
+        $tz === $x['timezone'] &&
+        $tzOff === (string)($x['tzOffset'] ?? '')
+    ) {
+        $currentMatches++;
+        $currentReasons[] = 'timezone';
+    }
+
+    if (
+        $hw &&
+        !empty($x['hardware']) &&
+        $hw === $x['hardware'] &&
+        $hw !== '0x0'
+    ) {
+        $currentMatches++;
+        $currentReasons[] = 'hardware';
+    }
+
+    if ($currentMatches >= 2) {
+        $matchCount = $currentMatches;
+        $reasons = $currentReasons;
+        $matchedUser = (string)($x['user_id'] ?? '');
+        break;
+    }
+}
+
+/* Save user - same device is allowed */
+$newUser = [
+    'bot_id' => $botId,
+    'user_id' => $userId,
+    'username' => $username,
+    'type' => $matchCount >= 2 ? 'same_device_allowed' : 'verified',
+    'status' => 'verified',
+    'same_device' => $matchCount >= 2,
+    'matched_with' => $matchedUser,
+    'match_count' => $matchCount,
+    'reasons' => $reasons,
+    'visitorId' => $vid,
+    'information' => $info,
+    'canvas' => $canvas,
+    'webgl' => $webgl,
+    'screenInfo' => $screenInfo,
+    'timezone' => $tz,
+    'tzOffset' => $tzOff,
+    'hardware' => $hw,
+    'ua' => $ua,
+    'ip' => $ip,
+    'hash' => $hash,
+    'time' => date('Y-m-d H:i:s')
+];
+
+$users[] = $newUser;
+
+if (!saveJson($usersFile, $users)) {
+    finish($registration, [
+        'status' => 'error',
+        'title' => 'Database Error',
+        'message' => 'Verification could not be saved. Please retry.',
+        'bot_id' => $botId,
+        'user_id' => $userId,
+        'hash' => $hash
+    ]);
+}
+
+/* Same device: allowed, but flagged */
+if ($matchCount >= 2) {
+    finish($registration, [
+        'status' => 'error',
+        'title' => 'Used Device Detected',
+        'message' => 'Same device detected. You are still allowed to continue.',
+        'visitorId' => $vid,
+        'bot_id' => $botId,
+        'user_id' => $userId,
+        'hash' => $hash
+    ]);
+}
+
+/* Normal success */
+finish($registration, [
+    'status' => 'success',
+    'title' => 'Device Verified Successfully',
+    'message' => 'Your device is now verified.',
+    'visitorId' => $vid,
+    'bot_id' => $botId,
+    'user_id' => $userId,
+    'hash' => $hash
+]);
+
 ?>
