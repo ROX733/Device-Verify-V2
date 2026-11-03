@@ -5,13 +5,13 @@ error_reporting(0);
 ini_set('display_errors', '0');
 
 /* =========================================
-   ADMIN LOGIN SETTINGS
+   ADMIN LOGIN
 ========================================= */
 
 $ADMIN_USER = 'admin';
 $ADMIN_PASS = 'AdminHuBro';
 
-$DATA_DIR  = dirname(__DIR__) . '/data';
+$DATA_DIR = dirname(__DIR__) . '/data';
 $BOTS_FILE = $DATA_DIR . '/bots.json';
 $USERS_FILE = $DATA_DIR . '/users.json';
 
@@ -20,7 +20,7 @@ if (!is_dir($DATA_DIR)) {
 }
 
 /* =========================================
-   HELPER FUNCTIONS
+   HELPERS
 ========================================= */
 
 function h($value) {
@@ -32,16 +32,13 @@ function readJson($file) {
         return [];
     }
 
-    $fp = @fopen($file, 'rb');
+    $raw = @file_get_contents($file);
 
-    if (!$fp) {
+    if ($raw === false || trim($raw) === '') {
         return [];
     }
 
-    $raw = stream_get_contents($fp);
-    fclose($fp);
-
-    $data = json_decode($raw ?: '{}', true);
+    $data = json_decode($raw, true);
 
     return is_array($data) ? $data : [];
 }
@@ -60,7 +57,7 @@ function saveJson($file, $data) {
 
     $tmp = $file . '.tmp';
 
-    if (file_put_contents($tmp, $json, LOCK_EX) === false) {
+    if (@file_put_contents($tmp, $json, LOCK_EX) === false) {
         return false;
     }
 
@@ -75,24 +72,8 @@ function botRegistrationId($bot) {
     return (string)($bot['id'] ?? $bot['random_id'] ?? '');
 }
 
-function getUserFingerprint($user) {
-    $fp = $user['fingerprint'] ?? [];
-
-    return is_array($fp) ? $fp : [];
-}
-
-function isSameDevice($user) {
-    return !empty($user['same_device']) ||
-           (($user['type'] ?? '') === 'same_device_allowed');
-}
-
-function isBlockedUser($user) {
-    $type = strtolower((string)($user['type'] ?? ''));
-    $status = strtolower((string)($user['status'] ?? ''));
-
-    return strpos($type, 'blocked') !== false ||
-           strpos($type, 'vpn') !== false ||
-           $status === 'blocked';
+function getUserType($user) {
+    return strtolower((string)($user['type'] ?? ''));
 }
 
 function getBotCounts($botId, $users) {
@@ -112,20 +93,34 @@ function getBotCounts($botId, $users) {
             continue;
         }
 
-        $type = (string)($user['type'] ?? '');
-        $status = (string)($user['status'] ?? '');
+        $type = getUserType($user);
+        $status = strtolower((string)($user['status'] ?? ''));
 
         if ($type === 'page_open') {
             $counts['opens']++;
         }
 
-        if (isSameDevice($user)) {
-            $counts['same']++;
-        } elseif ($status === 'verified') {
+        // Only normal successful verification
+        if (
+            $status === 'verified' &&
+            empty($user['same_device']) &&
+            $type !== 'same_device_allowed'
+        ) {
             $counts['verified']++;
         }
 
-        if (isBlockedUser($user)) {
+        // Same-device users counted separately
+        if (
+            !empty($user['same_device']) ||
+            $type === 'same_device_allowed'
+        ) {
+            $counts['same']++;
+        }
+
+        if (
+            strpos($type, 'blocked') !== false ||
+            $status === 'blocked'
+        ) {
             $counts['blocked']++;
         }
     }
@@ -146,7 +141,7 @@ if (isset($_GET['logout'])) {
 }
 
 /* =========================================
-   CSRF TOKEN
+   CSRF
 ========================================= */
 
 if (empty($_SESSION['csrf'])) {
@@ -159,8 +154,7 @@ if (empty($_SESSION['csrf'])) {
 
 $error = '';
 
-if (isset($_POST['login'])) {
-
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     $username = (string)($_POST['username'] ?? '');
     $password = (string)($_POST['password'] ?? '');
 
@@ -175,9 +169,9 @@ if (isset($_POST['login'])) {
 
         header('Location: ./');
         exit;
-    } else {
-        $error = 'Wrong username or password!';
     }
+
+    $error = 'Wrong username or password!';
 }
 
 /* =========================================
@@ -192,7 +186,6 @@ if (empty($_SESSION['admin_logged'])):
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <title>Admin Login</title>
 
 <style>
@@ -223,8 +216,8 @@ body {
 
 .login-title {
     text-align: center;
-    font-size: 21px;
-    font-weight: 700;
+    font-size: 22px;
+    font-weight: 800;
     margin-bottom: 25px;
     color: #1e293b;
 }
@@ -236,11 +229,6 @@ input {
     border: 1px solid #e2e8f0;
     border-radius: 10px;
     font-size: 14px;
-    outline: none;
-}
-
-input:focus {
-    border-color: #2563eb;
 }
 
 .login-btn {
@@ -270,17 +258,13 @@ input:focus {
 <body>
 
 <div class="login-card">
-
-    <div class="login-title">
-        🛡️ Admin Login
-    </div>
+    <div class="login-title">🛡️ Admin Login</div>
 
     <?php if ($error !== ''): ?>
         <div class="error"><?=h($error)?></div>
     <?php endif; ?>
 
     <form method="POST">
-
         <input
             type="text"
             name="username"
@@ -297,12 +281,10 @@ input:focus {
             required
         >
 
-        <button class="login-btn" name="login" value="1">
+        <button class="login-btn" type="submit" name="login" value="1">
             Login
         </button>
-
     </form>
-
 </div>
 
 </body>
@@ -323,10 +305,8 @@ $users = readJson($USERS_FILE);
    ADMIN ACTIONS
 ========================================= */
 
-if (
-    $_SERVER['REQUEST_METHOD'] === 'POST' &&
-    isset($_POST['action'])
-) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+
     $csrf = (string)($_POST['csrf'] ?? '');
 
     if (
@@ -340,29 +320,42 @@ if (
     $action = (string)$_POST['action'];
 
     if ($action === 'clear_users') {
+        if (is_file($USERS_FILE)) {
+            @copy($USERS_FILE, $USERS_FILE . '.backup-' . date('Ymd-His'));
+        }
+
         saveJson($USERS_FILE, []);
     }
 
-    if ($action === 'clear_bots') {
+    elseif ($action === 'clear_bots') {
+        if (is_file($BOTS_FILE)) {
+            @copy($BOTS_FILE, $BOTS_FILE . '.backup-' . date('Ymd-His'));
+        }
+
         saveJson($BOTS_FILE, []);
     }
 
-    if ($action === 'delete_bot') {
-
+    elseif ($action === 'delete_bot') {
         $deleteId = (string)($_POST['bot_id'] ?? '');
 
-        $botsRaw = array_values(array_filter(
-            $botsRaw,
-            function ($bot) use ($deleteId) {
-                if (!is_array($bot)) {
-                    return false;
+        if ($deleteId !== '') {
+            $botsRaw = array_values(array_filter(
+                $botsRaw,
+                function ($bot) use ($deleteId) {
+                    if (!is_array($bot)) {
+                        return true;
+                    }
+
+                    return botTelegramId($bot) !== $deleteId;
                 }
+            ));
 
-                return botTelegramId($bot) !== $deleteId;
+            if (is_file($BOTS_FILE)) {
+                @copy($BOTS_FILE, $BOTS_FILE . '.backup-' . date('Ymd-His'));
             }
-        ));
 
-        saveJson($BOTS_FILE, $botsRaw);
+            saveJson($BOTS_FILE, $botsRaw);
+        }
     }
 
     header('Location: ./');
@@ -370,36 +363,31 @@ if (
 }
 
 /* =========================================
-   UNIQUE BOTS
-   Same Telegram Bot ID = One Row
+   UNIQUE BOT LIST
+   One row per Telegram bot ID
 ========================================= */
 
 $uniqueBots = [];
 
 foreach ($botsRaw as $bot) {
-
     if (!is_array($bot)) {
         continue;
     }
 
     $telegramId = botTelegramId($bot);
 
-    $key = $telegramId !== ''
-        ? 'telegram_' . $telegramId
-        : 'registration_' . botRegistrationId($bot);
-
-    if ($key === 'registration_') {
+    if ($telegramId === '') {
         continue;
     }
 
-    if (!isset($uniqueBots[$key])) {
-        $uniqueBots[$key] = $bot;
+    if (!isset($uniqueBots[$telegramId])) {
+        $uniqueBots[$telegramId] = $bot;
         continue;
     }
 
     $oldTime = strtotime(
-        $uniqueBots[$key]['last_activity'] ??
-        $uniqueBots[$key]['created_at'] ?? ''
+        $uniqueBots[$telegramId]['last_activity'] ??
+        $uniqueBots[$telegramId]['created_at'] ?? ''
     ) ?: 0;
 
     $newTime = strtotime(
@@ -408,7 +396,7 @@ foreach ($botsRaw as $bot) {
     ) ?: 0;
 
     if ($newTime >= $oldTime) {
-        $uniqueBots[$key] = $bot;
+        $uniqueBots[$telegramId] = $bot;
     }
 }
 
@@ -424,62 +412,69 @@ $totalBlocked = 0;
 $totalPageOpen = 0;
 
 foreach ($users as $user) {
-
     if (!is_array($user)) {
         continue;
     }
 
-    $type = (string)($user['type'] ?? '');
-    $status = (string)($user['status'] ?? '');
+    $type = getUserType($user);
+    $status = strtolower((string)($user['status'] ?? ''));
+
+    if (
+        $status === 'verified' &&
+        empty($user['same_device']) &&
+        $type !== 'same_device_allowed'
+    ) {
+        $totalVerified++;
+    }
+
+    if (
+        !empty($user['same_device']) ||
+        $type === 'same_device_allowed'
+    ) {
+        $totalSameDevice++;
+    }
+
+    if (
+        strpos($type, 'blocked') !== false ||
+        $status === 'blocked'
+    ) {
+        $totalBlocked++;
+    }
 
     if ($type === 'page_open') {
         $totalPageOpen++;
     }
-
-    if (isSameDevice($user)) {
-        $totalSameDevice++;
-    } elseif ($status === 'verified') {
-        $totalVerified++;
-    }
-
-    if (isBlockedUser($user)) {
-        $totalBlocked++;
-    }
 }
 
 /* =========================================
-   BOT FILTER
+   USER FILTER
 ========================================= */
 
 $viewId = (string)($_GET['view'] ?? '');
 
-$displayUsers = $users;
+$displayUsers = [];
 
-if ($viewId !== '') {
+foreach ($users as $user) {
+    if (!is_array($user)) {
+        continue;
+    }
 
-    $displayUsers = array_filter(
-        $users,
-        function ($user) use ($viewId) {
+    if (
+        $viewId !== '' &&
+        (string)($user['bot_id'] ?? '') !== $viewId
+    ) {
+        continue;
+    }
 
-            if (!is_array($user)) {
-                return false;
-            }
-
-            return (string)($user['bot_id'] ?? '') === $viewId;
-        }
-    );
+    $displayUsers[] = $user;
 }
 
 $displayUsers = array_reverse($displayUsers);
 
-/* =========================================
-   HTML
-========================================= */
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 
 <meta charset="UTF-8">
@@ -490,7 +485,6 @@ $displayUsers = array_reverse($displayUsers);
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
-
 * {
     margin: 0;
     padding: 0;
@@ -517,7 +511,7 @@ body {
 
 .brand {
     font-size: 18px;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .logout {
@@ -526,7 +520,7 @@ body {
     border: none;
     padding: 10px 18px;
     border-radius: 10px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
 }
 
@@ -631,7 +625,7 @@ table {
     width: 100%;
     border-collapse: collapse;
     font-size: 13px;
-    min-width: 750px;
+    min-width: 850px;
 }
 
 th {
@@ -691,13 +685,13 @@ td {
 }
 
 .user-ip {
-    min-width: 130px;
+    min-width: 140px;
     white-space: normal;
     word-break: break-word;
 }
 
 .device-info {
-    min-width: 200px;
+    min-width: 180px;
     white-space: normal;
     word-break: break-word;
     font-size: 11px;
@@ -726,7 +720,6 @@ td {
 }
 
 @media(max-width:700px) {
-
     .header {
         padding: 15px;
     }
@@ -761,22 +754,6 @@ td {
         font-size: 17px;
     }
 }
-
-@media(max-width:350px) {
-
-    .stats-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .stat-card {
-        padding: 13px;
-    }
-
-    .stat-title {
-        font-size: 12px;
-    }
-}
-
 </style>
 
 </head>
@@ -784,7 +761,6 @@ td {
 <body>
 
 <div class="header">
-
     <div class="brand">
         🛡️ Admin Panel - Device Verification
     </div>
@@ -792,7 +768,6 @@ td {
     <button class="logout" onclick="location.href='?logout=1'">
         Logout
     </button>
-
 </div>
 
 <div class="container">
@@ -816,13 +791,13 @@ td {
         <div class="stat-card">
             <div class="stat-title">Verified Users</div>
             <div class="stat-value"><?=$totalVerified?></div>
-            <div class="stat-sub">Normal verified users</div>
+            <div class="stat-sub">Normal successful verification</div>
         </div>
 
         <div class="stat-card">
-            <div class="stat-title">VPN / Blocked</div>
-            <div class="stat-value"><?=$totalBlocked?></div>
-            <div class="stat-sub">Blocked records</div>
+            <div class="stat-title">Same Device</div>
+            <div class="stat-value"><?=$totalSameDevice?></div>
+            <div class="stat-sub">Allowed same-device records</div>
         </div>
 
     </div>
@@ -848,7 +823,6 @@ td {
                     <button class="btn btn-danger" type="submit">
                         Clear Bots
                     </button>
-
                 </form>
 
                 <form method="POST"
@@ -860,17 +834,15 @@ td {
                     <button class="btn btn-danger" type="submit">
                         Clear Users
                     </button>
-
                 </form>
 
             </div>
-
         </div>
 
         <div class="table-wrap">
 
             <table>
-
+                <thead>
                 <tr>
                     <th>Bot Username</th>
                     <th>Telegram Bot ID</th>
@@ -881,6 +853,9 @@ td {
                     <th>Last Activity</th>
                     <th>Action</th>
                 </tr>
+                </thead>
+
+                <tbody>
 
                 <?php if (empty($bots)): ?>
 
@@ -896,28 +871,27 @@ td {
 
                         <?php
                         $bid = botTelegramId($bot);
-
                         $counts = getBotCounts($bid, $users);
+
+                        $botName = $bot['bot_username'] ??
+                                   $bot['bot_username_clean'] ??
+                                   'Unknown';
 
                         $lastActivity =
                             $bot['last_activity'] ??
                             $bot['created_at'] ??
                             'N/A';
-
-                        $botUsername = $bot['bot_username'] ??
-                                       $bot['bot_username_clean'] ??
-                                       'Unknown';
                         ?>
 
                         <tr>
 
                             <td>
                                 <span class="bot-name">
-                                    <?=h('@' . ltrim($botUsername, '@'))?>
+                                    <?=h('@' . ltrim($botName, '@'))?>
                                 </span>
                             </td>
 
-                            <td><?=h($bid ?: 'N/A')?></td>
+                            <td><?=h($bid)?></td>
 
                             <td>
                                 <span class="badge badge-open">
@@ -946,23 +920,20 @@ td {
                             <td><?=h($lastActivity)?></td>
 
                             <td>
+                                <button
+                                    class="btn btn-view"
+                                    onclick="location.href='?view=<?=urlencode($bid)?>'">
+                                    View
+                                </button>
 
-                                <?php if ($bid !== ''): ?>
+                                <form method="POST"
+                                      style="display:inline"
+                                      onsubmit="return confirm('Delete all registrations of this bot?')">
 
-                                    <button
-                                        class="btn btn-view"
-                                        onclick="location.href='?view=<?=urlencode($bid)?>'">
-                                        View
-                                    </button>
+                                    <input type="hidden" name="csrf" value="<?=h($_SESSION['csrf'])?>">
+                                    <input type="hidden" name="action" value="delete_bot">
+                                    <input type="hidden" name="bot_id" value="<?=h($bid)?>">
 
-                                    <form method="POST"
-                                          style="display:inline"
-                                          onsubmit="return confirm('Delete all registrations of this bot?')">
-
-                                        <input type="hidden" name="csrf" value="<?=h($_SESSION['csrf'])?>">
-                                        <input type="hidden" name="action" value="delete_bot">
-                                        <input type="hidden" name="bot_id" value="<?=h($bid)?>">
-
-                                        <button class="btn btn-delete" type="submit">
-                                            Delete
-                                  
+                                    <button class="btn btn-delete" type="submit">
+                                        Delete
+              
