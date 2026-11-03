@@ -2,7 +2,7 @@
 session_start();
 
 /* =========================================
-   ADMIN LOGIN SETTINGS
+   ADMIN SETTINGS
 ========================================= */
 
 $ADMIN_USER = 'admin';
@@ -17,7 +17,7 @@ if (!is_dir($DATA_DIR)) {
 }
 
 /* =========================================
-   HELPER FUNCTIONS
+   HELPERS
 ========================================= */
 
 function h($value) {
@@ -72,78 +72,154 @@ function botRegistrationId($bot) {
     return (string)($bot['id'] ?? $bot['random_id'] ?? '');
 }
 
-function getUserFingerprint($user) {
-    $fp = $user['fingerprint'] ?? [];
+function isSameDevice($user) {
+    return (
+        !empty($user['same_device']) ||
+        ($user['type'] ?? '') === 'same_device_allowed'
+    );
+}
 
-    if (!is_array($fp)) {
-        $fp = [];
-    }
+function isVerifiedUser($user) {
+    return (
+        ($user['status'] ?? '') === 'verified' &&
+        !isSameDevice($user)
+    );
+}
 
-    return $fp;
+function isBlockedUser($user) {
+    $type = strtolower((string)($user['type'] ?? ''));
+    $status = strtolower((string)($user['status'] ?? ''));
+
+    return (
+        strpos($type, 'blocked') !== false ||
+        $status === 'blocked'
+    );
 }
 
 function getBotCounts($botId, $users) {
+
     $counts = [
-        'opens' => 0,
-        'verified' => 0,
-        'blocked' => 0,
-        'same' => 0
+        'opens'=>0,
+        'verified'=>0,
+        'same'=>0,
+        'blocked'=>0
     ];
 
     foreach ($users as $user) {
+
         if (!is_array($user)) {
             continue;
         }
 
-        if ((string)($user['bot_id'] ?? '') !== (string)$botId) {
+        if (
+            (string)($user['bot_id'] ?? '') !==
+            (string)$botId
+        ) {
             continue;
         }
 
         $type = (string)($user['type'] ?? '');
-        $status = (string)($user['status'] ?? '');
 
         if ($type === 'page_open') {
             $counts['opens']++;
         }
 
-        if ($status === 'verified') {
+        if (isSameDevice($user)) {
+            $counts['same']++;
+        } elseif (isVerifiedUser($user)) {
             $counts['verified']++;
         }
 
-        if (strpos($type, 'blocked') !== false) {
+        if (isBlockedUser($user)) {
             $counts['blocked']++;
-        }
-
-        if (
-            !empty($user['same_device']) ||
-            $type === 'same_device_allowed'
-        ) {
-            $counts['same']++;
         }
     }
 
     return $counts;
 }
 
+function userBadge($user) {
+
+    if (isSameDevice($user)) {
+        return [
+            'SAME DEVICE',
+            'badge-same'
+        ];
+    }
+
+    if (isVerifiedUser($user)) {
+        return [
+            'VERIFIED',
+            'badge-verified'
+        ];
+    }
+
+    if (isBlockedUser($user)) {
+        return [
+            'BLOCKED',
+            'badge-fail'
+        ];
+    }
+
+    if (($user['type'] ?? '') === 'page_open') {
+        return [
+            'PAGE OPEN',
+            'badge-open'
+        ];
+    }
+
+    return [
+        strtoupper((string)($user['status'] ?? 'UNKNOWN')),
+        'badge-unknown'
+    ];
+}
+
 /* =========================================
-   LOGIN / LOGOUT
+   LOGOUT
 ========================================= */
 
 if (isset($_GET['logout'])) {
+
     $_SESSION = [];
+
+    if (ini_get('session.use_cookies')) {
+        $params = session_get_cookie_params();
+
+        setcookie(
+            session_name(),
+            '',
+            time() - 42000,
+            $params['path'],
+            $params['domain'],
+            $params['secure'],
+            $params['httponly']
+        );
+    }
+
     session_destroy();
 
     header('Location: ./');
     exit;
 }
 
+/* =========================================
+   CSRF
+========================================= */
+
 if (empty($_SESSION['csrf'])) {
     $_SESSION['csrf'] = bin2hex(random_bytes(32));
 }
 
+/* =========================================
+   LOGIN
+========================================= */
+
 $error = '';
 
-if (isset($_POST['login'])) {
+if (
+    $_SERVER['REQUEST_METHOD'] === 'POST' &&
+    isset($_POST['login'])
+) {
 
     $username = (string)($_POST['username'] ?? '');
     $password = (string)($_POST['password'] ?? '');
@@ -152,9 +228,11 @@ if (isset($_POST['login'])) {
         hash_equals($ADMIN_USER, $username) &&
         hash_equals($ADMIN_PASS, $password)
     ) {
+
         session_regenerate_id(true);
 
         $_SESSION['admin_logged'] = true;
+        $_SESSION['csrf'] = bin2hex(random_bytes(32));
 
         header('Location: ./');
         exit;
@@ -163,6 +241,10 @@ if (isset($_POST['login'])) {
         $error = 'Wrong username or password!';
     }
 }
+
+/* =========================================
+   LOGIN PAGE
+========================================= */
 
 if (empty($_SESSION['admin_logged'])):
 ?>
@@ -307,7 +389,10 @@ if (
 
     $csrf = (string)($_POST['csrf'] ?? '');
 
-    if (!hash_equals($_SESSION['csrf'], $csrf)) {
+    if (
+        empty($_SESSION['csrf']) ||
+        !hash_equals($_SESSION['csrf'], $csrf)
+    ) {
         http_response_code(403);
         exit('Invalid request token');
     }
@@ -315,11 +400,17 @@ if (
     $action = (string)$_POST['action'];
 
     if ($action === 'clear_users') {
-        saveJson($USERS_FILE, []);
+
+        if (!saveJson($USERS_FILE, [])) {
+            exit('Could not clear users database');
+        }
     }
 
     if ($action === 'clear_bots') {
-        saveJson($BOTS_FILE, []);
+
+        if (!saveJson($BOTS_FILE, [])) {
+            exit('Could not clear bots database');
+        }
     }
 
     if ($action === 'delete_bot') {
@@ -330,11 +421,17 @@ if (
             $botsRaw,
             function ($bot) use ($deleteId) {
 
+                if (!is_array($bot)) {
+                    return true;
+                }
+
                 return botTelegramId($bot) !== $deleteId;
             }
         ));
 
-        saveJson($BOTS_FILE, $botsRaw);
+        if (!saveJson($BOTS_FILE, $botsRaw)) {
+            exit('Could not delete bot');
+        }
     }
 
     header('Location: ./');
@@ -342,7 +439,7 @@ if (
 }
 
 /* =========================================
-   UNIQUE BOTS
+   UNIQUE BOTS BY TELEGRAM BOT ID
 ========================================= */
 
 $uniqueBots = [];
@@ -386,7 +483,7 @@ foreach ($botsRaw as $bot) {
 $bots = array_values($uniqueBots);
 
 /* =========================================
-   STATISTICS
+   GLOBAL STATISTICS
 ========================================= */
 
 $totalVerified = 0;
@@ -400,26 +497,18 @@ foreach ($users as $user) {
         continue;
     }
 
-    $type = (string)($user['type'] ?? '');
-    $status = (string)($user['status'] ?? '');
-
-    if ($status === 'verified') {
+    if (isSameDevice($user)) {
+        $totalSameDevice++;
+    } elseif (isVerifiedUser($user)) {
         $totalVerified++;
     }
 
-    if (strpos($type, 'blocked') !== false) {
+    if (isBlockedUser($user)) {
         $totalBlocked++;
     }
 
-    if ($type === 'page_open') {
+    if (($user['type'] ?? '') === 'page_open') {
         $totalPageOpen++;
-    }
-
-    if (
-        !empty($user['same_device']) ||
-        $type === 'same_device_allowed'
-    ) {
-        $totalSameDevice++;
     }
 }
 
@@ -441,12 +530,14 @@ if ($viewId !== '') {
                 return false;
             }
 
-            return (string)($user['bot_id'] ?? '') === $viewId;
+            return (
+                (string)($user['bot_id'] ?? '') === $viewId
+            );
         }
     );
 }
 
-$displayUsers = array_reverse($displayUsers);
+$displayUsers = array_reverse($displayUsers, true);
 
 ?>
 
@@ -456,7 +547,6 @@ $displayUsers = array_reverse($displayUsers);
 <head>
 
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <title>Admin Panel - Device Verification</title>
@@ -491,7 +581,7 @@ body {
 
 .brand {
     font-size: 18px;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .logout {
@@ -505,14 +595,14 @@ body {
 }
 
 .container {
-    max-width: 1400px;
+    max-width: 1500px;
     margin: auto;
     padding: 25px 20px;
 }
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 15px;
     margin-bottom: 22px;
 }
@@ -538,7 +628,7 @@ body {
 }
 
 .stat-sub {
-    font-size: 13px;
+    font-size: 12px;
     color: #94a3b8;
     margin-top: 4px;
 }
@@ -605,7 +695,7 @@ table {
     width: 100%;
     border-collapse: collapse;
     font-size: 13px;
-    min-width: 650px;
+    min-width: 700px;
 }
 
 th {
@@ -665,7 +755,7 @@ td {
 }
 
 .user-ip {
-    min-width: 150px;
+    min-width: 140px;
     white-space: normal;
     word-break: break-word;
 }
@@ -699,14 +789,20 @@ td {
     font-size: 12px;
 }
 
-@media(max-width:700px) {
+@media(max-width:900px) {
+    .stats-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media(max-width:600px) {
 
     .header {
         padding: 15px;
     }
 
     .brand {
-        font-size: 15px;
+        font-size: 14px;
     }
 
     .container {
@@ -733,20 +829,6 @@ td {
 
     .card-title {
         font-size: 17px;
-    }
-}
-
-@media(max-width:350px) {
-    .stats-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .stat-card {
-        padding: 13px;
-    }
-
-    .stat-title {
-        font-size: 12px;
     }
 }
 
@@ -789,7 +871,13 @@ td {
         <div class="stat-card">
             <div class="stat-title">Verified Users</div>
             <div class="stat-value"><?=$totalVerified?></div>
-            <div class="stat-sub">Final verified</div>
+            <div class="stat-sub">Normal successful verifications</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Same Device</div>
+            <div class="stat-value"><?=$totalSameDevice?></div>
+            <div class="stat-sub">Matching device records</div>
         </div>
 
         <div class="stat-card">
@@ -924,77 +1012,4 @@ td {
                             <?php if ($bid !== ''): ?>
 
                                 <button
-                                    class="btn btn-view"
-                                    onclick="location.href='?view=<?=urlencode($bid)?>'">
-                                    View
-                                </button>
-
-                                <form method="POST"
-                                      style="display:inline"
-                                      onsubmit="return confirm('Delete all registrations of this bot?')">
-
-                                    <input type="hidden" name="csrf" value="<?=h($_SESSION['csrf'])?>">
-                                    <input type="hidden" name="action" value="delete_bot">
-                                    <input type="hidden" name="bot_id" value="<?=h($bid)?>">
-
-                                    <button class="btn btn-delete" type="submit">
-                                        Delete
-                                    </button>
-
-                                </form>
-
-                            <?php else: ?>
-
-                                <span class="muted">No Telegram ID</span>
-
-                            <?php endif; ?>
-
-                        </td>
-
-                    </tr>
-
-                <?php endforeach; ?>
-
-            </table>
-
-        </div>
-
-    </div>
-
-    <!-- ALL USERS -->
-
-    <div class="card">
-
-        <div class="card-heading">
-
-            <div class="card-title">
-                All Users Details (<?=count($displayUsers)?>)
-            </div>
-
-            <?php if ($viewId !== ''): ?>
-
-                <button class="btn btn-view" onclick="location.href='./'">
-                    Show All Users
-                </button>
-
-            <?php endif; ?>
-
-        </div>
-
-        <?php if ($viewId !== ''): ?>
-
-            <div class="filter-info">
-                Showing users for Telegram Bot ID: <?=h($viewId)?>
-            </div>
-
-        <?php endif; ?>
-
-        <div class="table-wrap">
-
-            <table>
-
-                <tr>
-                    <th>#</th>
-                    <th>User ID</th>
-                    <th>Username</th>
-  
+                                    class="btn btn-view
